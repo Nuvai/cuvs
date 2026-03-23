@@ -190,24 +190,25 @@ template <typename IdxT>
 auto deserialize_dataset(raft::resources const& res, std::istream& is)
   -> std::unique_ptr<dataset<IdxT>>
 {
-  switch (raft::deserialize_scalar<dataset_instance_tag>(res, is)) {
-    case kSerializeEmptyDataset: return deserialize_empty<IdxT>(res, is);
-    case kSerializeStridedDataset:
-      switch (raft::deserialize_scalar<cudaDataType_t>(res, is)) {
-        case CUDA_R_32F: return deserialize_strided<float, IdxT>(res, is);
-        case CUDA_R_16F: return deserialize_strided<half, IdxT>(res, is);
-        case CUDA_R_8I: return deserialize_strided<int8_t, IdxT>(res, is);
-        case CUDA_R_8U: return deserialize_strided<uint8_t, IdxT>(res, is);
-        default: break;
-      }
-    case kSerializeVPQDataset:
-      switch (raft::deserialize_scalar<cudaDataType_t>(res, is)) {
-        case CUDA_R_32F: return deserialize_vpq<float, IdxT>(res, is);
-        case CUDA_R_16F: return deserialize_vpq<half, IdxT>(res, is);
-        default: break;
-      }
-    case kSerializeBinaryDataset: return deserialize_binary<IdxT>(res, is);
-    default: break;
+  auto tag = raft::deserialize_scalar<dataset_instance_tag>(res, is);
+  if (tag == kSerializeEmptyDataset) {
+    return deserialize_empty<IdxT>(res, is);
+  } else if (tag == kSerializeStridedDataset) {
+    switch (raft::deserialize_scalar<cudaDataType_t>(res, is)) {
+      case CUDA_R_32F: return deserialize_strided<float, IdxT>(res, is);
+      case CUDA_R_16F: return deserialize_strided<half, IdxT>(res, is);
+      case CUDA_R_8I: return deserialize_strided<int8_t, IdxT>(res, is);
+      case CUDA_R_8U: return deserialize_strided<uint8_t, IdxT>(res, is);
+      default: break;
+    }
+  } else if (tag == kSerializeVPQDataset) {
+    switch (raft::deserialize_scalar<cudaDataType_t>(res, is)) {
+      case CUDA_R_32F: return deserialize_vpq<float, IdxT>(res, is);
+      case CUDA_R_16F: return deserialize_vpq<half, IdxT>(res, is);
+      default: break;
+    }
+  } else if (tag == kSerializeBinaryDataset) {
+    return deserialize_binary<IdxT>(res, is);
   }
   RAFT_FAIL("Failed to deserialize dataset: unsupported combination of instance tags.");
 }
