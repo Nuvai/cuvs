@@ -62,6 +62,8 @@ for f in glob.glob("compute_distance_standard_*.cu"):
     os.remove(f)
 for f in glob.glob("compute_distance_vpq_*.cu"):
     os.remove(f)
+for f in glob.glob("compute_distance_binary_adc_*.cu"):
+    os.remove(f)
 
 # Generate new files
 for type_path, (data_t, idx_t, distance_t) in search_types.items():
@@ -119,12 +121,30 @@ for mxdim, team in mxdim_team:
         f.write(template.format(includes=includes, content=content))
         cmake_list.append(f"  src/neighbors/detail/cagra/{path}")
 
+# Binary ADC (float query vs packed binary data)
+for mxdim, team in mxdim_team:
+    type_path = "float_uint32"
+    idx_t = "uint32_t"
+    distance_t = "float"
+    data_t = "float"
+
+    path = f"compute_distance_binary_adc_{type_path}_dim{mxdim}_t{team}.cu"
+    includes = '#include "compute_distance_binary_adc-impl.cuh"'
+    params = f"{team}, {mxdim}, {data_t}, {idx_t}, {distance_t}"
+    spec = f"binary_adc_descriptor_spec<{params}>"
+    content = f"""template struct {spec};"""
+    specs.append(spec)
+    with open(path, "w") as f:
+        f.write(template.format(includes=includes, content=content))
+        cmake_list.append(f"  src/neighbors/detail/cagra/{path}")
+
 with open("compute_distance-ext.cuh", "w") as f:
     includes = """
 #pragma once
 
 #include "compute_distance_standard.hpp"
 #include "compute_distance_vpq.hpp"
+#include "compute_distance_binary_adc.hpp"
 """
     newline = "\n"
     contents = f"""

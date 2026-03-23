@@ -117,6 +117,20 @@ auto make_key(const cagra::search_params& params,
              uint32_t(metric)};
 }
 
+template <typename DatasetT>
+auto make_key(const cagra::search_params& params,
+              const DatasetT& dataset,
+              cuvs::distance::DistanceType metric)
+  -> std::enable_if_t<is_binary_dataset_v<DatasetT>, key>
+{
+  return key{reinterpret_cast<uint64_t>(dataset.data_handle()),
+             uint64_t(dataset.n_rows()),
+             dataset.dim(),
+             dataset.packed_dim(),
+             uint32_t(params.team_size),
+             uint32_t(metric)};
+}
+
 inline auto operator==(const key& a, const key& b) -> bool
 {
   return a.data_ptr == b.data_ptr && a.n_rows == b.n_rows && a.dim == b.dim &&

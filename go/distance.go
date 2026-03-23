@@ -32,6 +32,7 @@ const (
 	DistanceMinkowski
 	DistanceRusselRao
 	DistanceDice
+	DistanceBitwiseHamming
 )
 
 // Maps cuvs Go distances to C distances
@@ -55,7 +56,8 @@ var CDistances = map[Distance]int{
 	DistanceKLDivergence:  C.CUVS_DISTANCE_KL_DIVERGENCE,
 	DistanceMinkowski:     C.CUVS_DISTANCE_LP_UNEXPANDED,
 	DistanceRusselRao:     C.CUVS_DISTANCE_RUSSEL_RAO_EXPANDED,
-	DistanceDice:          C.CUVS_DISTANCE_DICE_EXPANDED,
+	DistanceDice:           C.CUVS_DISTANCE_DICE_EXPANDED,
+	DistanceBitwiseHamming: C.CUVS_DISTANCE_BITWISE_HAMMING,
 }
 
 // Computes the pairwise distance between two vectors.
