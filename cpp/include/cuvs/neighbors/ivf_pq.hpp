@@ -3417,13 +3417,20 @@ struct ivf_pq_params {
     build_params.codebook_kind = ivf_pq::codebook_gen::PER_SUBSPACE;
 
     search_params                         = cuvs::neighbors::ivf_pq::search_params{};
-    search_params.n_probes                = std::round(std::sqrt(build_params.n_lists) / 20 + 4);
+    // For CAGRA graph build, we search the dataset against itself and need high recall
+    // to ensure self-inclusion. The old heuristic (sqrt(n_lists)/20 + 4) was too conservative,
+    // probing <0.1% of lists at scale and causing poor self-included ratios (issue #1765).
+    // Use sqrt(n_lists) (capped at n_lists) for much better coverage.
+    search_params.n_probes =
+      std::min<uint32_t>(build_params.n_lists,
+                         std::max<uint32_t>(10, std::round(std::sqrt(build_params.n_lists))));
     search_params.lut_dtype               = CUDA_R_16F;
     search_params.internal_distance_dtype = CUDA_R_16F;
     search_params.coarse_search_dtype     = CUDA_R_16F;
     search_params.max_internal_batch_size = 128 * 1024;
 
-    refinement_rate = 1;
+    // Use refinement to recover from PQ approximation errors during graph construction.
+    refinement_rate = 2.0;
   }
 };
 }  // namespace cuvs::neighbors::graph_build_params

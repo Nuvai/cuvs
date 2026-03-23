@@ -3,6 +3,13 @@ package cuvs
 // #include <stdlib.h>
 // #include <dlpack/dlpack.h>
 // #include <cuvs/core/c_api.h>
+//
+// static inline void call_deleter(DLManagedTensor* tensor) {
+//   if (tensor && tensor->deleter) {
+//     tensor->deleter(tensor);
+//     tensor->deleter = NULL;
+//   }
+// }
 import "C"
 
 import (
@@ -180,33 +187,47 @@ func NewTensorOnDevice[T TensorNumberType](res *Resource, shape []int64) (Tensor
 }
 
 // Destroys Tensor, freeing the memory it was allocated on.
+// If the tensor has a deleter set (e.g. from to_dlpack), the deleter is invoked
+// to free metadata (shape/strides) and the data pointer is NOT freed (it is owned
+// by the source index, not by this tensor).
 func (t *Tensor[T]) Close() error {
-	if t.C_tensor.dl_tensor.device.device_type == C.kDLCUDA {
-		bytes := t.sizeInBytes()
-		res, err := NewResource(nil)
-		if err != nil {
-			return err
+	if t.C_tensor == nil {
+		return nil
+	}
+
+	// If a C++ deleter was set (e.g. by to_dlpack), the data pointer belongs to the
+	// source object (an index's internal memory). We must NOT free it ourselves.
+	hasDeleter := t.C_tensor.deleter != nil
+
+	if hasDeleter {
+		// Invoke the C++ deleter to free shape/strides metadata allocated with new[]
+		C.call_deleter(t.C_tensor)
+	} else {
+		// We own the data — free it according to device type
+		if t.C_tensor.dl_tensor.device.device_type == C.kDLCUDA {
+			bytes := t.sizeInBytes()
+			res, err := NewResource(nil)
+			if err != nil {
+				return err
+			}
+			err = CheckCuvs(CuvsError(C.cuvsRMMFree(res.Resource, t.C_tensor.dl_tensor.data, C.size_t(bytes))))
+			if err != nil {
+				return err
+			}
+		} else if t.C_tensor.dl_tensor.device.device_type == C.kDLCPU {
+			if t.C_tensor.dl_tensor.data != nil {
+				C.free(t.C_tensor.dl_tensor.data)
+				t.C_tensor.dl_tensor.data = nil
+			}
 		}
-		err = CheckCuvs(CuvsError(C.cuvsRMMFree(res.Resource, t.C_tensor.dl_tensor.data, C.size_t(bytes))))
 
-		return err
-	} else if t.C_tensor.dl_tensor.device.device_type == C.kDLCPU {
-		if t.C_tensor.dl_tensor.data != nil {
-			C.free(t.C_tensor.dl_tensor.data)
-			t.C_tensor.dl_tensor.data = nil
+		if t.C_tensor.dl_tensor.shape != nil {
+			C.free(unsafe.Pointer(t.C_tensor.dl_tensor.shape))
+			t.C_tensor.dl_tensor.shape = nil
 		}
 	}
 
-	if t.C_tensor.dl_tensor.shape != nil {
-		C.free(unsafe.Pointer(t.C_tensor.dl_tensor.shape))
-		t.C_tensor.dl_tensor.shape = nil
-	}
-
-	if t.C_tensor != nil {
-		C.free(unsafe.Pointer(t.C_tensor))
-		t.C_tensor = nil
-	}
-
+	C.free(unsafe.Pointer(t.C_tensor))
 	t.C_tensor = nil
 	return nil
 }
@@ -245,10 +266,15 @@ func (t *Tensor[T]) Shape() []int64 {
 }
 
 // Expands the Tensor by adding newData to the end of the current data.
-// The Tensor must be on the device.
+// The Tensor must be on the device and must own its data (not from to_dlpack).
 func (t *Tensor[T]) Expand(res *Resource, newData [][]T) (*Tensor[T], error) {
 	if t.C_tensor.dl_tensor.device.device_type != C.kDLCUDA {
 		return &Tensor[T]{}, errors.New("Tensor must be on GPU")
+	}
+
+	// Cannot expand a tensor whose data is owned by an external source (e.g. index internals)
+	if t.C_tensor.deleter != nil {
+		return &Tensor[T]{}, errors.New("cannot expand a tensor with externally-owned data (from GetCenters/to_dlpack)")
 	}
 
 	newShape := []int64{int64(len(newData)), int64(len(newData[0]))}
@@ -307,20 +333,33 @@ func (t *Tensor[T]) Expand(res *Resource, newData [][]T) (*Tensor[T], error) {
 		return nil, err
 	}
 
-	shape := make([]int64, 2)
-	shape[0] = int64(*t.C_tensor.dl_tensor.shape) + int64(len(newData))
+	newRows := int64(*t.C_tensor.dl_tensor.shape) + int64(len(newData))
+	newCols := newShape[1]
 
-	shape[1] = newShape[1]
+	// Pre-allocate new shape before freeing old, so failure doesn't leave
+	// the tensor with a dangling shape pointer and leaked device memory.
+	shapePtr := C.malloc(C.size_t(2 * int(unsafe.Sizeof(C.int64_t(0)))))
+	if shapePtr == nil {
+		// New device data already allocated — must free it to avoid leak
+		C.cuvsRMMFree(res.Resource, NewDeviceDataPointer, C.size_t(bytes+newDataSize))
+		return nil, errors.New("shape memory allocation failed")
+	}
+	shapeSlice := unsafe.Slice((*C.int64_t)(shapePtr), 2)
+	shapeSlice[0] = C.int64_t(newRows)
+	shapeSlice[1] = C.int64_t(newCols)
 
-	t.shape = shape
-
+	// Now safe to free old shape and swap pointers atomically
+	C.free(unsafe.Pointer(t.C_tensor.dl_tensor.shape))
+	t.shape = []int64{newRows, newCols}
 	t.C_tensor.dl_tensor.data = NewDeviceDataPointer
-	t.C_tensor.dl_tensor.shape = (*C.int64_t)(unsafe.Pointer(&shape[0]))
+	t.C_tensor.dl_tensor.shape = (*C.int64_t)(shapePtr)
 
 	return t, nil
 }
 
 // Transfers the data in the Tensor to the host.
+// If the tensor's data is owned by an external source (has a deleter set by to_dlpack),
+// the data is copied but NOT freed — ownership remains with the source.
 func (t *Tensor[T]) ToHost(res *Resource) (*Tensor[T], error) {
 	bytes := t.sizeInBytes()
 
@@ -337,17 +376,44 @@ func (t *Tensor[T]) ToHost(res *Resource) (*Tensor[T], error) {
 			C.cudaMemcpyDeviceToHost,
 		))
 	if err != nil {
+		C.free(addr)
 		return nil, err
 	}
 
-	err = CheckCuvs(CuvsError(
-		C.cuvsRMMFree(res.Resource, t.C_tensor.dl_tensor.data, C.size_t(bytes))))
-	if err != nil {
-		return nil, err
+	// Pre-allocate the new shape before freeing anything, so failure doesn't
+	// leave the tensor in a broken state with a dangling shape pointer.
+	newShapePtr := C.malloc(C.size_t(len(t.shape) * int(unsafe.Sizeof(C.int64_t(0)))))
+	if newShapePtr == nil {
+		C.free(addr)
+		return nil, errors.New("shape memory allocation failed")
+	}
+	newShapeSlice := unsafe.Slice((*C.int64_t)(newShapePtr), len(t.shape))
+	for i, dim := range t.shape {
+		newShapeSlice[i] = C.int64_t(dim)
+	}
+
+	// Only free the device data if we own it (no deleter set by to_dlpack).
+	// If a deleter is set, the data pointer belongs to the source index.
+	if t.C_tensor.deleter == nil {
+		err = CheckCuvs(CuvsError(
+			C.cuvsRMMFree(res.Resource, t.C_tensor.dl_tensor.data, C.size_t(bytes))))
+		if err != nil {
+			C.free(addr)
+			C.free(newShapePtr)
+			return nil, err
+		}
+		// Free the old C-allocated shape
+		if t.C_tensor.dl_tensor.shape != nil {
+			C.free(unsafe.Pointer(t.C_tensor.dl_tensor.shape))
+		}
+	} else {
+		// Invoke deleter to free metadata (shape/strides) allocated by to_dlpack.
+		C.call_deleter(t.C_tensor)
 	}
 
 	t.C_tensor.dl_tensor.device.device_type = C.kDLCPU
 	t.C_tensor.dl_tensor.data = addr
+	t.C_tensor.dl_tensor.shape = (*C.int64_t)(newShapePtr)
 
 	return t, nil
 }
