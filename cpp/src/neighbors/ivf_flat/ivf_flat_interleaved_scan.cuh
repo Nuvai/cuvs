@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022-2025, NVIDIA CORPORATION.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2026, NVIDIA CORPORATION.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -122,8 +122,8 @@ struct loadAndComputeDist {
       for (int k = 0; k < Veclen; ++k) {
         compute_dist(dist, queryRegs[k], encV[k]);
         if constexpr (ComputeNorm) {
-          norm_query += queryRegs[k] * queryRegs[k];
-          norm_data += encV[k] * encV[k];
+          norm_query += (AccT)(queryRegs[k] * queryRegs[k]);
+          norm_data += (AccT)(encV[k] * encV[k]);
         }
       }
     }
@@ -157,8 +157,8 @@ struct loadAndComputeDist {
           T q = raft::shfl(queryReg, d + k, raft::WarpSize);
           compute_dist(dist, q, encV[k]);
           if constexpr (ComputeNorm) {
-            norm_query += q * q;
-            norm_data += encV[k] * encV[k];
+            norm_query += (AccT)(q * q);
+            norm_data += (AccT)(encV[k] * encV[k]);
           }
         }
       }
@@ -183,8 +183,8 @@ struct loadAndComputeDist {
         T q = raft::shfl(queryReg, d + k, raft::WarpSize);
         compute_dist(dist, q, enc[k]);
         if constexpr (ComputeNorm) {
-          norm_query += q * q;
-          norm_data += enc[k] * enc[k];
+          norm_query += (AccT)(q * q);
+          norm_data += (AccT)(enc[k] * enc[k]);
         }
       }
     }
@@ -875,7 +875,10 @@ RAFT_KERNEL __launch_bounds__(kThreadsPerBlock)
       uint32_t sample_offset = 0;
       if (probe_id > 0) { sample_offset = chunk_indices[probe_id - 1]; }
       assert(list_length == chunk_indices[probe_id] - sample_offset);
-      assert(sample_offset + list_length <= max_samples);
+      if constexpr (!kManageLocalTopK) {
+        // max_samples is zero/unused in the kManageLocalTopK mode
+        assert(sample_offset + list_length <= max_samples);
+      }
 
       constexpr int kUnroll        = raft::WarpSize / Veclen;
       constexpr uint32_t kNumWarps = kThreadsPerBlock / raft::WarpSize;
