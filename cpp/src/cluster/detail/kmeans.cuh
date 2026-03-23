@@ -380,6 +380,7 @@ void kmeans_fit_main(raft::resources const& handle,
   // temporary buffer to store weights per cluster, destructor releases the
   // resource
   auto wtInCluster = raft::make_device_vector<DataT, IndexT>(handle, n_clusters);
+  raft::matrix::fill(handle, wtInCluster.view(), DataT(0));
 
   rmm::device_scalar<DataT> clusterCostD(stream);
 

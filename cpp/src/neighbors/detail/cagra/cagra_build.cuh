@@ -1946,11 +1946,21 @@ struct mmap_owner {
       ptr_ = nullptr;
       throw std::runtime_error("cuvs::mmap_owner error");
     }
+    // Register with CUDA for safe device<->host transfers and correct pointer attributes
+    auto err = cudaHostRegister(ptr_, size, cudaHostRegisterDefault);
+    if (err != cudaSuccess) {
+      munmap(ptr_, size_);
+      ptr_ = nullptr;
+      RAFT_FAIL("cudaHostRegister failed for mmap'd memory: %s", cudaGetErrorString(err));
+    }
   }
 
   ~mmap_owner() noexcept
   {
-    if (ptr_ != nullptr) { munmap(ptr_, size_); }
+    if (ptr_ != nullptr) {
+      cudaHostUnregister(ptr_);
+      munmap(ptr_, size_);
+    }
   }
 
   // No copies for owning struct

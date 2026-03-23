@@ -560,6 +560,7 @@ void fit(const raft::resources& handle,
   // temporary buffer to store the weights per cluster, destructor releases
   // the resource
   auto wtInCluster = raft::make_device_vector<DataT, IndexT>(handle, n_clusters);
+  raft::matrix::fill(handle, wtInCluster.view(), DataT(0));
 
   // L2 norm of X: ||x||^2
   auto L2NormX = raft::make_device_vector<DataT, IndexT>(handle, n_samples);
