@@ -27,9 +27,9 @@ const (
 )
 
 var cBuildAlgos = map[BuildAlgo]int{
-	IvfPq:      C.IVF_PQ,
-	NnDescent:  C.NN_DESCENT,
-	AutoSelect: C.AUTO_SELECT,
+	IvfPq:      C.CUVS_CAGRA_BUILD_IVF_PQ,
+	NnDescent:  C.CUVS_CAGRA_BUILD_NN_DESCENT,
+	AutoSelect: C.CUVS_CAGRA_BUILD_AUTO_SELECT,
 }
 
 // Creates a new CompressionParams

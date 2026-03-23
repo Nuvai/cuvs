@@ -114,18 +114,19 @@ set_target_properties(
              POSITION_INDEPENDENT_CODE ON
              INTERFACE_POSITION_INDEPENDENT_CODE ON
              EXPORT_NAME c_api
+             C_VISIBILITY_PRESET hidden
+             CXX_VISIBILITY_PRESET hidden
+             VISIBILITY_INLINES_HIDDEN ON
 )
 
 # Setup the VERSION and SOVERSION of our library
 #
 # Long term goal is that every release that breaks the C ABI will update `cuvs_abi_version` allowing
 # us to have multiple releases of libcuvs_c that don't need consumers to rebuild against
-if(PROJECT_IS_TOP_LEVEL)
-  include(../cpp/cmake/modules/determine_cuvs_abi_version.cmake)
-  determine_cuvs_abi_version(${RAPIDS_VERSION} MAJOR abi_major MINOR abi_minor)
-  set_target_properties(cuvs_c PROPERTIES VERSION "${abi_major}.${abi_minor}")
-  set_target_properties(cuvs_c PROPERTIES SOVERSION "${abi_major}")
-endif()
+include(../cpp/cmake/modules/determine_cuvs_abi_version.cmake)
+determine_cuvs_abi_version(${RAPIDS_VERSION} MAJOR abi_major MINOR abi_minor)
+set_target_properties(cuvs_c PROPERTIES VERSION "${abi_major}.${abi_minor}")
+set_target_properties(cuvs_c PROPERTIES SOVERSION "${abi_major}")
 
 # Encode what optional components we are building
 set(CUVS_BUILD_CAGRA_HNSWLIB ${BUILD_CAGRA_HNSWLIB})
@@ -149,6 +150,7 @@ file(
 target_compile_definitions(
   cuvs_c PUBLIC $<$<BOOL:${BUILD_CAGRA_HNSWLIB}>:CUVS_BUILD_CAGRA_HNSWLIB>
                 $<$<BOOL:${BUILD_MG_ALGOS}>:CUVS_BUILD_MG_ALGOS>
+         PRIVATE CUVS_C_EXPORTS
 )
 
 target_compile_options(cuvs_c PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CUVS_CXX_FLAGS}>")

@@ -36,14 +36,14 @@ typedef cuvsBruteForceIndex* cuvsBruteForceIndex_t;
  * @param[in] index cuvsBruteForceIndex_t to allocate
  * @return cuvsError_t
  */
-cuvsError_t cuvsBruteForceIndexCreate(cuvsBruteForceIndex_t* index);
+CUVS_API cuvsError_t cuvsBruteForceIndexCreate(cuvsBruteForceIndex_t* index);
 
 /**
  * @brief De-allocate BRUTEFORCE index
  *
  * @param[in] index cuvsBruteForceIndex_t to de-allocate
  */
-cuvsError_t cuvsBruteForceIndexDestroy(cuvsBruteForceIndex_t index);
+CUVS_API cuvsError_t cuvsBruteForceIndexDestroy(cuvsBruteForceIndex_t index);
 /**
  * @}
  */
@@ -89,11 +89,11 @@ cuvsError_t cuvsBruteForceIndexDestroy(cuvsBruteForceIndex_t index);
  * @param[out] index cuvsBruteForceIndex_t Newly built BRUTEFORCE index
  * @return cuvsError_t
  */
-cuvsError_t cuvsBruteForceBuild(cuvsResources_t res,
-                                DLManagedTensor* dataset,
-                                cuvsDistanceType metric,
-                                float metric_arg,
-                                cuvsBruteForceIndex_t index);
+CUVS_API cuvsError_t cuvsBruteForceBuild(cuvsResources_t res,
+                                         DLManagedTensor* dataset,
+                                         cuvsDistanceType metric,
+                                         float metric_arg,
+                                         cuvsBruteForceIndex_t index);
 /**
  * @}
  */
@@ -145,12 +145,12 @@ cuvsError_t cuvsBruteForceBuild(cuvsResources_t res,
  * @param[in] prefilter cuvsFilter input prefilter that can be used
               to filter queries and neighbors based on the given bitmap.
  */
-cuvsError_t cuvsBruteForceSearch(cuvsResources_t res,
-                                 cuvsBruteForceIndex_t index,
-                                 DLManagedTensor* queries,
-                                 DLManagedTensor* neighbors,
-                                 DLManagedTensor* distances,
-                                 cuvsFilter prefilter);
+CUVS_API cuvsError_t cuvsBruteForceSearch(cuvsResources_t res,
+                                          cuvsBruteForceIndex_t index,
+                                          DLManagedTensor* queries,
+                                          DLManagedTensor* neighbors,
+                                          DLManagedTensor* distances,
+                                          cuvsFilter prefilter);
 /**
  * @}
  */
@@ -181,9 +181,9 @@ cuvsError_t cuvsBruteForceSearch(cuvsResources_t res,
  * @param[in] index BRUTEFORCE index
  *
  */
-cuvsError_t cuvsBruteForceSerialize(cuvsResources_t res,
-                                    const char* filename,
-                                    cuvsBruteForceIndex_t index);
+CUVS_API cuvsError_t cuvsBruteForceSerialize(cuvsResources_t res,
+                                             const char* filename,
+                                             cuvsBruteForceIndex_t index);
 
 /**
  * Load index from file.
@@ -208,9 +208,9 @@ cuvsError_t cuvsBruteForceSerialize(cuvsResources_t res,
  * @param[in] filename the name of the file that stores the index
  * @param[out] index BRUTEFORCE index loaded disk
  */
-cuvsError_t cuvsBruteForceDeserialize(cuvsResources_t res,
-                                      const char* filename,
-                                      cuvsBruteForceIndex_t index);
+CUVS_API cuvsError_t cuvsBruteForceDeserialize(cuvsResources_t res,
+                                               const char* filename,
+                                               cuvsBruteForceIndex_t index);
 
 /**
  * @}

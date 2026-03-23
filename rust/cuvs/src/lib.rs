@@ -20,6 +20,6 @@ pub mod ivf_pq;
 mod resources;
 pub mod vamana;
 
-pub use dlpack::ManagedTensor;
+pub use dlpack::{IntoDtype, ManagedTensor};
 pub use error::{Error, Result};
 pub use resources::Resources;

@@ -24,10 +24,17 @@ extern "C" {
  *
  */
 enum cuvsBinaryQuantizerThreshold {
-  ZERO=0,
-  MEAN=1,
-  SAMPLING_MEDIAN=2
+  CUVS_BINARY_QUANTIZER_ZERO            = 0,
+  CUVS_BINARY_QUANTIZER_MEAN            = 1,
+  CUVS_BINARY_QUANTIZER_SAMPLING_MEDIAN = 2
 };
+
+/* Backward-compatible aliases — opt in with CUVS_ENABLE_DEPRECATED_ENUM_ALIASES */
+#ifdef CUVS_ENABLE_DEPRECATED_ENUM_ALIASES
+#define ZERO            CUVS_BINARY_QUANTIZER_ZERO
+#define MEAN            CUVS_BINARY_QUANTIZER_MEAN
+#define SAMPLING_MEDIAN CUVS_BINARY_QUANTIZER_SAMPLING_MEDIAN
+#endif
 
 /**
  * @brief Binary quantizer parameters.
@@ -52,7 +59,7 @@ typedef struct cuvsBinaryQuantizerParams* cuvsBinaryQuantizerParams_t;
  * @param[in] params cuvsBinaryQuantizerParams_t to allocate
  * @return cuvsError_t
  */
-cuvsError_t cuvsBinaryQuantizerParamsCreate(cuvsBinaryQuantizerParams_t* params);
+CUVS_API cuvsError_t cuvsBinaryQuantizerParamsCreate(cuvsBinaryQuantizerParams_t* params);
 
 /**
  * @brief De-allocate Binary Quantizer params
@@ -60,7 +67,7 @@ cuvsError_t cuvsBinaryQuantizerParamsCreate(cuvsBinaryQuantizerParams_t* params)
  * @param[in] params
  * @return cuvsError_t
  */
-cuvsError_t cuvsBinaryQuantizerParamsDestroy(cuvsBinaryQuantizerParams_t params);
+CUVS_API cuvsError_t cuvsBinaryQuantizerParamsDestroy(cuvsBinaryQuantizerParams_t params);
 
 /**
  * @brief Defines and stores threshold for quantization upon training
@@ -81,7 +88,7 @@ typedef cuvsBinaryQuantizer* cuvsBinaryQuantizer_t;
  * @param[in] quantizer cuvsBinaryQuantizer_t to allocate
  * @return cuvsError_t
  */
-cuvsError_t cuvsBinaryQuantizerCreate(cuvsBinaryQuantizer_t* quantizer);
+CUVS_API cuvsError_t cuvsBinaryQuantizerCreate(cuvsBinaryQuantizer_t* quantizer);
 
 /**
  * @brief De-allocate Binary Quantizer
@@ -89,7 +96,7 @@ cuvsError_t cuvsBinaryQuantizerCreate(cuvsBinaryQuantizer_t* quantizer);
  * @param[in] quantizer
  * @return cuvsError_t
  */
-cuvsError_t cuvsBinaryQuantizerDestroy(cuvsBinaryQuantizer_t quantizer);
+CUVS_API cuvsError_t cuvsBinaryQuantizerDestroy(cuvsBinaryQuantizer_t quantizer);
 
 /**
  * @brief Trains a binary quantizer to be used later for quantizing the dataset.
@@ -99,10 +106,10 @@ cuvsError_t cuvsBinaryQuantizerDestroy(cuvsBinaryQuantizer_t quantizer);
  * @param[in] dataset a row-major host or device matrix
  * @param[out] quantizer trained binary quantizer
  */
-cuvsError_t cuvsBinaryQuantizerTrain(cuvsResources_t res,
-                                     cuvsBinaryQuantizerParams_t params,
-                                     DLManagedTensor* dataset,
-                                     cuvsBinaryQuantizer_t quantizer);
+CUVS_API cuvsError_t cuvsBinaryQuantizerTrain(cuvsResources_t res,
+                                              cuvsBinaryQuantizerParams_t params,
+                                              DLManagedTensor* dataset,
+                                              cuvsBinaryQuantizer_t quantizer);
 
 /**
  * @brief Applies binary quantization transform to the given dataset
@@ -115,9 +122,9 @@ cuvsError_t cuvsBinaryQuantizerTrain(cuvsResources_t res,
  * @param[in] dataset a row-major host or device matrix to transform
  * @param[out] out a row-major host or device matrix to store transformed data
  */
-cuvsError_t cuvsBinaryQuantizerTransform(cuvsResources_t res,
-                                         DLManagedTensor* dataset,
-                                         DLManagedTensor* out);
+CUVS_API cuvsError_t cuvsBinaryQuantizerTransform(cuvsResources_t res,
+                                                  DLManagedTensor* dataset,
+                                                  DLManagedTensor* out);
 
 /**
  * @brief Applies binary quantization transform to the given dataset
@@ -131,10 +138,10 @@ cuvsError_t cuvsBinaryQuantizerTransform(cuvsResources_t res,
  * @param[in] dataset a row-major host or device matrix to transform
  * @param[out] out a row-major host or device matrix to store transformed data
  */
-cuvsError_t cuvsBinaryQuantizerTransformWithParams(cuvsResources_t res,
-                                                   cuvsBinaryQuantizer_t quantizer,
-                                                   DLManagedTensor* dataset,
-                                                   DLManagedTensor* out);
+CUVS_API cuvsError_t cuvsBinaryQuantizerTransformWithParams(cuvsResources_t res,
+                                                            cuvsBinaryQuantizer_t quantizer,
+                                                            DLManagedTensor* dataset,
+                                                            DLManagedTensor* out);
 
 /**
  * @}

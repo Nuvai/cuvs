@@ -220,7 +220,7 @@ extern "C" cuvsError_t cuvsAllNeighborsIndexParamsCreate(cuvsAllNeighborsIndexPa
     (*params)->algo              = CUVS_ALL_NEIGHBORS_ALGO_BRUTE_FORCE;
     (*params)->overlap_factor    = 1;
     (*params)->n_clusters        = 1;
-    (*params)->metric            = L2Expanded;
+    (*params)->metric            = CUVS_DISTANCE_L2_EXPANDED;
     (*params)->ivf_pq_params     = nullptr;
     (*params)->nn_descent_params = nullptr;
   });

@@ -4,6 +4,7 @@
  */
 //! Brute Force KNN
 
+use std::ffi::CString;
 use std::io::{stderr, Write};
 use std::marker::PhantomData;
 
@@ -30,7 +31,7 @@ use crate::resources::Resources;
 /// let res = Resources::new().unwrap();
 /// let arr = ndarray::Array::<f32, _>::zeros((64, 8));
 /// let tensor = ManagedTensor::from(&arr);
-/// let index = Index::build(&res, DistanceType::L2Expanded, None, &tensor).unwrap();
+/// let index = Index::build(&res, DistanceType::CUVS_DISTANCE_L2_EXPANDED, None, &tensor).unwrap();
 /// // arr and tensor must remain alive while index is in use
 /// ```
 ///
@@ -43,7 +44,7 @@ use crate::resources::Resources;
 /// let res = Resources::new().unwrap();
 /// let arr = ndarray::Array::<f32, _>::zeros((64, 8));
 /// let device_tensor = ManagedTensor::from(&arr).to_device(&res).unwrap();
-/// let index = Index::build_owned(&res, DistanceType::L2Expanded, None, device_tensor).unwrap();
+/// let index = Index::build_owned(&res, DistanceType::CUVS_DISTANCE_L2_EXPANDED, None, device_tensor).unwrap();
 /// drop(arr); // Fine — index owns the device copy
 /// ```
 #[derive(Debug)]
@@ -80,20 +81,20 @@ impl<'a> Index<'a> {
         metric_arg: Option<f32>,
         dataset: &'a ManagedTensor,
     ) -> Result<Index<'a>> {
-        let inner = Self::create_handle()?;
+        let index = Index {
+            inner: Self::create_handle()?,
+            _data: DatasetOwnership::Borrowed(PhantomData),
+        };
         unsafe {
             check_cuvs(ffi::cuvsBruteForceBuild(
                 res.0,
                 dataset.as_ptr(),
                 metric,
                 metric_arg.unwrap_or(2.0),
-                inner,
+                index.inner,
             ))?;
         }
-        Ok(Index {
-            inner,
-            _data: DatasetOwnership::Borrowed(PhantomData),
-        })
+        Ok(index)
     }
 
     /// Creates a new empty index
@@ -102,6 +103,23 @@ impl<'a> Index<'a> {
             inner: Self::create_handle()?,
             _data: DatasetOwnership::Borrowed(PhantomData),
         })
+    }
+
+    /// Save the Brute Force index to file.
+    ///
+    /// # Arguments
+    ///
+    /// * `res` - Resources to use
+    /// * `filename` - The file name for saving the index
+    pub fn serialize(&self, res: &Resources, filename: &str) -> Result<()> {
+        let c_filename = CString::new(filename).expect("filename contains null byte");
+        unsafe {
+            check_cuvs(ffi::cuvsBruteForceSerialize(
+                res.0,
+                c_filename.as_ptr(),
+                self.inner,
+            ))
+        }
     }
 
     /// Perform a Nearest Neighbors search on the Index
@@ -122,7 +140,7 @@ impl<'a> Index<'a> {
         unsafe {
             let prefilter = ffi::cuvsFilter {
                 addr: 0,
-                type_: ffi::cuvsFilterType::NO_FILTER,
+                type_: ffi::cuvsFilterType::CUVS_FILTER_NONE,
             };
 
             check_cuvs(ffi::cuvsBruteForceSearch(
@@ -138,6 +156,28 @@ impl<'a> Index<'a> {
 }
 
 impl Index<'static> {
+    /// Load a Brute Force index from file.
+    ///
+    /// # Arguments
+    ///
+    /// * `res` - Resources to use
+    /// * `filename` - The file name of the stored index
+    pub fn deserialize(res: &Resources, filename: &str) -> Result<Index<'static>> {
+        let index = Index {
+            inner: Self::create_handle()?,
+            _data: DatasetOwnership::Borrowed(PhantomData),
+        };
+        let c_filename = CString::new(filename).expect("filename contains null byte");
+        unsafe {
+            check_cuvs(ffi::cuvsBruteForceDeserialize(
+                res.0,
+                c_filename.as_ptr(),
+                index.inner,
+            ))?;
+        }
+        Ok(index)
+    }
+
     /// Builds a new Brute Force KNN Index from an owned dataset.
     ///
     /// The index takes ownership of `dataset`, making it self-contained
@@ -157,20 +197,21 @@ impl Index<'static> {
         metric_arg: Option<f32>,
         dataset: ManagedTensor,
     ) -> Result<Index<'static>> {
-        let inner = Self::create_handle()?;
+        let mut index = Index {
+            inner: Self::create_handle()?,
+            _data: DatasetOwnership::Borrowed(PhantomData),
+        };
         unsafe {
             check_cuvs(ffi::cuvsBruteForceBuild(
                 res.0,
                 dataset.as_ptr(),
                 metric,
                 metric_arg.unwrap_or(2.0),
-                inner,
+                index.inner,
             ))?;
         }
-        Ok(Index {
-            inner,
-            _data: DatasetOwnership::Owned(dataset),
-        })
+        index._data = DatasetOwnership::Owned(dataset);
+        Ok(index)
     }
 }
 
@@ -252,13 +293,13 @@ mod tests {
     /*
         #[test]
         fn test_cosine() {
-            test_bfknn(DistanceType::CosineExpanded);
+            test_bfknn(DistanceType::CUVS_DISTANCE_COSINE_EXPANDED);
         }
     */
 
     #[flaky]
     fn test_l2() {
-        test_bfknn(DistanceType::L2Expanded);
+        test_bfknn(DistanceType::CUVS_DISTANCE_L2_EXPANDED);
     }
 
     /// Test that an index built with build_owned can be searched multiple times.
@@ -274,7 +315,7 @@ mod tests {
 
         // Build the brute force index with owned device memory
         let dataset_device = ManagedTensor::from(&dataset).to_device(&res).unwrap();
-        let index = Index::build_owned(&res, DistanceType::L2Expanded, None, dataset_device)
+        let index = Index::build_owned(&res, DistanceType::CUVS_DISTANCE_L2_EXPANDED, None, dataset_device)
             .expect("failed to create brute force index");
 
         res.sync_stream().unwrap();
@@ -328,7 +369,7 @@ mod tests {
 
         // Create a device tensor and borrow it for the index
         let dataset_device = ManagedTensor::from(&dataset_host).to_device(&res).unwrap();
-        let index = Index::build(&res, DistanceType::L2Expanded, None, &dataset_device)
+        let index = Index::build(&res, DistanceType::CUVS_DISTANCE_L2_EXPANDED, None, &dataset_device)
             .expect("failed to create brute force index");
 
         res.sync_stream().unwrap();

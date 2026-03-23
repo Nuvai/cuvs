@@ -29,12 +29,19 @@ extern "C" {
  */
 enum cuvsHnswHierarchy {
   /* Flat hierarchy, search is base-layer only */
-  NONE = 0,
+  CUVS_HNSW_HIERARCHY_NONE = 0,
   /* Full hierarchy is built using the CPU */
-  CPU = 1,
+  CUVS_HNSW_HIERARCHY_CPU  = 1,
   /* Full hierarchy is built using the GPU */
-  GPU = 2
+  CUVS_HNSW_HIERARCHY_GPU  = 2
 };
+
+/* Backward-compatible aliases — opt in with CUVS_ENABLE_DEPRECATED_ENUM_ALIASES */
+#ifdef CUVS_ENABLE_DEPRECATED_ENUM_ALIASES
+#define NONE CUVS_HNSW_HIERARCHY_NONE
+#define CPU  CUVS_HNSW_HIERARCHY_CPU
+#define GPU  CUVS_HNSW_HIERARCHY_GPU
+#endif
 
 /**
  * Parameters for ACE (Augmented Core Extraction) graph build for HNSW.
@@ -94,7 +101,7 @@ typedef struct cuvsHnswAceParams* cuvsHnswAceParams_t;
  * @param[in] params cuvsHnswAceParams_t to allocate
  * @return cuvsError_t
  */
-cuvsError_t cuvsHnswAceParamsCreate(cuvsHnswAceParams_t* params);
+CUVS_API cuvsError_t cuvsHnswAceParamsCreate(cuvsHnswAceParams_t* params);
 
 /**
  * @brief De-allocate HNSW ACE params
@@ -102,7 +109,7 @@ cuvsError_t cuvsHnswAceParamsCreate(cuvsHnswAceParams_t* params);
  * @param[in] params
  * @return cuvsError_t
  */
-cuvsError_t cuvsHnswAceParamsDestroy(cuvsHnswAceParams_t params);
+CUVS_API cuvsError_t cuvsHnswAceParamsDestroy(cuvsHnswAceParams_t params);
 
 struct cuvsHnswIndexParams {
   /* hierarchy of the hnsw index */
@@ -138,7 +145,7 @@ typedef struct cuvsHnswIndexParams* cuvsHnswIndexParams_t;
  * @param[in] params cuvsHnswIndexParams_t to allocate
  * @return cuvsError_t
  */
-cuvsError_t cuvsHnswIndexParamsCreate(cuvsHnswIndexParams_t* params);
+CUVS_API cuvsError_t cuvsHnswIndexParamsCreate(cuvsHnswIndexParams_t* params);
 
 /**
  * @brief De-allocate HNSW Index params
@@ -146,7 +153,7 @@ cuvsError_t cuvsHnswIndexParamsCreate(cuvsHnswIndexParams_t* params);
  * @param[in] params
  * @return cuvsError_t
  */
-cuvsError_t cuvsHnswIndexParamsDestroy(cuvsHnswIndexParams_t params);
+CUVS_API cuvsError_t cuvsHnswIndexParamsDestroy(cuvsHnswIndexParams_t params);
 
 /**
  * @}
@@ -175,14 +182,14 @@ typedef cuvsHnswIndex* cuvsHnswIndex_t;
  * @param[in] index cuvsHnswIndex_t to allocate
  * @return HnswError_t
  */
-cuvsError_t cuvsHnswIndexCreate(cuvsHnswIndex_t* index);
+CUVS_API cuvsError_t cuvsHnswIndexCreate(cuvsHnswIndex_t* index);
 
 /**
  * @brief De-allocate HNSW index
  *
  * @param[in] index cuvsHnswIndex_t to de-allocate
  */
-cuvsError_t cuvsHnswIndexDestroy(cuvsHnswIndex_t index);
+CUVS_API cuvsError_t cuvsHnswIndexDestroy(cuvsHnswIndex_t index);
 
 /**
  * @}
@@ -206,7 +213,7 @@ typedef struct cuvsHnswExtendParams* cuvsHnswExtendParams_t;
  * @param[in] params cuvsHnswExtendParams_t to allocate
  * @return cuvsError_t
  */
-cuvsError_t cuvsHnswExtendParamsCreate(cuvsHnswExtendParams_t* params);
+CUVS_API cuvsError_t cuvsHnswExtendParamsCreate(cuvsHnswExtendParams_t* params);
 
 /**
  * @brief De-allocate HNSW extend params
@@ -215,7 +222,7 @@ cuvsError_t cuvsHnswExtendParamsCreate(cuvsHnswExtendParams_t* params);
  * @return cuvsError_t
  */
 
-cuvsError_t cuvsHnswExtendParamsDestroy(cuvsHnswExtendParams_t params);
+CUVS_API cuvsError_t cuvsHnswExtendParamsDestroy(cuvsHnswExtendParams_t params);
 
 /**
  * @}
@@ -267,16 +274,16 @@ cuvsError_t cuvsHnswExtendParamsDestroy(cuvsHnswExtendParams_t params);
  * cuvsError_t res_destroy_status = cuvsResourcesDestroy(res);
  * @endcode
  */
-cuvsError_t cuvsHnswFromCagra(cuvsResources_t res,
-                              cuvsHnswIndexParams_t params,
-                              cuvsCagraIndex_t cagra_index,
-                              cuvsHnswIndex_t hnsw_index);
+CUVS_API cuvsError_t cuvsHnswFromCagra(cuvsResources_t res,
+                                       cuvsHnswIndexParams_t params,
+                                       cuvsCagraIndex_t cagra_index,
+                                       cuvsHnswIndex_t hnsw_index);
 
-cuvsError_t cuvsHnswFromCagraWithDataset(cuvsResources_t res,
-                                         cuvsHnswIndexParams_t params,
-                                         cuvsCagraIndex_t cagra_index,
-                                         cuvsHnswIndex_t hnsw_index,
-                                         DLManagedTensor* dataset_tensor);
+CUVS_API cuvsError_t cuvsHnswFromCagraWithDataset(cuvsResources_t res,
+                                                  cuvsHnswIndexParams_t params,
+                                                  cuvsCagraIndex_t cagra_index,
+                                                  cuvsHnswIndex_t hnsw_index,
+                                                  DLManagedTensor* dataset_tensor);
 
 /**
  * @}
@@ -344,10 +351,10 @@ cuvsError_t cuvsHnswFromCagraWithDataset(cuvsResources_t res,
  * cuvsResourcesDestroy(res);
  * @endcode
  */
-cuvsError_t cuvsHnswBuild(cuvsResources_t res,
-                          cuvsHnswIndexParams_t params,
-                          DLManagedTensor* dataset,
-                          cuvsHnswIndex_t index);
+CUVS_API cuvsError_t cuvsHnswBuild(cuvsResources_t res,
+                                   cuvsHnswIndexParams_t params,
+                                   DLManagedTensor* dataset,
+                                   cuvsHnswIndex_t index);
 
 /**
  * @}
@@ -402,10 +409,10 @@ cuvsError_t cuvsHnswBuild(cuvsResources_t res,
   * @endcode
   */
 
-cuvsError_t cuvsHnswExtend(cuvsResources_t res,
-                           cuvsHnswExtendParams_t params,
-                           DLManagedTensor* additional_dataset,
-                           cuvsHnswIndex_t index);
+CUVS_API cuvsError_t cuvsHnswExtend(cuvsResources_t res,
+                                    cuvsHnswExtendParams_t params,
+                                    DLManagedTensor* additional_dataset,
+                                    cuvsHnswIndex_t index);
 
 /**
  * @}
@@ -429,7 +436,7 @@ typedef struct cuvsHnswSearchParams* cuvsHnswSearchParams_t;
  * @param[in] params cuvsHnswSearchParams_t to allocate
  * @return cuvsError_t
  */
-cuvsError_t cuvsHnswSearchParamsCreate(cuvsHnswSearchParams_t* params);
+CUVS_API cuvsError_t cuvsHnswSearchParamsCreate(cuvsHnswSearchParams_t* params);
 
 /**
  * @brief De-allocate HNSW search params
@@ -437,7 +444,7 @@ cuvsError_t cuvsHnswSearchParamsCreate(cuvsHnswSearchParams_t* params);
  * @param[in] params cuvsHnswSearchParams_t to de-allocate
  * @return cuvsError_t
  */
-cuvsError_t cuvsHnswSearchParamsDestroy(cuvsHnswSearchParams_t params);
+CUVS_API cuvsError_t cuvsHnswSearchParamsDestroy(cuvsHnswSearchParams_t params);
 
 /**
  * @}
@@ -496,12 +503,12 @@ cuvsError_t cuvsHnswSearchParamsDestroy(cuvsHnswSearchParams_t params);
  * @param[out] neighbors DLManagedTensor* output `k` neighbors for queries
  * @param[out] distances DLManagedTensor* output `k` distances for queries
  */
-cuvsError_t cuvsHnswSearch(cuvsResources_t res,
-                           cuvsHnswSearchParams_t params,
-                           cuvsHnswIndex_t index,
-                           DLManagedTensor* queries,
-                           DLManagedTensor* neighbors,
-                           DLManagedTensor* distances);
+CUVS_API cuvsError_t cuvsHnswSearch(cuvsResources_t res,
+                                    cuvsHnswSearchParams_t params,
+                                    cuvsHnswIndex_t index,
+                                    DLManagedTensor* queries,
+                                    DLManagedTensor* neighbors,
+                                    DLManagedTensor* distances);
 
 /**
  * @}
@@ -551,7 +558,7 @@ cuvsError_t cuvsHnswSearch(cuvsResources_t res,
  * cuvsError_t res_destroy_status = cuvsResourcesDestroy(res);
  * @endcode
  */
-cuvsError_t cuvsHnswSerialize(cuvsResources_t res, const char* filename, cuvsHnswIndex_t index);
+CUVS_API cuvsError_t cuvsHnswSerialize(cuvsResources_t res, const char* filename, cuvsHnswIndex_t index);
 
 /**
  * Load hnswlib index from file which was serialized from a HNSW index.
@@ -589,12 +596,12 @@ cuvsError_t cuvsHnswSerialize(cuvsResources_t res, const char* filename, cuvsHns
  * @param[in] metric the distance metric used to build the index
  * @param[out] index HNSW index loaded disk
  */
-cuvsError_t cuvsHnswDeserialize(cuvsResources_t res,
-                                cuvsHnswIndexParams_t params,
-                                const char* filename,
-                                int dim,
-                                cuvsDistanceType metric,
-                                cuvsHnswIndex_t index);
+CUVS_API cuvsError_t cuvsHnswDeserialize(cuvsResources_t res,
+                                         cuvsHnswIndexParams_t params,
+                                         const char* filename,
+                                         int dim,
+                                         cuvsDistanceType metric,
+                                         cuvsHnswIndex_t index);
 /**
  * @}
  */

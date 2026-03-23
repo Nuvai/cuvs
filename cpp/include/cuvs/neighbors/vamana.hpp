@@ -257,6 +257,11 @@ struct index : cuvs::neighbors::index {
                raft::resource::get_cuda_stream(res));
   }
 
+  /**
+   * Set the medoid (entry-point) node id.
+   */
+  void update_medoid(IdxT new_medoid) noexcept { medoid_id_ = new_medoid; }
+
  private:
   cuvs::distance::DistanceType metric_;
   raft::device_matrix<IdxT, int64_t, raft::row_major> graph_;
@@ -576,6 +581,45 @@ void serialize(raft::resources const& handle,
                const cuvs::neighbors::vamana::index<uint8_t, uint32_t>& index,
                bool include_dataset = true,
                bool sector_aligned  = false);
+
+/**
+ * @}
+ */
+
+/**
+ * @defgroup vamana_cpp_deserialize Vamana deserialize functions
+ * @{
+ */
+
+/**
+ * Load a Vamana index from file (DiskANN format).
+ *
+ * The DiskANN format does NOT encode data types. The caller must know
+ * the data type that was used to build the index.
+ *
+ * If a dataset file exists at `file_prefix.data`, it is also loaded.
+ *
+ * @param[in] handle the raft handle
+ * @param[in] file_prefix prefix of path and name of index files
+ * @param[out] index pointer to Vamana index to populate
+ */
+void deserialize(raft::resources const& handle,
+                 const std::string& file_prefix,
+                 cuvs::neighbors::vamana::index<float, uint32_t>* index);
+
+/**
+ * @copydoc cuvs::neighbors::vamana::deserialize(raft::resources const&, const std::string&, cuvs::neighbors::vamana::index<float, uint32_t>*)
+ */
+void deserialize(raft::resources const& handle,
+                 const std::string& file_prefix,
+                 cuvs::neighbors::vamana::index<int8_t, uint32_t>* index);
+
+/**
+ * @copydoc cuvs::neighbors::vamana::deserialize(raft::resources const&, const std::string&, cuvs::neighbors::vamana::index<float, uint32_t>*)
+ */
+void deserialize(raft::resources const& handle,
+                 const std::string& file_prefix,
+                 cuvs::neighbors::vamana::index<uint8_t, uint32_t>* index);
 
 /**
  * @}

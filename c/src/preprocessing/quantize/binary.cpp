@@ -61,13 +61,13 @@ void* _train(cuvsResources_t res,
   auto quantizer_params           = cuvs::preprocessing::quantize::binary::params();
   quantizer_params.sampling_ratio = params->sampling_ratio;
   switch (params->threshold) {
-    case ZERO:
+    case CUVS_BINARY_QUANTIZER_ZERO:
       quantizer_params.threshold = cuvs::preprocessing::quantize::binary::bit_threshold::zero;
       break;
-    case MEAN:
+    case CUVS_BINARY_QUANTIZER_MEAN:
       quantizer_params.threshold = cuvs::preprocessing::quantize::binary::bit_threshold::mean;
       break;
-    case SAMPLING_MEDIAN:
+    case CUVS_BINARY_QUANTIZER_SAMPLING_MEDIAN:
       quantizer_params.threshold =
         cuvs::preprocessing::quantize::binary::bit_threshold::sampling_median;
       break;
@@ -96,7 +96,7 @@ extern "C" cuvsError_t cuvsBinaryQuantizerParamsCreate(cuvsBinaryQuantizerParams
 {
   return cuvs::core::translate_exceptions([=] {
     *params =
-        new cuvsBinaryQuantizerParams{.threshold = MEAN, .sampling_ratio = 0.1};
+        new cuvsBinaryQuantizerParams{.threshold = CUVS_BINARY_QUANTIZER_MEAN, .sampling_ratio = 0.1};
   });
 }
 
@@ -164,7 +164,7 @@ extern "C" cuvsError_t cuvsBinaryQuantizerTransform(cuvsResources_t res,
 {
   cuvsBinaryQuantizerParams_t params;
   cuvsBinaryQuantizerParamsCreate(&params);
-  params->threshold = ZERO;
+  params->threshold = CUVS_BINARY_QUANTIZER_ZERO;
 
   cuvsBinaryQuantizer_t quantizer;
   cuvsBinaryQuantizerCreate(&quantizer);

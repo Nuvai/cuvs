@@ -130,10 +130,10 @@ void _search(cuvsResources_t res,
   auto neighbors_mds          = cuvs::core::from_dlpack<neighbors_mdspan_type>(neighbors_tensor);
   auto distances_mds          = cuvs::core::from_dlpack<distances_mdspan_type>(distances_tensor);
 
-  if (filter.type == NO_FILTER) {
+  if (filter.type == CUVS_FILTER_NONE) {
     tiered_index::search(
       *res_ptr, search_params, *index_ptr, queries_mds, neighbors_mds, distances_mds);
-  } else if (filter.type == BITSET) {
+  } else if (filter.type == CUVS_FILTER_BITSET) {
     using filter_mdspan_type    = raft::device_vector_view<std::uint32_t, int64_t, raft::row_major>;
     auto removed_indices_tensor = reinterpret_cast<DLManagedTensor*>(filter.addr);
     auto removed_indices = cuvs::core::from_dlpack<filter_mdspan_type>(removed_indices_tensor);

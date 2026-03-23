@@ -194,6 +194,26 @@ impl IntoDtype for u32 {
     }
 }
 
+impl IntoDtype for i8 {
+    fn ffi_dtype() -> ffi::DLDataType {
+        ffi::DLDataType {
+            code: ffi::DLDataTypeCode::kDLInt as _,
+            bits: 8,
+            lanes: 1,
+        }
+    }
+}
+
+impl IntoDtype for u8 {
+    fn ffi_dtype() -> ffi::DLDataType {
+        ffi::DLDataType {
+            code: ffi::DLDataTypeCode::kDLUInt as _,
+            bits: 8,
+            lanes: 1,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

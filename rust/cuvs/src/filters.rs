@@ -114,7 +114,7 @@ impl Filter for NoFilter {
     fn into_ffi(&self) -> ffi::cuvsFilter {
         ffi::cuvsFilter {
             addr: 0,
-            type_: ffi::cuvsFilterType::NO_FILTER,
+            type_: ffi::cuvsFilterType::CUVS_FILTER_NONE,
         }
     }
 }
@@ -175,7 +175,7 @@ impl<'a> Filter for Bitset<'a> {
     fn into_ffi(&self) -> ffi::cuvsFilter {
         ffi::cuvsFilter {
             addr: self.tensor.as_ptr() as uintptr_t,
-            type_: ffi::cuvsFilterType::BITSET,
+            type_: ffi::cuvsFilterType::CUVS_FILTER_BITSET,
         }
     }
 }
@@ -238,7 +238,7 @@ impl<'a> Filter for Bitmap<'a> {
     fn into_ffi(&self) -> ffi::cuvsFilter {
         ffi::cuvsFilter {
             addr: self.tensor.as_ptr() as uintptr_t,
-            type_: ffi::cuvsFilterType::BITMAP,
+            type_: ffi::cuvsFilterType::CUVS_FILTER_BITMAP,
         }
     }
 }
@@ -441,7 +441,7 @@ mod tests {
         let ffi_filter = filter.into_ffi();
 
         assert_eq!(ffi_filter.addr, 0);
-        assert_eq!(ffi_filter.type_, ffi::cuvsFilterType::NO_FILTER);
+        assert_eq!(ffi_filter.type_, ffi::cuvsFilterType::CUVS_FILTER_NONE);
     }
 
     #[test]
@@ -452,7 +452,7 @@ mod tests {
         let ffi_filter = filter.into_ffi();
 
         assert_eq!(ffi_filter.addr, tensor.as_ptr() as uintptr_t);
-        assert_eq!(ffi_filter.type_, ffi::cuvsFilterType::BITSET);
+        assert_eq!(ffi_filter.type_, ffi::cuvsFilterType::CUVS_FILTER_BITSET);
     }
 
     #[test]
@@ -463,7 +463,7 @@ mod tests {
         let ffi_filter = filter.into_ffi();
 
         assert_eq!(ffi_filter.addr, tensor.as_ptr() as uintptr_t);
-        assert_eq!(ffi_filter.type_, ffi::cuvsFilterType::BITMAP);
+        assert_eq!(ffi_filter.type_, ffi::cuvsFilterType::CUVS_FILTER_BITMAP);
     }
 
     #[test]

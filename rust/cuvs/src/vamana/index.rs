@@ -6,7 +6,7 @@
 use std::ffi::CString;
 use std::io::{stderr, Write};
 
-use crate::dlpack::ManagedTensor;
+use crate::dlpack::{IntoDtype, ManagedTensor};
 use crate::error::{check_cuvs, Result};
 use crate::resources::Resources;
 use crate::vamana::IndexParams;
@@ -66,7 +66,7 @@ impl Index {
     /// # Arguments
     ///
     /// * `res` - Resources to use
-    /// * `filename` - The file prefix for where the index is sazved
+    /// * `filename` - The file prefix for where the index is saved
     /// * `include_dataset` - whether to include the dataset in the serialized index
     pub fn serialize(self, res: &Resources, filename: &str, include_dataset: bool) -> Result<()> {
         let c_filename = CString::new(filename).unwrap();
@@ -78,6 +78,45 @@ impl Index {
                 include_dataset,
             ))
         }
+    }
+
+    /// Load a Vamana index from file (DiskANN format).
+    ///
+    /// The DiskANN format does NOT encode data types. The caller **must**
+    /// supply the element type `T` that was used when building the index.
+    /// Passing the wrong type is undefined behavior (silent data corruption).
+    ///
+    /// Supported types: `f32`, `i8`, `u8`.
+    ///
+    /// If a dataset file exists at `filename.data`, it is also loaded.
+    ///
+    /// # Arguments
+    ///
+    /// * `res` - Resources to use
+    /// * `filename` - The file prefix for the serialized index
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// # use cuvs::Resources;
+    /// # use cuvs::vamana::Index;
+    /// let res = Resources::new().unwrap();
+    /// let index = Index::deserialize::<f32>(&res, "/path/to/index").unwrap();
+    /// ```
+    pub fn deserialize<T: IntoDtype>(res: &Resources, filename: &str) -> Result<Index> {
+        // Wrap in Index immediately so Drop cleans up the FFI handle on error
+        let index = Index::new()?;
+        let c_filename = CString::new(filename).expect("filename contains null byte");
+        let dtype = T::ffi_dtype();
+        unsafe {
+            check_cuvs(ffi::cuvsVamanaDeserialize(
+                res.0,
+                c_filename.as_ptr(),
+                index.0,
+                dtype,
+            ))?;
+        }
+        Ok(index)
     }
 }
 

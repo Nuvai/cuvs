@@ -86,6 +86,14 @@ void serialize(raft::resources const& res,
   cuvs::neighbors::vamana::detail::serialize<T, IdxT>(res, file_prefix, index_);
 }
 
+template <typename T, typename IdxT>
+void deserialize(raft::resources const& res,
+                 const std::string& file_prefix,
+                 index<T, IdxT>* index_)
+{
+  cuvs::neighbors::vamana::detail::deserialize<T, IdxT>(res, file_prefix, index_);
+}
+
 template <typename T>
 codebook_params<T> deserialize_codebooks(const std::string& codebook_prefix, const int dim)
 {

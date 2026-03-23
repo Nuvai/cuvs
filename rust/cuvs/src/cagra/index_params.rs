@@ -321,7 +321,7 @@ mod tests {
             .unwrap()
             .set_intermediate_graph_degree(128)
             .set_graph_degree(16)
-            .set_build_algo(BuildAlgo::NN_DESCENT)
+            .set_build_algo(BuildAlgo::CUVS_CAGRA_BUILD_NN_DESCENT)
             .set_nn_descent_niter(10)
             .set_compression(
                 CompressionParams::new()
@@ -334,7 +334,7 @@ mod tests {
         unsafe {
             assert_eq!((*params.0).graph_degree, 16);
             assert_eq!((*params.0).intermediate_graph_degree, 128);
-            assert_eq!((*params.0).build_algo, BuildAlgo::NN_DESCENT);
+            assert_eq!((*params.0).build_algo, BuildAlgo::CUVS_CAGRA_BUILD_NN_DESCENT);
             assert_eq!((*params.0).nn_descent_niter, 10);
             assert_eq!((*(*params.0).compression).pq_dim, 8);
             assert_eq!((*(*params.0).compression).pq_bits, 4);
