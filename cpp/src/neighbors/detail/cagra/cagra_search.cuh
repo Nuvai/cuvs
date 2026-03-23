@@ -191,6 +191,28 @@ void search_main(raft::resources const& res,
       neighbors,
       distances,
       sample_filter);
+  } else if (auto* bin_dset =
+               dynamic_cast<const binary_dataset<ds_idx_type>*>(&index.data());
+             bin_dset != nullptr) {
+    // Search using binary ADC: float queries vs packed binary data.
+    // ADC computes -dot(query, binary_vec), valid only for L2Expanded and InnerProduct.
+    // Other metrics are either semantically wrong (L1) or produce NaN (L2Sqrt).
+    RAFT_EXPECTS(index.metric() == cuvs::distance::DistanceType::L2Expanded ||
+                   index.metric() == cuvs::distance::DistanceType::InnerProduct,
+                 "binary_dataset ADC search supports only L2Expanded and InnerProduct metrics. "
+                 "For BitwiseHamming, use strided_dataset<uint8_t> with symmetric binary search.");
+    auto desc = dataset_descriptor_init_with_cache<T, graph_idx_type, DistanceT>(
+      res, params, *bin_dset, index.metric(), nullptr);
+    search_main_core<T, graph_idx_type, DistanceT, CagraSampleFilterT, IdxT, OutputIdxT>(
+      res,
+      params,
+      desc,
+      index.graph(),
+      index.source_indices(),
+      queries,
+      neighbors,
+      distances,
+      sample_filter);
   } else if (auto* empty_dset = dynamic_cast<const empty_dataset<ds_idx_type>*>(&index.data());
              empty_dset != nullptr) {
     // Forgot to add a dataset.

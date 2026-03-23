@@ -128,7 +128,10 @@ template struct instance_selector<standard_descriptor_spec<DistanceType::L2Expan
                     vpq_descriptor_spec<DistanceType::L2Expanded, 32, 512, 8, 4, half, nv_bfloat16, uint32_t, float>,
                     standard_descriptor_spec<DistanceType::BitwiseHamming, 8, 128, uint8_t, uint32_t, float>,
                     standard_descriptor_spec<DistanceType::BitwiseHamming, 16, 256, uint8_t, uint32_t, float>,
-                    standard_descriptor_spec<DistanceType::BitwiseHamming, 32, 512, uint8_t, uint32_t, float>>;
+                    standard_descriptor_spec<DistanceType::BitwiseHamming, 32, 512, uint8_t, uint32_t, float>,
+                    binary_adc_descriptor_spec<8, 128, float, uint32_t, float>,
+                    binary_adc_descriptor_spec<16, 256, float, uint32_t, float>,
+                    binary_adc_descriptor_spec<32, 512, float, uint32_t, float>>;
 
 
 }  // namespace cuvs::neighbors::cagra::detail

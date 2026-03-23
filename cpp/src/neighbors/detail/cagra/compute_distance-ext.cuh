@@ -17,6 +17,7 @@
 
 #include "compute_distance_standard.hpp"
 #include "compute_distance_vpq.hpp"
+#include "compute_distance_binary_adc.hpp"
 
 
 namespace cuvs::neighbors::cagra::detail {
@@ -134,6 +135,9 @@ extern template struct vpq_descriptor_spec<DistanceType::L2Expanded, 32, 512, 8,
 extern template struct standard_descriptor_spec<DistanceType::BitwiseHamming, 8, 128, uint8_t, uint32_t, float>;
 extern template struct standard_descriptor_spec<DistanceType::BitwiseHamming, 16, 256, uint8_t, uint32_t, float>;
 extern template struct standard_descriptor_spec<DistanceType::BitwiseHamming, 32, 512, uint8_t, uint32_t, float>;
+extern template struct binary_adc_descriptor_spec<8, 128, float, uint32_t, float>;
+extern template struct binary_adc_descriptor_spec<16, 256, float, uint32_t, float>;
+extern template struct binary_adc_descriptor_spec<32, 512, float, uint32_t, float>;
 
 extern template struct
   instance_selector<standard_descriptor_spec<DistanceType::L2Expanded, 8, 128, float, uint32_t, float>,
@@ -246,7 +250,10 @@ extern template struct
                     vpq_descriptor_spec<DistanceType::L2Expanded, 32, 512, 8, 4, half, nv_bfloat16, uint32_t, float>,
                     standard_descriptor_spec<DistanceType::BitwiseHamming, 8, 128, uint8_t, uint32_t, float>,
                     standard_descriptor_spec<DistanceType::BitwiseHamming, 16, 256, uint8_t, uint32_t, float>,
-                    standard_descriptor_spec<DistanceType::BitwiseHamming, 32, 512, uint8_t, uint32_t, float>>;
+                    standard_descriptor_spec<DistanceType::BitwiseHamming, 32, 512, uint8_t, uint32_t, float>,
+                    binary_adc_descriptor_spec<8, 128, float, uint32_t, float>,
+                    binary_adc_descriptor_spec<16, 256, float, uint32_t, float>,
+                    binary_adc_descriptor_spec<32, 512, float, uint32_t, float>>;
 
 using descriptor_instances =
   instance_selector<standard_descriptor_spec<DistanceType::L2Expanded, 8, 128, float, uint32_t, float>,
@@ -359,7 +366,10 @@ using descriptor_instances =
                     vpq_descriptor_spec<DistanceType::L2Expanded, 32, 512, 8, 4, half, nv_bfloat16, uint32_t, float>,
                     standard_descriptor_spec<DistanceType::BitwiseHamming, 8, 128, uint8_t, uint32_t, float>,
                     standard_descriptor_spec<DistanceType::BitwiseHamming, 16, 256, uint8_t, uint32_t, float>,
-                    standard_descriptor_spec<DistanceType::BitwiseHamming, 32, 512, uint8_t, uint32_t, float>>;
+                    standard_descriptor_spec<DistanceType::BitwiseHamming, 32, 512, uint8_t, uint32_t, float>,
+                    binary_adc_descriptor_spec<8, 128, float, uint32_t, float>,
+                    binary_adc_descriptor_spec<16, 256, float, uint32_t, float>,
+                    binary_adc_descriptor_spec<32, 512, float, uint32_t, float>>;
 
 template <typename DataT, typename IndexT, typename DistanceT, typename DatasetT>
 auto dataset_descriptor_init(const cagra::search_params& params,

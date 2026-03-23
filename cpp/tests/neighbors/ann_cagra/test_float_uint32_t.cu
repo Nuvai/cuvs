@@ -45,4 +45,7 @@ INSTANTIATE_TEST_CASE_P(AnnCagraIndexFilteredMergeTest,
                         AnnCagraIndexFilteredMergeTestF_U32,
                         ::testing::ValuesIn(inputs));
 
+TEST_F(AnnCagraBinaryDatasetTest, BinaryDatasetBasic) { this->testBinaryDataset(); }
+TEST_F(AnnCagraBinaryAdcTest, BinaryAdcE2E) { this->testBinaryAdc(); }
+
 }  // namespace cuvs::neighbors::cagra

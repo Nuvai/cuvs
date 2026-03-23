@@ -47,3 +47,15 @@ func TestDistance(t *testing.T) {
 		t.Error("wrong distance, expected", 0.0, "got", arr[0][0])
 	}
 }
+
+func TestDistanceBitwiseHammingConstant(t *testing.T) {
+	// Verify DistanceBitwiseHamming is defined and maps to the correct C constant
+	cDist, exists := cuvs.CDistances[cuvs.DistanceBitwiseHamming]
+	if !exists {
+		t.Fatal("DistanceBitwiseHamming not found in CDistances map")
+	}
+	// CUVS_DISTANCE_BITWISE_HAMMING = 20
+	if cDist != 20 {
+		t.Errorf("DistanceBitwiseHamming maps to %d, expected 20", cDist)
+	}
+}

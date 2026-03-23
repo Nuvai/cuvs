@@ -12,6 +12,7 @@
 
 #include <cuvs/distance/distance.hpp>
 #include <cuvs/neighbors/cagra.hpp>
+#include <cuvs/preprocessing/quantize/binary.hpp>
 #include <cuvs/neighbors/composite/index.hpp>
 #include <raft/core/device_mdarray.hpp>
 #include <raft/core/device_mdspan.hpp>
@@ -37,6 +38,7 @@
 #include <cstddef>
 #include <iostream>
 #include <optional>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -1411,6 +1413,220 @@ class AnnCagraIndexMergeTest : public ::testing::TestWithParam<AnnCagraInputs> {
   AnnCagraInputs ps;
   rmm::device_uvector<DataT> database;
   rmm::device_uvector<DataT> search_queries;
+};
+
+/**
+ * @brief Unit test for binary_dataset: verifies dim(), packed_dim(), and data integrity.
+ */
+class AnnCagraBinaryDatasetTest : public ::testing::Test {
+ protected:
+  void testBinaryDataset()
+  {
+    raft::resources handle;
+    auto stream = raft::resource::get_cuda_stream(handle);
+
+    const uint32_t original_dim = 256;
+    const int64_t n_rows        = 100;
+    const uint32_t packed_dim   = (original_dim + 7) / 8;  // 32
+
+    auto packed_data = raft::make_device_matrix<uint8_t, int64_t>(handle, n_rows, packed_dim);
+    // Fill with a pattern
+    std::vector<uint8_t> host_data(n_rows * packed_dim);
+    for (size_t i = 0; i < host_data.size(); i++) {
+      host_data[i] = static_cast<uint8_t>(i % 256);
+    }
+    raft::update_device(packed_data.data_handle(), host_data.data(), host_data.size(), stream);
+    raft::resource::sync_stream(handle);
+
+    cuvs::neighbors::binary_dataset<int64_t> bds(original_dim, std::move(packed_data));
+
+    EXPECT_EQ(bds.dim(), original_dim);
+    EXPECT_EQ(bds.packed_dim(), packed_dim);
+    EXPECT_EQ(bds.n_rows(), n_rows);
+    EXPECT_TRUE(bds.is_owning());
+    EXPECT_NE(bds.data_handle(), nullptr);
+
+    // Verify data integrity
+    std::vector<uint8_t> readback(n_rows * packed_dim);
+    raft::update_host(readback.data(), bds.data_handle(), readback.size(), stream);
+    raft::resource::sync_stream(handle);
+    for (size_t i = 0; i < readback.size(); i++) {
+      EXPECT_EQ(readback[i], host_data[i]);
+    }
+
+    // Test non-multiple-of-8 dimension
+    const uint32_t odd_dim      = 200;
+    const uint32_t odd_packed   = (odd_dim + 7) / 8;  // 25
+    auto packed_data2 = raft::make_device_matrix<uint8_t, int64_t>(handle, n_rows, odd_packed);
+    cuvs::neighbors::binary_dataset<int64_t> bds2(odd_dim, std::move(packed_data2));
+    EXPECT_EQ(bds2.dim(), odd_dim);
+    EXPECT_EQ(bds2.packed_dim(), odd_packed);
+  }
+};
+
+/**
+ * @brief E2E test: Float build -> Binary quantize -> ADC search.
+ *
+ * Uses low-dimensional data (D=64) with clustered structure to ensure binary
+ * quantization preserves meaningful neighborhood information. High-dimensional
+ * uniform random data causes concentration of measure, collapsing recall for
+ * any lossy quantization.
+ *
+ * Pipeline:
+ * 1. Generate clustered float32 data [N=2000, D=64] (10 clusters)
+ * 2. Build CAGRA index with float + L2 (accurate graph topology)
+ * 3. Binary quantize with mean threshold -> binary_dataset
+ * 4. index.update_dataset(binary_dataset) — replaces float data with packed bits
+ * 5. Search with float queries -> verify recall > 30% vs brute-force L2
+ *
+ * Note on recall expectations: binary quantization is a 32x compression (float32 -> 1 bit).
+ * On clustered data with D=64, inter-cluster structure is preserved well, giving recall
+ * well above random (random baseline = k/N = 16/2000 = 0.8%).
+ * 30% threshold validates the ADC kernel is functional and producing meaningful rankings.
+ */
+class AnnCagraBinaryAdcTest : public ::testing::Test {
+ protected:
+  void testBinaryAdc()
+  {
+    raft::resources handle;
+    auto stream = raft::resource::get_cuda_stream(handle);
+
+    const int64_t n_rows    = 2000;
+    const int64_t n_queries = 50;
+    const uint32_t dim      = 64;
+    const int64_t k         = 16;
+    const int n_clusters    = 10;
+
+    // Generate clustered data: each cluster has a random center, points are center + noise.
+    // This creates structure that binary quantization can capture.
+    rmm::device_uvector<float> database(n_rows * dim, stream);
+    rmm::device_uvector<float> queries(n_queries * dim, stream);
+    {
+      raft::random::RngState rng(42ULL);
+      // Generate cluster centers
+      auto centers = raft::make_device_matrix<float, int64_t>(handle, n_clusters, dim);
+      raft::random::uniform(handle, rng, centers.data_handle(), n_clusters * dim, -5.0f, 5.0f);
+      // For each row, pick a cluster center and add small noise
+      auto noise = raft::make_device_matrix<float, int64_t>(handle, n_rows, dim);
+      raft::random::normal(handle, rng, noise.data_handle(), n_rows * dim, 0.0f, 0.5f);
+
+      // Assign rows to clusters and add center + noise on host
+      std::vector<float> h_centers(n_clusters * dim);
+      std::vector<float> h_noise(n_rows * dim);
+      raft::update_host(h_centers.data(), centers.data_handle(), n_clusters * dim, stream);
+      raft::update_host(h_noise.data(), noise.data_handle(), n_rows * dim, stream);
+      raft::resource::sync_stream(handle);
+
+      std::vector<float> h_database(n_rows * dim);
+      raft::random::RngState assign_rng(123ULL);
+      for (int64_t i = 0; i < n_rows; i++) {
+        int cluster = i % n_clusters;
+        for (uint32_t d = 0; d < dim; d++) {
+          h_database[i * dim + d] = h_centers[cluster * dim + d] + h_noise[i * dim + d];
+        }
+      }
+      raft::update_device(database.data(), h_database.data(), n_rows * dim, stream);
+
+      // Queries: same cluster structure
+      auto q_noise = raft::make_device_matrix<float, int64_t>(handle, n_queries, dim);
+      raft::random::normal(handle, rng, q_noise.data_handle(), n_queries * dim, 0.0f, 0.5f);
+      std::vector<float> h_q_noise(n_queries * dim);
+      raft::update_host(h_q_noise.data(), q_noise.data_handle(), n_queries * dim, stream);
+      raft::resource::sync_stream(handle);
+
+      std::vector<float> h_queries(n_queries * dim);
+      for (int64_t i = 0; i < n_queries; i++) {
+        int cluster = i % n_clusters;
+        for (uint32_t d = 0; d < dim; d++) {
+          h_queries[i * dim + d] = h_centers[cluster * dim + d] + h_q_noise[i * dim + d];
+        }
+      }
+      raft::update_device(queries.data(), h_queries.data(), n_queries * dim, stream);
+      raft::resource::sync_stream(handle);
+    }
+
+    auto database_view = raft::make_device_matrix_view<const float, int64_t>(
+      database.data(), n_rows, dim);
+
+    // Step 1: Build CAGRA index with float + L2
+    cagra::index_params index_params;
+    index_params.metric = cuvs::distance::DistanceType::L2Expanded;
+    index_params.graph_build_params =
+      graph_build_params::nn_descent_params(
+        index_params.intermediate_graph_degree, index_params.metric);
+
+    auto index = cagra::build(handle, index_params, database_view);
+
+    // Step 2: Binary quantize
+    const uint32_t packed_dim = (dim + 7) / 8;
+    auto packed_data = raft::make_device_matrix<uint8_t, int64_t>(handle, n_rows, packed_dim);
+
+    cuvs::preprocessing::quantize::binary::params bq_params;
+    bq_params.threshold = cuvs::preprocessing::quantize::binary::bit_threshold::mean;
+    auto quantizer =
+      cuvs::preprocessing::quantize::binary::train(handle, bq_params, database_view);
+    cuvs::preprocessing::quantize::binary::transform(
+      handle, quantizer, database_view, packed_data.view());
+    raft::resource::sync_stream(handle);
+
+    // Step 3: Attach binary_dataset to index
+    index.update_dataset(
+      handle,
+      cuvs::neighbors::binary_dataset<int64_t>(dim, std::move(packed_data)));
+
+    // Step 4: Search with float queries
+    cagra::search_params search_params;
+    search_params.algo = search_algo::SINGLE_CTA;
+
+    auto queries_view = raft::make_device_matrix_view<const float, int64_t>(
+      queries.data(), n_queries, dim);
+    auto neighbors_out = raft::make_device_matrix<int64_t, int64_t>(handle, n_queries, k);
+    auto distances_out = raft::make_device_matrix<float, int64_t>(handle, n_queries, k);
+
+    cagra::search(handle,
+                  search_params,
+                  index,
+                  queries_view,
+                  neighbors_out.view(),
+                  distances_out.view());
+
+    // Step 5: Compute brute-force L2 neighbors for comparison
+    rmm::device_uvector<float> bf_distances(n_queries * k, stream);
+    rmm::device_uvector<int64_t> bf_neighbors(n_queries * k, stream);
+    cuvs::neighbors::naive_knn<float, float, int64_t>(handle,
+                                                       bf_distances.data(),
+                                                       bf_neighbors.data(),
+                                                       queries.data(),
+                                                       database.data(),
+                                                       n_queries,
+                                                       n_rows,
+                                                       dim,
+                                                       k,
+                                                       cuvs::distance::DistanceType::L2Expanded);
+
+    std::vector<int64_t> h_neighbors(n_queries * k);
+    std::vector<int64_t> h_bf_neighbors(n_queries * k);
+    raft::update_host(h_neighbors.data(), neighbors_out.data_handle(), n_queries * k, stream);
+    raft::update_host(h_bf_neighbors.data(), bf_neighbors.data(), n_queries * k, stream);
+    raft::resource::sync_stream(handle);
+
+    // Compute recall: fraction of ADC top-k that appear in brute-force top-k
+    int64_t total_hits = 0;
+    for (int64_t q = 0; q < n_queries; q++) {
+      std::set<int64_t> true_set(h_bf_neighbors.data() + q * k,
+                                 h_bf_neighbors.data() + (q + 1) * k);
+      for (int64_t j = 0; j < k; j++) {
+        if (true_set.count(h_neighbors[q * k + j])) { total_hits++; }
+      }
+    }
+    double recall = static_cast<double>(total_hits) / static_cast<double>(n_queries * k);
+    // Binary quantization on clustered D=64 data should achieve meaningful recall.
+    // Random baseline is k/N = 16/2000 = 0.8%. Threshold of 30% is 37x above random,
+    // validating the ADC kernel produces correct rankings.
+    EXPECT_GT(recall, 0.30)
+      << "Binary ADC recall too low: " << recall
+      << " (expected > 0.30 on clustered data; random baseline = 0.008)";
+  }
 };
 
 inline std::vector<AnnCagraInputs> generate_inputs()

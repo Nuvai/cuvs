@@ -488,6 +488,65 @@ struct is_vpq_dataset<vpq_dataset<MathT, IdxT>> : std::true_type {};
 template <typename DatasetT>
 inline constexpr bool is_vpq_dataset_v = is_vpq_dataset<DatasetT>::value;
 
+/**
+ * @brief Binary dataset: bit-packed binary vectors stored as uint8_t.
+ *
+ * Stores N binary vectors of D bits each, packed into ceil(D/8) bytes per row.
+ * Used with CAGRA for ADC (Asymmetric Distance Computation) search: the index graph is built
+ * from float data, then the dataset is replaced with binary-quantized vectors. At search time,
+ * float queries are compared against packed binary data using an efficient ADC kernel.
+ *
+ * Follows the same pattern as `vpq_dataset`: compressed uint8_t data in a `dataset<IdxT>` subclass,
+ * `dim()` returns the original binary dimensionality (not the packed byte length).
+ *
+ * @tparam IdxT type of the vector indices (represent dataset.extent(0))
+ */
+template <typename IdxT>
+struct binary_dataset : public dataset<IdxT> {
+  using index_type = IdxT;
+  /** Original binary dimensionality D (number of bits per vector). */
+  uint32_t original_dim_;
+  /** Packed binary data [N, ceil(D/8)]. */
+  raft::device_matrix<uint8_t, IdxT, raft::row_major> data_;
+
+  binary_dataset(uint32_t original_dim,
+                 raft::device_matrix<uint8_t, IdxT, raft::row_major>&& data)
+    : original_dim_{original_dim}, data_{std::move(data)}
+  {
+    auto expected_packed = raft::div_rounding_up_safe<uint32_t>(original_dim_, 8u);
+    RAFT_EXPECTS(static_cast<uint32_t>(data_.extent(1)) >= expected_packed,
+                 "binary_dataset: data extent(1) = %u but need at least ceil(%u/8) = %u bytes",
+                 static_cast<uint32_t>(data_.extent(1)),
+                 original_dim_,
+                 expected_packed);
+  }
+
+  [[nodiscard]] auto n_rows() const noexcept -> IdxT final { return data_.extent(0); }
+  [[nodiscard]] auto dim() const noexcept -> uint32_t final { return original_dim_; }
+  [[nodiscard]] auto is_owning() const noexcept -> bool final { return true; }
+
+  /** Row length of the packed data in bytes: ceil(D/8). */
+  [[nodiscard]] auto packed_dim() const noexcept -> uint32_t
+  {
+    return static_cast<uint32_t>(data_.extent(1));
+  }
+
+  /** Raw pointer to the packed binary data on device. */
+  [[nodiscard]] auto data_handle() const noexcept -> const uint8_t*
+  {
+    return data_.data_handle();
+  }
+};
+
+template <typename DatasetT>
+struct is_binary_dataset : std::false_type {};
+
+template <typename IdxT>
+struct is_binary_dataset<binary_dataset<IdxT>> : std::true_type {};
+
+template <typename DatasetT>
+inline constexpr bool is_binary_dataset_v = is_binary_dataset<DatasetT>::value;
+
 namespace filtering {
 
 /**
