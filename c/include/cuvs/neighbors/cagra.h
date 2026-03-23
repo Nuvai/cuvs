@@ -731,6 +731,25 @@ CUVS_API cuvsError_t cuvsCagraUpdateDataset(cuvsResources_t res,
                                             cuvsCagraIndex_t index);
 
 /**
+ * @brief Replace the dataset with a binary (bit-packed) dataset for ADC search.
+ *
+ * The dataset tensor must contain uint8_t packed binary data with shape [n_rows, packed_dim]
+ * where packed_dim = ceil(original_dim / 8). The index must have been built with float data
+ * and L2Expanded or InnerProduct metric. After this call, searches use Asymmetric Distance
+ * Computation (float queries vs packed binary data).
+ *
+ * @param[in] res cuvsResources_t opaque C handle
+ * @param[in] dataset DLManagedTensor* uint8_t packed binary data [n_rows, ceil(original_dim/8)]
+ * @param[in] original_dim the original binary dimensionality (number of bits per vector)
+ * @param[in] index cuvsCagraIndex_t the index to update
+ * @return cuvsError_t
+ */
+CUVS_API cuvsError_t cuvsCagraUpdateDatasetBinary(cuvsResources_t res,
+                                                   DLManagedTensor* dataset,
+                                                   uint32_t original_dim,
+                                                   cuvsCagraIndex_t index);
+
+/**
  * @}
  */
 

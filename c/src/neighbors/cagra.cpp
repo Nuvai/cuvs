@@ -807,6 +807,60 @@ extern "C" cuvsError_t cuvsCagraUpdateDataset(cuvsResources_t res,
   });
 }
 
+extern "C" cuvsError_t cuvsCagraUpdateDatasetBinary(cuvsResources_t res,
+                                                    DLManagedTensor* dataset_tensor,
+                                                    uint32_t original_dim,
+                                                    cuvsCagraIndex_t index)
+{
+  return cuvs::core::translate_exceptions([=] {
+    // binary_dataset ADC only works with float indices
+    RAFT_EXPECTS(index->dtype.code == kDLFloat && index->dtype.bits == 32,
+                 "cuvsCagraUpdateDatasetBinary requires a float32 index. "
+                 "Build the CAGRA index with float data, then attach the binary dataset.");
+
+    auto res_ptr   = reinterpret_cast<raft::resources*>(res);
+    auto index_ptr = reinterpret_cast<cuvs::neighbors::cagra::index<float, uint32_t>*>(index->addr);
+    auto dataset   = dataset_tensor->dl_tensor;
+
+    RAFT_EXPECTS(dataset.dtype.code == kDLUInt && dataset.dtype.bits == 8,
+                 "Binary dataset must have uint8 dtype (packed bits).");
+    RAFT_EXPECTS(dataset.ndim == 2, "Binary dataset must be 2-dimensional [n_rows, packed_dim].");
+
+    if (cuvs::core::is_dlpack_device_compatible(dataset)) {
+      using mdspan_type =
+        raft::device_matrix_view<const uint8_t, int64_t, raft::row_major>;
+      auto mds        = cuvs::core::from_dlpack<mdspan_type>(dataset_tensor);
+      auto n_rows     = mds.extent(0);
+      auto packed_dim = static_cast<uint32_t>(mds.extent(1));
+      auto data =
+        raft::make_device_matrix<uint8_t, int64_t, raft::row_major>(*res_ptr, n_rows, packed_dim);
+      raft::copy(data.data_handle(),
+                 mds.data_handle(),
+                 n_rows * packed_dim,
+                 raft::resource::get_cuda_stream(*res_ptr));
+      index_ptr->update_dataset(
+        *res_ptr,
+        cuvs::neighbors::binary_dataset<int64_t>(original_dim, std::move(data)));
+    } else if (cuvs::core::is_dlpack_host_compatible(dataset)) {
+      using mdspan_type = raft::host_matrix_view<const uint8_t, int64_t, raft::row_major>;
+      auto mds          = cuvs::core::from_dlpack<mdspan_type>(dataset_tensor);
+      auto n_rows       = mds.extent(0);
+      auto packed_dim   = static_cast<uint32_t>(mds.extent(1));
+      auto data =
+        raft::make_device_matrix<uint8_t, int64_t, raft::row_major>(*res_ptr, n_rows, packed_dim);
+      raft::copy(data.data_handle(),
+                 mds.data_handle(),
+                 n_rows * packed_dim,
+                 raft::resource::get_cuda_stream(*res_ptr));
+      index_ptr->update_dataset(
+        *res_ptr,
+        cuvs::neighbors::binary_dataset<int64_t>(original_dim, std::move(data)));
+    } else {
+      RAFT_FAIL("Unsupported dataset DLtensor device type: %d", dataset.device.device_type);
+    }
+  });
+}
+
 extern "C" cuvsError_t cuvsCagraIndexFromArgs(cuvsResources_t res,
                                               cuvsDistanceType metric,
                                               DLManagedTensor* graph_tensor,
