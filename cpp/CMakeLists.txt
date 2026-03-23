@@ -232,7 +232,11 @@ if(NOT BUILD_CPU_ONLY)
     src/neighbors/cagra_search_uint8.cu
     src/neighbors/cagra_search_double.cu
     src/neighbors/cagra_search_bfloat16.cu
+    src/neighbors/cagra_search_with_reranking.cu
     src/neighbors/detail/cagra/compute_distance.cu
+    src/neighbors/detail/cagra/compute_distance_binary_adc_float_uint32_dim128_t8.cu
+    src/neighbors/detail/cagra/compute_distance_binary_adc_float_uint32_dim256_t16.cu
+    src/neighbors/detail/cagra/compute_distance_binary_adc_float_uint32_dim512_t32.cu
     src/neighbors/detail/cagra/compute_distance_standard_BitwiseHamming_u8_uint32_dim128_t8.cu
     src/neighbors/detail/cagra/compute_distance_standard_BitwiseHamming_u8_uint32_dim256_t16.cu
     src/neighbors/detail/cagra/compute_distance_standard_BitwiseHamming_u8_uint32_dim512_t32.cu
