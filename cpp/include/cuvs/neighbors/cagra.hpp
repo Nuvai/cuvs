@@ -10,9 +10,6 @@
 #include <cuvs/neighbors/common.hpp>
 #include <cuvs/neighbors/ivf_pq.hpp>
 #include <cuvs/neighbors/nn_descent.hpp>
-#include <cuvs/neighbors/refine.hpp>
-#include <raft/core/operators.hpp>
-#include <raft/linalg/map.cuh>
 #include <cuvs/util/file_io.hpp>
 #include <raft/core/device_mdspan.hpp>
 #include <raft/core/host_device_accessor.hpp>
@@ -3463,7 +3460,7 @@ void build_knn_graph(raft::resources const& res,
  * @param[in] metric distance metric for the re-ranking phase (default: L2Expanded)
  * @param[in] oversample_factor how many candidates to retrieve before re-ranking (default: 2.0)
  */
-inline void search_with_reranking(
+void search_with_reranking(
   raft::resources const& res,
   const search_params& params,
   const index<float, uint32_t>& idx,
@@ -3472,62 +3469,7 @@ inline void search_with_reranking(
   raft::device_matrix_view<int64_t, int64_t, raft::row_major> neighbors,
   raft::device_matrix_view<float, int64_t, raft::row_major> distances,
   cuvs::distance::DistanceType metric = cuvs::distance::DistanceType::L2Expanded,
-  float oversample_factor             = 2.0f)
-{
-  auto n_queries = queries.extent(0);
-  auto k         = neighbors.extent(1);
-  RAFT_EXPECTS(oversample_factor >= 1.0f, "oversample_factor must be >= 1.0");
-  RAFT_EXPECTS(k > 0, "k must be > 0");
-
-  auto k_oversample =
-    static_cast<int64_t>(std::ceil(static_cast<float>(k) * oversample_factor));
-  // Clamp to dataset size
-  if (k_oversample > static_cast<int64_t>(idx.size())) {
-    k_oversample = static_cast<int64_t>(idx.size());
-  }
-
-  if (k_oversample == k) {
-    // No oversampling needed — just search directly
-    // Use uint32_t neighbors for CAGRA search, then widen to int64_t
-    auto tmp_neighbors =
-      raft::make_device_matrix<uint32_t, int64_t>(res, n_queries, k);
-    search(res, params, idx, queries, tmp_neighbors.view(), distances);
-    // Widen uint32_t → int64_t
-    auto tmp_view = raft::make_device_vector_view<const uint32_t, int64_t>(
-      tmp_neighbors.data_handle(), n_queries * k);
-    auto out_view = raft::make_device_vector_view<int64_t, int64_t>(
-      neighbors.data_handle(), n_queries * k);
-    raft::linalg::map(res, out_view, raft::cast_op<int64_t>{}, tmp_view);
-    return;
-  }
-
-  // Phase 1: Approximate search with oversampled k
-  auto candidates =
-    raft::make_device_matrix<uint32_t, int64_t>(res, n_queries, k_oversample);
-  auto approx_distances =
-    raft::make_device_matrix<float, int64_t>(res, n_queries, k_oversample);
-  search(res, params, idx, queries, candidates.view(), approx_distances.view());
-
-  // Widen candidate indices to int64_t for refine()
-  auto candidates_i64 =
-    raft::make_device_matrix<int64_t, int64_t>(res, n_queries, k_oversample);
-  {
-    auto src_view = raft::make_device_vector_view<const uint32_t, int64_t>(
-      candidates.data_handle(), n_queries * k_oversample);
-    auto dst_view = raft::make_device_vector_view<int64_t, int64_t>(
-      candidates_i64.data_handle(), n_queries * k_oversample);
-    raft::linalg::map(res, dst_view, raft::cast_op<int64_t>{}, src_view);
-  }
-
-  // Phase 2: Refine — compute exact distances and return top-k
-  cuvs::neighbors::refine(res,
-                           original_dataset,
-                           queries,
-                           raft::make_const_mdspan(candidates_i64.view()),
-                           neighbors,
-                           distances,
-                           metric);
-}
+  float oversample_factor             = 2.0f);
 
 }  // namespace cuvs::neighbors::cagra
 
