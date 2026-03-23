@@ -65,17 +65,17 @@ func (p *SearchParams) SetMaxIterations(max_iterations uintptr) (*SearchParams, 
 
 // Which search implementation to use.
 func (p *SearchParams) SetAlgo(algo SearchAlgo) (*SearchParams, error) {
-	CAlgo := C.SINGLE_CTA
+	CAlgo := C.CUVS_CAGRA_SEARCH_SINGLE_CTA
 
 	switch algo {
 	case SearchAlgoSingleCta:
-		CAlgo = C.SINGLE_CTA
+		CAlgo = C.CUVS_CAGRA_SEARCH_SINGLE_CTA
 	case SearchAlgoMultiCta:
-		CAlgo = C.MULTI_CTA
+		CAlgo = C.CUVS_CAGRA_SEARCH_MULTI_CTA
 	case SearchAlgoMultiKernel:
-		CAlgo = C.MULTI_KERNEL
+		CAlgo = C.CUVS_CAGRA_SEARCH_MULTI_KERNEL
 	case SearchAlgoAuto:
-		CAlgo = C.AUTO
+		CAlgo = C.CUVS_CAGRA_SEARCH_AUTO
 	default:
 		return nil, errors.New("unsupported algo")
 	}
@@ -111,15 +111,15 @@ func (p *SearchParams) SetThreadBlockSize(thread_block_size uintptr) (*SearchPar
 
 // Hashmap type. Auto selection when AUTO.
 func (p *SearchParams) SetHashmapMode(hashmap_mode HashmapMode) (*SearchParams, error) {
-	CHashMode := C.AUTO_HASH
+	CHashMode := C.CUVS_CAGRA_HASH_AUTO
 
 	switch hashmap_mode {
 	case HashmapModeHash:
-		CHashMode = C.HASH
+		CHashMode = C.CUVS_CAGRA_HASH_HASH
 	case HashmapModeSmall:
-		CHashMode = C.SMALL
+		CHashMode = C.CUVS_CAGRA_HASH_SMALL
 	case HashmapModeAuto:
-		CHashMode = C.AUTO_HASH
+		CHashMode = C.CUVS_CAGRA_HASH_AUTO
 	default:
 		return nil, errors.New("unsupported hashmap_mode")
 	}

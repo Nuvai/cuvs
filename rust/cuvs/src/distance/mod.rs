@@ -65,7 +65,7 @@ mod tests {
             &dataset_device,
             &dataset_device,
             &distances,
-            DistanceType::L2Expanded,
+            DistanceType::CUVS_DISTANCE_L2_EXPANDED,
             None,
         )
         .unwrap();

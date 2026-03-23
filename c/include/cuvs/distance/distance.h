@@ -12,50 +12,76 @@ extern "C" {
 typedef enum {
 
   /** evaluate as dist_ij = sum(x_ik^2) + sum(y_ij)^2 - 2*sum(x_ik * y_jk) */
-  L2Expanded = 0,
+  CUVS_DISTANCE_L2_EXPANDED = 0,
   /** same as above, but inside the epilogue, perform square root operation */
-  L2SqrtExpanded = 1,
+  CUVS_DISTANCE_L2_SQRT_EXPANDED = 1,
   /** cosine distance */
-  CosineExpanded = 2,
+  CUVS_DISTANCE_COSINE_EXPANDED = 2,
   /** L1 distance */
-  L1 = 3,
+  CUVS_DISTANCE_L1 = 3,
   /** evaluate as dist_ij += (x_ik - y-jk)^2 */
-  L2Unexpanded = 4,
+  CUVS_DISTANCE_L2_UNEXPANDED = 4,
   /** same as above, but inside the epilogue, perform square root operation */
-  L2SqrtUnexpanded = 5,
+  CUVS_DISTANCE_L2_SQRT_UNEXPANDED = 5,
   /** basic inner product **/
-  InnerProduct = 6,
+  CUVS_DISTANCE_INNER_PRODUCT = 6,
   /** Chebyshev (Linf) distance **/
-  Linf = 7,
+  CUVS_DISTANCE_LINF = 7,
   /** Canberra distance **/
-  Canberra = 8,
+  CUVS_DISTANCE_CANBERRA = 8,
   /** Generalized Minkowski distance **/
-  LpUnexpanded = 9,
+  CUVS_DISTANCE_LP_UNEXPANDED = 9,
   /** Correlation distance **/
-  CorrelationExpanded = 10,
+  CUVS_DISTANCE_CORRELATION_EXPANDED = 10,
   /** Jaccard distance **/
-  JaccardExpanded = 11,
+  CUVS_DISTANCE_JACCARD_EXPANDED = 11,
   /** Hellinger distance **/
-  HellingerExpanded = 12,
+  CUVS_DISTANCE_HELLINGER_EXPANDED = 12,
   /** Haversine distance **/
-  Haversine = 13,
+  CUVS_DISTANCE_HAVERSINE = 13,
   /** Bray-Curtis distance **/
-  BrayCurtis = 14,
+  CUVS_DISTANCE_BRAY_CURTIS = 14,
   /** Jensen-Shannon distance**/
-  JensenShannon = 15,
+  CUVS_DISTANCE_JENSEN_SHANNON = 15,
   /** Hamming distance **/
-  HammingUnexpanded = 16,
+  CUVS_DISTANCE_HAMMING_UNEXPANDED = 16,
   /** KLDivergence **/
-  KLDivergence = 17,
+  CUVS_DISTANCE_KL_DIVERGENCE = 17,
   /** RusselRao **/
-  RusselRaoExpanded = 18,
+  CUVS_DISTANCE_RUSSEL_RAO_EXPANDED = 18,
   /** Dice-Sorensen distance **/
-  DiceExpanded = 19,
+  CUVS_DISTANCE_DICE_EXPANDED = 19,
   /** Bitstring Hamming distance **/
-  BitwiseHamming = 20,
+  CUVS_DISTANCE_BITWISE_HAMMING = 20,
   /** Precomputed (special value) **/
-  Precomputed = 100
+  CUVS_DISTANCE_PRECOMPUTED = 100
 } cuvsDistanceType;
+
+/* Backward-compatible aliases — opt in with CUVS_ENABLE_DEPRECATED_ENUM_ALIASES */
+#ifdef CUVS_ENABLE_DEPRECATED_ENUM_ALIASES
+#define L2Expanded            CUVS_DISTANCE_L2_EXPANDED
+#define L2SqrtExpanded        CUVS_DISTANCE_L2_SQRT_EXPANDED
+#define CosineExpanded        CUVS_DISTANCE_COSINE_EXPANDED
+#define L1                    CUVS_DISTANCE_L1
+#define L2Unexpanded          CUVS_DISTANCE_L2_UNEXPANDED
+#define L2SqrtUnexpanded      CUVS_DISTANCE_L2_SQRT_UNEXPANDED
+#define InnerProduct          CUVS_DISTANCE_INNER_PRODUCT
+#define Linf                  CUVS_DISTANCE_LINF
+#define Canberra              CUVS_DISTANCE_CANBERRA
+#define LpUnexpanded          CUVS_DISTANCE_LP_UNEXPANDED
+#define CorrelationExpanded   CUVS_DISTANCE_CORRELATION_EXPANDED
+#define JaccardExpanded       CUVS_DISTANCE_JACCARD_EXPANDED
+#define HellingerExpanded     CUVS_DISTANCE_HELLINGER_EXPANDED
+#define Haversine             CUVS_DISTANCE_HAVERSINE
+#define BrayCurtis            CUVS_DISTANCE_BRAY_CURTIS
+#define JensenShannon         CUVS_DISTANCE_JENSEN_SHANNON
+#define HammingUnexpanded     CUVS_DISTANCE_HAMMING_UNEXPANDED
+#define KLDivergence          CUVS_DISTANCE_KL_DIVERGENCE
+#define RusselRaoExpanded     CUVS_DISTANCE_RUSSEL_RAO_EXPANDED
+#define DiceExpanded          CUVS_DISTANCE_DICE_EXPANDED
+#define BitwiseHamming        CUVS_DISTANCE_BITWISE_HAMMING
+#define Precomputed           CUVS_DISTANCE_PRECOMPUTED
+#endif
 
 #ifdef __cplusplus
 }

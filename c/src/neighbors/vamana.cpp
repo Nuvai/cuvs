@@ -4,6 +4,7 @@
  */
 
 #include <cstdint>
+#include <memory>
 #include <dlpack/dlpack.h>
 
 #include <raft/core/error.hpp>
@@ -36,7 +37,7 @@ void* _build(cuvsResources_t res, cuvsVamanaIndexParams* params, DLManagedTensor
   index_params.batch_base        = params->batch_base;
   index_params.queue_size        = params->queue_size;
   index_params.reverse_batchsize = params->reverse_batchsize;
-  auto index                     = new cuvs::neighbors::vamana::index<T, uint32_t>(*res_ptr);
+  auto index = std::make_unique<cuvs::neighbors::vamana::index<T, uint32_t>>(*res_ptr);
 
   if (cuvs::core::is_dlpack_device_compatible(dataset)) {
     using mdspan_type = raft::device_matrix_view<T const, int64_t, raft::row_major>;
@@ -48,7 +49,7 @@ void* _build(cuvsResources_t res, cuvsVamanaIndexParams* params, DLManagedTensor
     *index            = cuvs::neighbors::vamana::build(*res_ptr, index_params, mds);
   }
 
-  return index;
+  return index.release();
 }
 
 template <typename T>
@@ -61,6 +62,17 @@ void _serialize(cuvsResources_t res,
   auto index_ptr = reinterpret_cast<cuvs::neighbors::vamana::index<T, uint32_t>*>(index->addr);
 
   cuvs::neighbors::vamana::serialize(*res_ptr, std::string(filename), *index_ptr, include_dataset);
+}
+
+template <typename T>
+void _deserialize(cuvsResources_t res, const char* filename, cuvsVamanaIndex_t index)
+{
+  auto res_ptr   = reinterpret_cast<raft::resources*>(res);
+  auto index_ptr = std::make_unique<cuvs::neighbors::vamana::index<T, uint32_t>>(*res_ptr);
+
+  cuvs::neighbors::vamana::deserialize(*res_ptr, std::string(filename), index_ptr.get());
+
+  index->addr = reinterpret_cast<uintptr_t>(index_ptr.release());
 }
 
 }  // namespace
@@ -96,6 +108,7 @@ extern "C" cuvsError_t cuvsVamanaIndexDestroy(cuvsVamanaIndex_t index_c_ptr)
 extern "C" cuvsError_t cuvsVamanaIndexGetDims(cuvsVamanaIndex_t index, int* dim)
 {
   return cuvs::core::translate_exceptions([=] {
+    RAFT_EXPECTS(index->addr != 0, "index has not been built or deserialized");
     if (index->dtype.code == kDLFloat && index->dtype.bits == 32) {
       auto index_ptr =
         reinterpret_cast<cuvs::neighbors::vamana::index<float, uint32_t>*>(index->addr);
@@ -119,19 +132,22 @@ extern "C" cuvsError_t cuvsVamanaBuild(cuvsResources_t res,
 {
   return cuvs::core::translate_exceptions([=] {
     auto dataset = dataset_tensor->dl_tensor;
-    index->dtype = dataset.dtype;
 
+    void* addr = nullptr;
     if (dataset.dtype.code == kDLFloat && dataset.dtype.bits == 32) {
-      index->addr = reinterpret_cast<uintptr_t>(_build<float>(res, params, dataset_tensor));
+      addr = _build<float>(res, params, dataset_tensor);
     } else if (dataset.dtype.code == kDLInt && dataset.dtype.bits == 8) {
-      index->addr = reinterpret_cast<uintptr_t>(_build<int8_t>(res, params, dataset_tensor));
+      addr = _build<int8_t>(res, params, dataset_tensor);
     } else if (dataset.dtype.code == kDLUInt && dataset.dtype.bits == 8) {
-      index->addr = reinterpret_cast<uintptr_t>(_build<uint8_t>(res, params, dataset_tensor));
+      addr = _build<uint8_t>(res, params, dataset_tensor);
     } else {
       RAFT_FAIL("Unsupported dataset DLtensor dtype: %d and bits: %d",
                 dataset.dtype.code,
                 dataset.dtype.bits);
     }
+    // Commit both fields only after successful build
+    index->dtype = dataset.dtype;
+    index->addr  = reinterpret_cast<uintptr_t>(addr);
   });
 }
 
@@ -158,7 +174,7 @@ extern "C" cuvsError_t cuvsVamanaIndexParamsCreate(cuvsVamanaIndexParams_t* para
 {
   return cuvs::core::translate_exceptions([=] {
     *params                      = new cuvsVamanaIndexParams{};
-    (*params)->metric            = L2Expanded;
+    (*params)->metric            = CUVS_DISTANCE_L2_EXPANDED;
     (*params)->graph_degree      = 32;
     (*params)->visited_size      = 64;
     (*params)->vamana_iters      = 1;
@@ -173,4 +189,24 @@ extern "C" cuvsError_t cuvsVamanaIndexParamsCreate(cuvsVamanaIndexParams_t* para
 extern "C" cuvsError_t cuvsVamanaIndexParamsDestroy(cuvsVamanaIndexParams_t params)
 {
   return cuvs::core::translate_exceptions([=] { delete params; });
+}
+
+extern "C" cuvsError_t cuvsVamanaDeserialize(cuvsResources_t res,
+                                              const char* filename,
+                                              cuvsVamanaIndex_t index,
+                                              DLDataType dtype)
+{
+  return cuvs::core::translate_exceptions([=] {
+    if (dtype.code == kDLFloat && dtype.bits == 32) {
+      _deserialize<float>(res, filename, index);
+    } else if (dtype.code == kDLInt && dtype.bits == 8) {
+      _deserialize<int8_t>(res, filename, index);
+    } else if (dtype.code == kDLUInt && dtype.bits == 8) {
+      _deserialize<uint8_t>(res, filename, index);
+    } else {
+      RAFT_FAIL("Unsupported DLtensor dtype: %d and bits: %d", dtype.code, dtype.bits);
+    }
+    // Commit dtype only after successful deserialize (addr already set by _deserialize)
+    index->dtype = dtype;
+  });
 }

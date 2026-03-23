@@ -392,4 +392,109 @@ void serialize(raft::resources const& res,
   if (include_dataset) { serialize_dataset<T>(res, &index_.data(), file_name + ".data"); }
 }
 
+/**
+ * Load a Vamana index from file (DiskANN format).
+ *
+ * The DiskANN format does NOT encode data types, so the caller must
+ * instantiate this template with the correct T.
+ *
+ * @param[in] res the raft resource handle
+ * @param[in] file_name the path to the DiskANN graph index file
+ * @param[out] index_ pointer to Vamana index to populate
+ *
+ */
+template <typename T, typename IdxT>
+void deserialize(raft::resources const& res,
+                 const std::string& file_name,
+                 index<T, IdxT>* index_)
+{
+  static_assert(std::is_same_v<IdxT, uint32_t>,
+                "deserialization is only implemented for uint32_t graph");
+
+  // --- Read the graph file ---
+  std::ifstream index_if(file_name, std::ios::in | std::ios::binary);
+  RAFT_EXPECTS(index_if.is_open(), "Cannot open file %s", file_name.c_str());
+
+  // 24-byte header
+  uint64_t index_size;
+  uint32_t max_observed_degree;
+  uint32_t start_point_id;
+  size_t num_frozen_points;
+
+  index_if.read(reinterpret_cast<char*>(&index_size), sizeof(uint64_t));
+  index_if.read(reinterpret_cast<char*>(&max_observed_degree), sizeof(uint32_t));
+  index_if.read(reinterpret_cast<char*>(&start_point_id), sizeof(uint32_t));
+  index_if.read(reinterpret_cast<char*>(&num_frozen_points), sizeof(size_t));
+
+  // First pass: count number of nodes by walking variable-length adjacency lists
+  uint64_t num_nodes = 0;
+  {
+    auto saved_pos = index_if.tellg();
+    size_t bytes_read = 24;
+    while (bytes_read < index_size) {
+      uint32_t degree;
+      index_if.read(reinterpret_cast<char*>(&degree), sizeof(uint32_t));
+      if (!index_if) break;
+      bytes_read += sizeof(uint32_t);
+      index_if.seekg(degree * sizeof(uint32_t), std::ios::cur);
+      bytes_read += degree * sizeof(uint32_t);
+      num_nodes++;
+    }
+    // Seek back to start of adjacency data
+    index_if.seekg(saved_pos);
+  }
+
+  RAFT_EXPECTS(num_nodes > 0, "Empty graph in %s", file_name.c_str());
+
+  // Allocate host graph matrix filled with sentinel
+  auto h_graph =
+    raft::make_host_matrix<IdxT, int64_t>(static_cast<int64_t>(num_nodes),
+                                           static_cast<int64_t>(max_observed_degree));
+  std::fill(h_graph.data_handle(),
+            h_graph.data_handle() + num_nodes * max_observed_degree,
+            raft::upper_bound<IdxT>());
+
+  // Second pass: read and populate graph rows
+  for (uint64_t i = 0; i < num_nodes; i++) {
+    uint32_t degree;
+    index_if.read(reinterpret_cast<char*>(&degree), sizeof(uint32_t));
+    RAFT_EXPECTS(index_if.good(), "Error reading graph node %lu from %s", i, file_name.c_str());
+    RAFT_EXPECTS(degree <= max_observed_degree,
+                 "Node %lu has degree %u > max_observed_degree %u",
+                 i,
+                 degree,
+                 max_observed_degree);
+    index_if.read(reinterpret_cast<char*>(&h_graph(i, 0)), degree * sizeof(uint32_t));
+  }
+  index_if.close();
+
+  // Optionally read the dataset from filename.data
+  const std::string dataset_file = file_name + ".data";
+  std::ifstream data_if(dataset_file, std::ios::in | std::ios::binary);
+
+  if (data_if.is_open()) {
+    int size, dim;
+    data_if.read(reinterpret_cast<char*>(&size), sizeof(int));
+    data_if.read(reinterpret_cast<char*>(&dim), sizeof(int));
+
+    auto h_dataset = raft::make_host_matrix<T, int64_t>(size, dim);
+    for (int i = 0; i < size; i++) {
+      data_if.read(reinterpret_cast<char*>(h_dataset.data_handle() + i * dim), dim * sizeof(T));
+    }
+    data_if.close();
+
+    // Use the constructor that accepts dataset + graph + medoid (host mdspans are fine)
+    *index_ = index<T, IdxT>(res,
+                              cuvs::distance::DistanceType::L2Expanded,
+                              raft::make_const_mdspan(h_dataset.view()),
+                              raft::make_const_mdspan(h_graph.view()),
+                              static_cast<IdxT>(start_point_id));
+  } else {
+    // No dataset file — construct index with graph only
+    *index_ = index<T, IdxT>(res, cuvs::distance::DistanceType::L2Expanded);
+    index_->update_graph(res, raft::make_const_mdspan(h_graph.view()));
+    index_->update_medoid(static_cast<IdxT>(start_point_id));
+  }
+}
+
 }  // namespace cuvs::neighbors::vamana::detail

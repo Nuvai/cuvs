@@ -1,5 +1,6 @@
 package ivf_pq
 
+// #include <stdlib.h>
 // #include <cuvs/neighbors/ivf_pq.h>
 import "C"
 
@@ -54,6 +55,57 @@ func (index *IvfPqIndex) Close() error {
 	return nil
 }
 
+// Serialize an IVF-PQ index to file.
+//
+// # Arguments
+//
+// * `Resources` - Resources to use
+// * `index` - IvfPqIndex to serialize
+// * `filename` - Path to save the index
+func SerializeIndex(Resources cuvs.Resource, index *IvfPqIndex, filename string) error {
+	if !index.trained {
+		return errors.New("index needs to be built before calling serialize")
+	}
+	cFilename := C.CString(filename)
+	defer C.free(unsafe.Pointer(cFilename))
+
+	return cuvs.CheckCuvs(cuvs.CuvsError(C.cuvsIvfPqSerialize(
+		C.cuvsResources_t(Resources.Resource),
+		cFilename,
+		index.index,
+	)))
+}
+
+// Deserialize an IVF-PQ index from file.
+//
+// # Arguments
+//
+// * `Resources` - Resources to use
+// * `filename` - Path to load the index from
+func DeserializeIndex(Resources cuvs.Resource, filename string) (*IvfPqIndex, error) {
+	var idx C.cuvsIvfPqIndex_t
+	err := cuvs.CheckCuvs(cuvs.CuvsError(C.cuvsIvfPqIndexCreate(&idx)))
+	if err != nil {
+		return nil, err
+	}
+	index := &IvfPqIndex{index: idx}
+
+	cFilename := C.CString(filename)
+	defer C.free(unsafe.Pointer(cFilename))
+
+	err = cuvs.CheckCuvs(cuvs.CuvsError(C.cuvsIvfPqDeserialize(
+		C.cuvsResources_t(Resources.Resource),
+		cFilename,
+		index.index,
+	)))
+	if err != nil {
+		index.Close()
+		return nil, err
+	}
+	index.trained = true
+	return index, nil
+}
+
 // Perform a Approximate Nearest Neighbors search on the Index
 //
 // # Arguments
@@ -70,7 +122,7 @@ func SearchIndex[T any](Resources cuvs.Resource, params *SearchParams, index *Iv
 	}
 	prefilter := C.cuvsFilter{
 		addr:  0,
-		_type: C.NO_FILTER,
+		_type: C.CUVS_FILTER_NONE,
 	}
 
 	return cuvs.CheckCuvs(cuvs.CuvsError(C.cuvsIvfPqSearch(C.cuvsResources_t(Resources.Resource), params.params, index.index, (*C.DLManagedTensor)(unsafe.Pointer(queries.C_tensor)), (*C.DLManagedTensor)(unsafe.Pointer(neighbors.C_tensor)), (*C.DLManagedTensor)(unsafe.Pointer(distances.C_tensor)), prefilter)))

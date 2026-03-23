@@ -68,7 +68,7 @@ typedef struct cuvsNNDescentIndexParams* cuvsNNDescentIndexParams_t;
  * @param[in] index_params cuvsNNDescentIndexParams_t to allocate
  * @return cuvsError_t
  */
-cuvsError_t cuvsNNDescentIndexParamsCreate(cuvsNNDescentIndexParams_t* index_params);
+CUVS_API cuvsError_t cuvsNNDescentIndexParamsCreate(cuvsNNDescentIndexParams_t* index_params);
 
 /**
  * @brief De-allocate NN-Descent Index params
@@ -76,7 +76,7 @@ cuvsError_t cuvsNNDescentIndexParamsCreate(cuvsNNDescentIndexParams_t* index_par
  * @param[in] index_params
  * @return cuvsError_t
  */
-cuvsError_t cuvsNNDescentIndexParamsDestroy(cuvsNNDescentIndexParams_t index_params);
+CUVS_API cuvsError_t cuvsNNDescentIndexParamsDestroy(cuvsNNDescentIndexParams_t index_params);
 /**
  * @}
  */
@@ -102,14 +102,14 @@ typedef cuvsNNDescentIndex* cuvsNNDescentIndex_t;
  * @param[in] index cuvsNNDescentIndex_t to allocate
  * @return cuvsError_t
  */
-cuvsError_t cuvsNNDescentIndexCreate(cuvsNNDescentIndex_t* index);
+CUVS_API cuvsError_t cuvsNNDescentIndexCreate(cuvsNNDescentIndex_t* index);
 
 /**
  * @brief De-allocate NN-Descent index
  *
  * @param[in] index cuvsNNDescentIndex_t to de-allocate
  */
-cuvsError_t cuvsNNDescentIndexDestroy(cuvsNNDescentIndex_t index);
+CUVS_API cuvsError_t cuvsNNDescentIndexDestroy(cuvsNNDescentIndex_t index);
 /**
  * @}
  */
@@ -162,11 +162,11 @@ cuvsError_t cuvsNNDescentIndexDestroy(cuvsNNDescentIndex_t index);
  * @param[out] index cuvsNNDescentIndex_t Newly built NN-Descent index
  * @return cuvsError_t
  */
-cuvsError_t cuvsNNDescentBuild(cuvsResources_t res,
-                               cuvsNNDescentIndexParams_t index_params,
-                               DLManagedTensor* dataset,
-                               DLManagedTensor* graph,
-                               cuvsNNDescentIndex_t index);
+CUVS_API cuvsError_t cuvsNNDescentBuild(cuvsResources_t res,
+                                        cuvsNNDescentIndexParams_t index_params,
+                                        DLManagedTensor* dataset,
+                                        DLManagedTensor* graph,
+                                        cuvsNNDescentIndex_t index);
 /**
  * @}
  */
@@ -179,9 +179,9 @@ cuvsError_t cuvsNNDescentBuild(cuvsResources_t res,
  * @param[out] graph Preallocated graph on host memory to store output
  * @return cuvsError_t
  */
-cuvsError_t cuvsNNDescentIndexGetGraph(cuvsResources_t res,
-                                       cuvsNNDescentIndex_t index,
-                                       DLManagedTensor* graph);
+CUVS_API cuvsError_t cuvsNNDescentIndexGetGraph(cuvsResources_t res,
+                                                cuvsNNDescentIndex_t index,
+                                                DLManagedTensor* graph);
 
 /**
  * @brief Get the distances from a build NN_Descent index
@@ -194,9 +194,9 @@ cuvsError_t cuvsNNDescentIndexGetGraph(cuvsResources_t res,
  * @param[out] distances Preallocated memory to store the output distances tensor
  * @return cuvsError_t
  */
-cuvsError_t cuvsNNDescentIndexGetDistances(cuvsResources_t res,
-                                           cuvsNNDescentIndex_t index,
-                                           DLManagedTensor* distances);
+CUVS_API cuvsError_t cuvsNNDescentIndexGetDistances(cuvsResources_t res,
+                                                    cuvsNNDescentIndex_t index,
+                                                    DLManagedTensor* distances);
 #ifdef __cplusplus
 }
 #endif

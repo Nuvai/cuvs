@@ -36,7 +36,7 @@ typedef struct cuvsScalarQuantizerParams* cuvsScalarQuantizerParams_t;
  * @param[in] params cuvsScalarQuantizerParams_t to allocate
  * @return cuvsError_t
  */
-cuvsError_t cuvsScalarQuantizerParamsCreate(cuvsScalarQuantizerParams_t* params);
+CUVS_API cuvsError_t cuvsScalarQuantizerParamsCreate(cuvsScalarQuantizerParams_t* params);
 
 /**
  * @brief De-allocate Scalar Quantizer params
@@ -44,7 +44,7 @@ cuvsError_t cuvsScalarQuantizerParamsCreate(cuvsScalarQuantizerParams_t* params)
  * @param[in] params
  * @return cuvsError_t
  */
-cuvsError_t cuvsScalarQuantizerParamsDestroy(cuvsScalarQuantizerParams_t params);
+CUVS_API cuvsError_t cuvsScalarQuantizerParamsDestroy(cuvsScalarQuantizerParams_t params);
 
 /**
  * @brief Defines and stores scalar for quantisation upon training
@@ -65,7 +65,7 @@ typedef cuvsScalarQuantizer* cuvsScalarQuantizer_t;
  * @param[in] quantizer cuvsScalarQuantizer_t to allocate
  * @return cuvsError_t
  */
-cuvsError_t cuvsScalarQuantizerCreate(cuvsScalarQuantizer_t* quantizer);
+CUVS_API cuvsError_t cuvsScalarQuantizerCreate(cuvsScalarQuantizer_t* quantizer);
 
 /**
  * @brief De-allocate Scalar Quantizer
@@ -73,7 +73,7 @@ cuvsError_t cuvsScalarQuantizerCreate(cuvsScalarQuantizer_t* quantizer);
  * @param[in] quantizer
  * @return cuvsError_t
  */
-cuvsError_t cuvsScalarQuantizerDestroy(cuvsScalarQuantizer_t quantizer);
+CUVS_API cuvsError_t cuvsScalarQuantizerDestroy(cuvsScalarQuantizer_t quantizer);
 
 /**
  * @brief Trains a scalar quantizer to be used later for quantizing the dataset.
@@ -83,10 +83,10 @@ cuvsError_t cuvsScalarQuantizerDestroy(cuvsScalarQuantizer_t quantizer);
  * @param[in] dataset a row-major host or device matrix
  * @param[out] quantizer trained scalar quantizer
  */
-cuvsError_t cuvsScalarQuantizerTrain(cuvsResources_t res,
-                                     cuvsScalarQuantizerParams_t params,
-                                     DLManagedTensor* dataset,
-                                     cuvsScalarQuantizer_t quantizer);
+CUVS_API cuvsError_t cuvsScalarQuantizerTrain(cuvsResources_t res,
+                                              cuvsScalarQuantizerParams_t params,
+                                              DLManagedTensor* dataset,
+                                              cuvsScalarQuantizer_t quantizer);
 
 /**
  * @brief Applies quantization transform to given dataset
@@ -96,10 +96,10 @@ cuvsError_t cuvsScalarQuantizerTrain(cuvsResources_t res,
  * @param[in] dataset a row-major host or device matrix to transform
  * @param[out] out a row-major host or device matrix to store transformed data
  */
-cuvsError_t cuvsScalarQuantizerTransform(cuvsResources_t res,
-                                         cuvsScalarQuantizer_t quantizer,
-                                         DLManagedTensor* dataset,
-                                         DLManagedTensor* out);
+CUVS_API cuvsError_t cuvsScalarQuantizerTransform(cuvsResources_t res,
+                                                  cuvsScalarQuantizer_t quantizer,
+                                                  DLManagedTensor* dataset,
+                                                  DLManagedTensor* out);
 
 /**
  * @brief Perform inverse quantization step on previously quantized dataset
@@ -113,10 +113,10 @@ cuvsError_t cuvsScalarQuantizerTransform(cuvsResources_t res,
  * @param[out] out a row-major host or device matrix
  *
  */
-cuvsError_t cuvsScalarQuantizerInverseTransform(cuvsResources_t res,
-                                                cuvsScalarQuantizer_t quantizer,
-                                                DLManagedTensor* dataset,
-                                                DLManagedTensor* out);
+CUVS_API cuvsError_t cuvsScalarQuantizerInverseTransform(cuvsResources_t res,
+                                                         cuvsScalarQuantizer_t quantizer,
+                                                         DLManagedTensor* dataset,
+                                                         DLManagedTensor* out);
 
 /**
  * @}

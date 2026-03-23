@@ -99,10 +99,10 @@ void _search(cuvsResources_t res,
   auto neighbors_mds          = cuvs::core::from_dlpack<neighbors_mdspan_type>(neighbors_tensor);
   auto distances_mds          = cuvs::core::from_dlpack<distances_mdspan_type>(distances_tensor);
 
-  if (filter.type == NO_FILTER) {
+  if (filter.type == CUVS_FILTER_NONE) {
     cuvs::neighbors::ivf_pq::search(
       *res_ptr, search_params, *index_ptr, queries_mds, neighbors_mds, distances_mds);
-  } else if (filter.type == BITMAP) {
+  } else if (filter.type == CUVS_FILTER_BITMAP) {
     using filter_mdspan_type = raft::device_vector_view<std::uint32_t, int64_t>;
     using filter_bmp_type    = cuvs::core::bitmap_view<std::uint32_t, int64_t>;
     auto filter_tensor       = reinterpret_cast<DLManagedTensor*>(filter.addr);
@@ -111,7 +111,7 @@ void _search(cuvsResources_t res,
       filter_bmp_type((std::uint32_t*)filter_mds.data_handle(), queries_mds.extent(0), index_ptr->size()));
     cuvs::neighbors::ivf_pq::search(
       *res_ptr, search_params, *index_ptr, queries_mds, neighbors_mds, distances_mds, bitmap_filter_obj);
-  } else if (filter.type == BITSET) {
+  } else if (filter.type == CUVS_FILTER_BITSET) {
     using filter_mdspan_type = raft::device_vector_view<std::uint32_t, int64_t>;
     using filter_bst_type    = cuvs::core::bitset_view<std::uint32_t, int64_t>;
     auto filter_tensor       = reinterpret_cast<DLManagedTensor*>(filter.addr);
@@ -372,7 +372,7 @@ extern "C" cuvsError_t cuvsIvfPqSearch(cuvsResources_t res,
 extern "C" cuvsError_t cuvsIvfPqIndexParamsCreate(cuvsIvfPqIndexParams_t* params)
 {
   return cuvs::core::translate_exceptions([=] {
-    *params = new cuvsIvfPqIndexParams{.metric                         = L2Expanded,
+    *params = new cuvsIvfPqIndexParams{.metric                         = CUVS_DISTANCE_L2_EXPANDED,
                                        .metric_arg                     = 2.0f,
                                        .add_data_on_build              = true,
                                        .n_lists                        = 1024,

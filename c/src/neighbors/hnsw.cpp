@@ -169,11 +169,11 @@ extern "C" cuvsError_t cuvsHnswAceParamsDestroy(cuvsHnswAceParams_t params)
 extern "C" cuvsError_t cuvsHnswIndexParamsCreate(cuvsHnswIndexParams_t* params)
 {
   return cuvs::core::translate_exceptions([=] {
-    *params = new cuvsHnswIndexParams{.hierarchy       = cuvsHnswHierarchy::GPU,
+    *params = new cuvsHnswIndexParams{.hierarchy       = cuvsHnswHierarchy::CUVS_HNSW_HIERARCHY_GPU,
                                       .ef_construction = 200,
                                       .num_threads     = 0,
                                       .M               = 32,
-                                      .metric          = L2Expanded,
+                                      .metric          = CUVS_DISTANCE_L2_EXPANDED,
                                       .ace_params      = nullptr};
   });
 }

@@ -1,5 +1,6 @@
 package cagra
 
+// #include <stdlib.h>
 // #include <cuvs/neighbors/cagra.h>
 import "C"
 
@@ -42,6 +43,47 @@ func BuildIndex[T any](Resources cuvs.Resource, params *IndexParams, dataset *cu
 	}
 	index.trained = true
 	return nil
+}
+
+// CagraBuildHandle is an opaque handle for an in-progress async build.
+type CagraBuildHandle struct {
+	handle C.cuvsCagraBuildHandle_t
+}
+
+// BuildIndexAsync starts building a CAGRA index in the background and returns
+// immediately. Call Await on the returned handle to block until the build
+// finishes and retrieve the index.
+//
+// Params are deep-copied and may be destroyed immediately after this call.
+// The dataset must remain valid until Await returns.
+func BuildIndexAsync[T any](Resources cuvs.Resource, params *IndexParams, dataset *cuvs.Tensor[T]) (*CagraBuildHandle, error) {
+	var handle C.cuvsCagraBuildHandle_t
+	err := cuvs.CheckCuvs(cuvs.CuvsError(C.cuvsCagraBuildAsync(
+		C.ulong(Resources.Resource),
+		params.params,
+		(*C.DLManagedTensor)(unsafe.Pointer(dataset.C_tensor)),
+		&handle)))
+	if err != nil {
+		return nil, err
+	}
+	return &CagraBuildHandle{handle: handle}, nil
+}
+
+// Await blocks until the async build completes and stores the result in index.
+// The handle is consumed and must not be used again.
+func (h *CagraBuildHandle) Await(index *CagraIndex) error {
+	err := cuvs.CheckCuvs(cuvs.CuvsError(C.cuvsCagraBuildAwait(h.handle, index.index)))
+	if err != nil {
+		return err
+	}
+	index.trained = true
+	return nil
+}
+
+// Close destroys the async build handle. If the build is still in progress,
+// it blocks until completion and discards the result.
+func (h *CagraBuildHandle) Close() error {
+	return cuvs.CheckCuvs(cuvs.CuvsError(C.cuvsCagraBuildHandleDestroy(h.handle)))
 }
 
 // Extends the index with additional data
@@ -100,16 +142,66 @@ func SearchIndex[T any](Resources cuvs.Resource, params *SearchParams, index *Ca
 	}
 	if allowList == nil {
 		filter = C.cuvsFilter{
-			_type: C.NO_FILTER,
+			_type: C.CUVS_FILTER_NONE,
 			addr:  C.uintptr_t(0),
 		}
 	} else {
 		filter = C.cuvsFilter{
-			_type: C.BITSET,
+			_type: C.CUVS_FILTER_BITSET,
 			addr:  C.uintptr_t(uintptr(unsafe.Pointer(allowListTensor.C_tensor))),
 		}
 	}
 	return cuvs.CheckCuvs(cuvs.CuvsError(C.cuvsCagraSearch(C.cuvsResources_t(Resources.Resource), params.params, index.index, (*C.DLManagedTensor)(unsafe.Pointer(queries.C_tensor)), (*C.DLManagedTensor)(unsafe.Pointer(neighbors.C_tensor)), (*C.DLManagedTensor)(unsafe.Pointer(distances.C_tensor)), filter)))
+}
+
+// Serialize a CAGRA index to file.
+//
+// # Arguments
+//
+// * `Resources` - Resources to use
+// * `index` - CagraIndex to serialize
+// * `filename` - Path to save the index
+// * `includeDataset` - Whether to include the dataset in the serialized index
+func SerializeIndex(Resources cuvs.Resource, index *CagraIndex, filename string, includeDataset bool) error {
+	if !index.trained {
+		return errors.New("index needs to be built before calling serialize")
+	}
+	cFilename := C.CString(filename)
+	defer C.free(unsafe.Pointer(cFilename))
+
+	return cuvs.CheckCuvs(cuvs.CuvsError(C.cuvsCagraSerialize(
+		C.cuvsResources_t(Resources.Resource),
+		cFilename,
+		index.index,
+		C.bool(includeDataset),
+	)))
+}
+
+// Deserialize a CAGRA index from file.
+//
+// # Arguments
+//
+// * `Resources` - Resources to use
+// * `filename` - Path to load the index from
+func DeserializeIndex(Resources cuvs.Resource, filename string) (*CagraIndex, error) {
+	index, err := CreateIndex()
+	if err != nil {
+		return nil, err
+	}
+	cFilename := C.CString(filename)
+	defer C.free(unsafe.Pointer(cFilename))
+
+	err = cuvs.CheckCuvs(cuvs.CuvsError(C.cuvsCagraDeserialize(
+		C.cuvsResources_t(Resources.Resource),
+		cFilename,
+		index.index,
+	)))
+	if err != nil {
+		index.Close()
+		return nil, err
+	}
+	index.trained = true
+	return index, nil
 }
 
 func createBitset(allowList []uint32) []uint32 {

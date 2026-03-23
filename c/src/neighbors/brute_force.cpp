@@ -67,7 +67,7 @@ void _search(cuvsResources_t res,
 
   cuvs::neighbors::brute_force::search_params params;
 
-  if (prefilter.type == NO_FILTER) {
+  if (prefilter.type == CUVS_FILTER_NONE) {
     cuvs::neighbors::brute_force::search(*res_ptr,
                                          params,
                                          *index_ptr,
@@ -75,7 +75,7 @@ void _search(cuvsResources_t res,
                                          neighbors_mds,
                                          distances_mds,
                                          cuvs::neighbors::filtering::none_sample_filter{});
-  } else if (prefilter.type == BITMAP) {
+  } else if (prefilter.type == CUVS_FILTER_BITMAP) {
     using prefilter_bmp_type = cuvs::core::bitmap_view<uint32_t, int64_t>;
     auto prefilter_ptr       = reinterpret_cast<DLManagedTensor*>(prefilter.addr);
     auto prefilter_mds       = cuvs::core::from_dlpack<prefilter_mds_type>(prefilter_ptr);
@@ -85,7 +85,7 @@ void _search(cuvsResources_t res,
                          index_ptr->dataset().extent(0)));
     cuvs::neighbors::brute_force::search(
       *res_ptr, params, *index_ptr, queries_mds, neighbors_mds, distances_mds, prefilter);
-  } else if (prefilter.type == BITSET) {
+  } else if (prefilter.type == CUVS_FILTER_BITSET) {
     using prefilter_bst_type = cuvs::core::bitset_view<uint32_t, int64_t>;
     auto prefilter_ptr       = reinterpret_cast<DLManagedTensor*>(prefilter.addr);
     auto prefilter_mds       = cuvs::core::from_dlpack<prefilter_mds_type>(prefilter_ptr);

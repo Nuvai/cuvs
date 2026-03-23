@@ -66,7 +66,7 @@ typedef struct cuvsVamanaIndexParams* cuvsVamanaIndexParams_t;
  * @param[in] params cuvsVamanaIndexParams_t to allocate
  * @return cuvsError_t
  */
-cuvsError_t cuvsVamanaIndexParamsCreate(cuvsVamanaIndexParams_t* params);
+CUVS_API cuvsError_t cuvsVamanaIndexParamsCreate(cuvsVamanaIndexParams_t* params);
 
 /**
  * @brief De-allocate Vamana Index params
@@ -74,7 +74,7 @@ cuvsError_t cuvsVamanaIndexParamsCreate(cuvsVamanaIndexParams_t* params);
  * @param[in] params cuvsVamanaIndexParams_t to de-allocate
  * @return cuvsError_t
  */
-cuvsError_t cuvsVamanaIndexParamsDestroy(cuvsVamanaIndexParams_t params);
+CUVS_API cuvsError_t cuvsVamanaIndexParamsDestroy(cuvsVamanaIndexParams_t params);
 
 /**
  * @}
@@ -103,7 +103,7 @@ typedef cuvsVamanaIndex* cuvsVamanaIndex_t;
  * @param[in] index cuvsVamanaIndex_t to allocate
  * @return cuvsError_t
  */
-cuvsError_t cuvsVamanaIndexCreate(cuvsVamanaIndex_t* index);
+CUVS_API cuvsError_t cuvsVamanaIndexCreate(cuvsVamanaIndex_t* index);
 
 /**
  * @brief De-allocate Vamana index
@@ -111,7 +111,7 @@ cuvsError_t cuvsVamanaIndexCreate(cuvsVamanaIndex_t* index);
  * @param[in] index cuvsVamanaIndex_t to de-allocate
  * @return cuvsError_t
  */
-cuvsError_t cuvsVamanaIndexDestroy(cuvsVamanaIndex_t index);
+CUVS_API cuvsError_t cuvsVamanaIndexDestroy(cuvsVamanaIndex_t index);
 
 /**
  * @brief Get the dimension of the index
@@ -120,7 +120,7 @@ cuvsError_t cuvsVamanaIndexDestroy(cuvsVamanaIndex_t index);
  * @param[out] dim pointer to dimension to set
  * @return cuvsError_t
  */
-cuvsError_t cuvsVamanaIndexGetDims(cuvsVamanaIndex_t index, int* dim);
+CUVS_API cuvsError_t cuvsVamanaIndexGetDims(cuvsVamanaIndex_t index, int* dim);
 
 /**
  * @}
@@ -166,10 +166,10 @@ cuvsError_t cuvsVamanaIndexGetDims(cuvsVamanaIndex_t index, int* dim);
  * @param[out] index cuvsVamanaIndex_t Vamana index
  * @return cuvsError_t
  */
-cuvsError_t cuvsVamanaBuild(cuvsResources_t res,
-                            cuvsVamanaIndexParams_t params,
-                            DLManagedTensor* dataset,
-                            cuvsVamanaIndex_t index);
+CUVS_API cuvsError_t cuvsVamanaBuild(cuvsResources_t res,
+                                     cuvsVamanaIndexParams_t params,
+                                     DLManagedTensor* dataset,
+                                     cuvsVamanaIndex_t index);
 
 /**
  * @}
@@ -202,10 +202,49 @@ cuvsError_t cuvsVamanaBuild(cuvsResources_t res,
  * @param[in] include_dataset whether to include the dataset in the serialized index
  * @return cuvsError_t
  */
-cuvsError_t cuvsVamanaSerialize(cuvsResources_t res,
-                                const char* filename,
-                                cuvsVamanaIndex_t index,
-                                bool include_dataset);
+CUVS_API cuvsError_t cuvsVamanaSerialize(cuvsResources_t res,
+                                         const char* filename,
+                                         cuvsVamanaIndex_t index,
+                                         bool include_dataset);
+
+/**
+ * @}
+ */
+
+/**
+ * @defgroup vamana_c_index_deserialize Vamana index deserialize
+ * @{
+ */
+
+/**
+ * @brief Load Vamana index from file
+ *
+ * Loads a Vamana index that was previously serialized using cuvsVamanaSerialize.
+ * The DiskANN format does NOT encode data types, so the caller must provide
+ * the dtype that was used when building the index.
+ *
+ * If a dataset file exists at `filename.data`, it is also loaded.
+ *
+ * @code{.c}
+ *   cuvsResources_t res;
+ *   cuvsResourcesCreate(&res);
+ *
+ *   cuvsVamanaIndex_t index;
+ *   cuvsVamanaIndexCreate(&index);
+ *   DLDataType dtype = {kDLFloat, 32, 1};
+ *   cuvsVamanaDeserialize(res, "/path/to/index", index, dtype);
+ * @endcode
+ *
+ * @param[in] res cuvsResources_t opaque C handle
+ * @param[in] filename the file prefix for the serialized index
+ * @param[out] index cuvsVamanaIndex_t to deserialize into
+ * @param[in] dtype DLDataType of the original dataset
+ * @return cuvsError_t
+ */
+CUVS_API cuvsError_t cuvsVamanaDeserialize(cuvsResources_t res,
+                                           const char* filename,
+                                           cuvsVamanaIndex_t index,
+                                           DLDataType dtype);
 
 /**
  * @}

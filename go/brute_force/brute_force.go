@@ -1,5 +1,6 @@
 package brute_force
 
+// #include <stdlib.h>
 // #include <cuvs/neighbors/brute_force.h>
 import "C"
 
@@ -61,6 +62,54 @@ func BuildIndex[T any](Resources cuvs.Resource, Dataset *cuvs.Tensor[T], metric 
 	return nil
 }
 
+// Serialize a Brute Force index to file.
+//
+// # Arguments
+//
+// * `Resources` - Resources to use
+// * `index` - BruteForceIndex to serialize
+// * `filename` - Path to save the index
+func SerializeIndex(Resources cuvs.Resource, index *BruteForceIndex, filename string) error {
+	if !index.trained {
+		return errors.New("index needs to be built before calling serialize")
+	}
+	cFilename := C.CString(filename)
+	defer C.free(unsafe.Pointer(cFilename))
+
+	return cuvs.CheckCuvs(cuvs.CuvsError(C.cuvsBruteForceSerialize(
+		C.cuvsResources_t(Resources.Resource),
+		cFilename,
+		index.index,
+	)))
+}
+
+// Deserialize a Brute Force index from file.
+//
+// # Arguments
+//
+// * `Resources` - Resources to use
+// * `filename` - Path to load the index from
+func DeserializeIndex(Resources cuvs.Resource, filename string) (*BruteForceIndex, error) {
+	index, err := CreateIndex()
+	if err != nil {
+		return nil, err
+	}
+	cFilename := C.CString(filename)
+	defer C.free(unsafe.Pointer(cFilename))
+
+	err = cuvs.CheckCuvs(cuvs.CuvsError(C.cuvsBruteForceDeserialize(
+		C.cuvsResources_t(Resources.Resource),
+		cFilename,
+		index.index,
+	)))
+	if err != nil {
+		index.Close()
+		return nil, err
+	}
+	index.trained = true
+	return index, nil
+}
+
 // Perform a Nearest Neighbors search on the Index
 //
 // # Arguments
@@ -76,7 +125,7 @@ func SearchIndex[T any](resources cuvs.Resource, index BruteForceIndex, queries 
 
 	prefilter := C.cuvsFilter{
 		addr:  0,
-		_type: C.NO_FILTER,
+		_type: C.CUVS_FILTER_NONE,
 	}
 
 	err := cuvs.CheckCuvs(cuvs.CuvsError(C.cuvsBruteForceSearch(C.ulong(resources.Resource), index.index, (*C.DLManagedTensor)(unsafe.Pointer(queries.C_tensor)), (*C.DLManagedTensor)(unsafe.Pointer(neighbors.C_tensor)), (*C.DLManagedTensor)(unsafe.Pointer(distances.C_tensor)), prefilter)))

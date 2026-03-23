@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <future>
 #include <dlpack/dlpack.h>
 
 #include <raft/core/error.hpp>
@@ -41,8 +42,8 @@ static void _set_graph_build_params(
 {
   auto metric = static_cast<cuvs::distance::DistanceType>((int)params.metric);
   switch (algo) {
-    case cuvsCagraGraphBuildAlgo::AUTO_SELECT: break;
-    case cuvsCagraGraphBuildAlgo::IVF_PQ: {
+    case cuvsCagraGraphBuildAlgo::CUVS_CAGRA_BUILD_AUTO_SELECT: break;
+    case cuvsCagraGraphBuildAlgo::CUVS_CAGRA_BUILD_IVF_PQ: {
       auto pq_params = cuvs::neighbors::cagra::graph_build_params::ivf_pq_params(
         raft::matrix_extent<int64_t>(n_rows, dim), metric);
       if (params.graph_build_params) {
@@ -76,14 +77,14 @@ static void _set_graph_build_params(
       out_params = pq_params;
       break;
     }
-    case cuvsCagraGraphBuildAlgo::NN_DESCENT: {
+    case cuvsCagraGraphBuildAlgo::CUVS_CAGRA_BUILD_NN_DESCENT: {
       auto nn_params =
         cuvs::neighbors::nn_descent::index_params(params.intermediate_graph_degree, metric);
       nn_params.max_iterations = params.nn_descent_niter;
       out_params               = nn_params;
       break;
     }
-    case cuvsCagraGraphBuildAlgo::ACE: {
+    case cuvsCagraGraphBuildAlgo::CUVS_CAGRA_BUILD_ACE: {
       cuvs::neighbors::cagra::graph_build_params::ace_params ace_p;
       if (params.graph_build_params) {
         auto ace_params_c             = static_cast<cuvsAceParams*>(params.graph_build_params);
@@ -97,7 +98,7 @@ static void _set_graph_build_params(
       out_params = ace_p;
       break;
     }
-    case cuvsCagraGraphBuildAlgo::ITERATIVE_CAGRA_SEARCH: {
+    case cuvsCagraGraphBuildAlgo::CUVS_CAGRA_BUILD_ITERATIVE_CAGRA_SEARCH: {
       cuvs::neighbors::cagra::graph_build_params::iterative_search_params p;
       out_params = p;
       break;
@@ -240,10 +241,10 @@ void _search(cuvsResources_t res,
   auto queries_mds            = cuvs::core::from_dlpack<queries_mdspan_type>(queries_tensor);
   auto neighbors_mds          = cuvs::core::from_dlpack<neighbors_mdspan_type>(neighbors_tensor);
   auto distances_mds          = cuvs::core::from_dlpack<distances_mdspan_type>(distances_tensor);
-  if (filter.type == NO_FILTER) {
+  if (filter.type == CUVS_FILTER_NONE) {
     cuvs::neighbors::cagra::search(
       *res_ptr, search_params, *index_ptr, queries_mds, neighbors_mds, distances_mds);
-  } else if (filter.type == BITMAP) {
+  } else if (filter.type == CUVS_FILTER_BITMAP) {
     using filter_mdspan_type = raft::device_vector_view<std::uint32_t, int64_t>;
     using filter_bmp_type    = cuvs::core::bitmap_view<std::uint32_t, int64_t>;
     auto filter_tensor       = reinterpret_cast<DLManagedTensor*>(filter.addr);
@@ -252,7 +253,7 @@ void _search(cuvsResources_t res,
       filter_bmp_type((std::uint32_t*)filter_mds.data_handle(), queries_mds.extent(0), index_ptr->size()));
     cuvs::neighbors::cagra::search(
       *res_ptr, search_params, *index_ptr, queries_mds, neighbors_mds, distances_mds, bitmap_filter_obj);
-  } else if (filter.type == BITSET) {
+  } else if (filter.type == CUVS_FILTER_BITSET) {
     using filter_mdspan_type = raft::device_vector_view<std::uint32_t, int64_t>;
     using filter_bst_type    = cuvs::core::bitset_view<std::uint32_t, int64_t>;
     auto filter_tensor       = reinterpret_cast<DLManagedTensor*>(filter.addr);
@@ -358,10 +359,10 @@ void* _merge(cuvsResources_t res,
     index_ptrs.push_back(idx_ptr);
   }
 
-  if (filter.type == NO_FILTER) {
+  if (filter.type == CUVS_FILTER_NONE) {
     return new cuvs::neighbors::cagra::index<T, uint32_t>(
       cuvs::neighbors::cagra::merge(*res_ptr, params_cpp, index_ptrs));
-  } else if (filter.type == BITSET) {
+  } else if (filter.type == CUVS_FILTER_BITSET) {
     using filter_mdspan_type    = raft::device_vector_view<std::uint32_t, int64_t, raft::row_major>;
     auto removed_indices_tensor = reinterpret_cast<DLManagedTensor*>(filter.addr);
     auto removed_indices = cuvs::core::from_dlpack<filter_mdspan_type>(removed_indices_tensor);
@@ -615,6 +616,143 @@ extern "C" cuvsError_t cuvsCagraBuild(cuvsResources_t res,
   });
 }
 
+// ---------------------------------------------------------------------------
+// Async CAGRA build
+// ---------------------------------------------------------------------------
+namespace {
+
+// Typed-delete helper — mirrors the dispatch in cuvsCagraIndexDestroy.
+void _delete_cagra_index(void* addr, DLDataType dtype)
+{
+  if (addr == nullptr) return;
+  if (dtype.code == kDLFloat && dtype.bits == 32) {
+    delete reinterpret_cast<cuvs::neighbors::cagra::index<float, uint32_t>*>(addr);
+  } else if (dtype.code == kDLFloat && dtype.bits == 16) {
+    delete reinterpret_cast<cuvs::neighbors::cagra::index<half, uint32_t>*>(addr);
+  } else if (dtype.code == kDLInt && dtype.bits == 8) {
+    delete reinterpret_cast<cuvs::neighbors::cagra::index<int8_t, uint32_t>*>(addr);
+  } else if (dtype.code == kDLUInt && dtype.bits == 8) {
+    delete reinterpret_cast<cuvs::neighbors::cagra::index<uint8_t, uint32_t>*>(addr);
+  }
+}
+
+// Internal build that uses a pre-converted C++ index_params and its own
+// raft::device_resources, making it safe to call from a background thread.
+template <typename T>
+void* _build_with_own_res(cuvs::neighbors::cagra::index_params const& index_params,
+                          DLManagedTensor* dataset_tensor)
+{
+  auto dataset = dataset_tensor->dl_tensor;
+
+  // Each async build owns its own raft::device_resources so there is no
+  // data-race on cuBLAS handles, workspace, or stream state.
+  raft::device_resources thread_res{};
+
+  auto index = new cuvs::neighbors::cagra::index<T, uint32_t>(thread_res);
+
+  if (cuvs::core::is_dlpack_device_compatible(dataset)) {
+    using mdspan_type = raft::device_matrix_view<T const, int64_t, raft::row_major>;
+    auto mds          = cuvs::core::from_dlpack<mdspan_type>(dataset_tensor);
+    *index            = cuvs::neighbors::cagra::build(thread_res, index_params, mds);
+  } else if (cuvs::core::is_dlpack_host_compatible(dataset)) {
+    using mdspan_type = raft::host_matrix_view<T const, int64_t, raft::row_major>;
+    auto mds          = cuvs::core::from_dlpack<mdspan_type>(dataset_tensor);
+    *index            = cuvs::neighbors::cagra::build(thread_res, index_params, mds);
+  }
+
+  // Synchronise the thread-local stream before returning so the index is
+  // fully materialised and safe to use from any stream.
+  raft::resource::sync_stream(thread_res);
+  return index;
+}
+
+struct cagra_build_future {
+  DLDataType dtype;
+  std::future<void*> future;
+};
+
+}  // namespace
+
+extern "C" cuvsError_t cuvsCagraBuildAsync(cuvsResources_t res,
+                                           cuvsCagraIndexParams_t params,
+                                           DLManagedTensor* dataset_tensor,
+                                           cuvsCagraBuildHandle_t* handle)
+{
+  (void)res;  // The async build uses its own raft::device_resources.
+  return cuvs::core::translate_exceptions([=] {
+    auto dataset   = dataset_tensor->dl_tensor;
+    DLDataType dtype = dataset.dtype;
+
+    // Capture the caller's CUDA device so the background thread targets
+    // the same GPU — std::async threads have no inherited device affinity.
+    int caller_device = 0;
+    RAFT_CUDA_TRY(cudaGetDevice(&caller_device));
+
+    // Deep-convert C params → C++ index_params on the calling thread.
+    // This copies all pointer-reachable data (compression, IVF-PQ sub-params,
+    // ACE params) into value-semantic C++ objects, so the caller is free to
+    // destroy the C params immediately after this call returns.
+    auto index_params = cuvs::neighbors::cagra::index_params();
+    convert_c_index_params(*params, dataset.shape[0], dataset.shape[1], &index_params);
+
+    auto* state   = new cagra_build_future{};
+    state->dtype  = dtype;
+    // Capture index_params by value (fully self-contained, no pointers back
+    // to the C params struct).
+    state->future = std::async(std::launch::async,
+                               [dtype, index_params, dataset_tensor, caller_device]() -> void* {
+      RAFT_CUDA_TRY(cudaSetDevice(caller_device));
+      if (dtype.code == kDLFloat && dtype.bits == 32) {
+        return _build_with_own_res<float>(index_params, dataset_tensor);
+      } else if (dtype.code == kDLFloat && dtype.bits == 16) {
+        return _build_with_own_res<half>(index_params, dataset_tensor);
+      } else if (dtype.code == kDLInt && dtype.bits == 8) {
+        return _build_with_own_res<int8_t>(index_params, dataset_tensor);
+      } else if (dtype.code == kDLUInt && dtype.bits == 8) {
+        return _build_with_own_res<uint8_t>(index_params, dataset_tensor);
+      } else {
+        RAFT_FAIL("Unsupported dataset DLtensor dtype: %d and bits: %d",
+                  dtype.code, dtype.bits);
+      }
+    });
+
+    *handle = reinterpret_cast<cuvsCagraBuildHandle_t>(state);
+  });
+}
+
+extern "C" cuvsError_t cuvsCagraBuildAwait(cuvsCagraBuildHandle_t handle,
+                                           cuvsCagraIndex_t index)
+{
+  return cuvs::core::translate_exceptions([=] {
+    auto* state = reinterpret_cast<cagra_build_future*>(handle);
+    try {
+      void* built_index = state->future.get();  // blocks until done
+      index->addr       = reinterpret_cast<uintptr_t>(built_index);
+      index->dtype      = state->dtype;
+    } catch (...) {
+      delete state;
+      throw;
+    }
+    delete state;
+  });
+}
+
+extern "C" cuvsError_t cuvsCagraBuildHandleDestroy(cuvsCagraBuildHandle_t handle)
+{
+  return cuvs::core::translate_exceptions([=] {
+    auto* state = reinterpret_cast<cagra_build_future*>(handle);
+    if (state->future.valid()) {
+      try {
+        void* built_index = state->future.get();
+        _delete_cagra_index(built_index, state->dtype);
+      } catch (...) {
+        // swallow — caller is cleaning up, not interested in errors
+      }
+    }
+    delete state;
+  });
+}
+
 extern "C" cuvsError_t cuvsCagraUpdateDataset(cuvsResources_t res,
                                               DLManagedTensor* dataset_tensor,
                                               cuvsCagraIndex_t index)
@@ -780,7 +918,7 @@ extern "C" cuvsError_t cuvsCagraMerge(cuvsResources_t res,
 extern "C" cuvsError_t cuvsCagraIndexParamsCreate(cuvsCagraIndexParams_t* params)
 {
   return cuvs::core::translate_exceptions([=] {
-    *params                       = new cuvsCagraIndexParams{.metric                    = L2Expanded,
+    *params                       = new cuvsCagraIndexParams{.metric                    = CUVS_DISTANCE_L2_EXPANDED,
                                                              .intermediate_graph_degree = 128,
                                                              .graph_degree              = 64,
                                                              .build_algo                = IVF_PQ,
@@ -801,16 +939,16 @@ extern "C" cuvsError_t cuvsCagraIndexParamsDestroy(cuvsCagraIndexParams_t params
       case cuvsCagraGraphBuildAlgo::IVF_PQ:
         delete static_cast<cuvsIvfPqParams *>(params->graph_build_params);
         break;
-      case cuvsCagraGraphBuildAlgo::ACE: {
+      case cuvsCagraGraphBuildAlgo::CUVS_CAGRA_BUILD_ACE: {
         auto ace_params = static_cast<cuvsAceParams *>(params->graph_build_params);
         // Free the allocated build directory string
         if (ace_params->build_dir) { free(const_cast<char*>(ace_params->build_dir)); }
         delete ace_params;
         break;
       }
-      case cuvsCagraGraphBuildAlgo::AUTO_SELECT:
-      case cuvsCagraGraphBuildAlgo::NN_DESCENT:
-      case cuvsCagraGraphBuildAlgo::ITERATIVE_CAGRA_SEARCH:
+      case cuvsCagraGraphBuildAlgo::CUVS_CAGRA_BUILD_AUTO_SELECT:
+      case cuvsCagraGraphBuildAlgo::CUVS_CAGRA_BUILD_NN_DESCENT:
+      case cuvsCagraGraphBuildAlgo::CUVS_CAGRA_BUILD_ITERATIVE_CAGRA_SEARCH:
         // These algorithms don't have separate parameter structs
         break;
       }

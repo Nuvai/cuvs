@@ -11,6 +11,7 @@ from cuda.bindings.cyruntime cimport cudaStream_t
 from cuvs.common.c_api cimport (
     cuvsResources_t,
     cuvsResourcesCreate,
+    cuvsResourcesCreateWithStream,
     cuvsResourcesDestroy,
     cuvsStreamSet,
     cuvsStreamSync,
@@ -53,9 +54,16 @@ cdef class Resources:
     """
 
     def __cinit__(self, stream=None):
-        check_cuvs(cuvsResourcesCreate(&self.c_obj))
-        if stream:
-            check_cuvs(cuvsStreamSet(self.c_obj, <cudaStream_t>stream))
+        if stream is not None:
+            # Construct raft::device_resources with the user's stream from the
+            # start so that all internal state (workspace, cuBLAS handles, …) is
+            # properly initialised for it.  The old path (create-then-set) left
+            # the internal resources bound to the default stream, causing a
+            # segfault on sync (issue #1863).
+            check_cuvs(cuvsResourcesCreateWithStream(
+                &self.c_obj, <cudaStream_t>stream))
+        else:
+            check_cuvs(cuvsResourcesCreate(&self.c_obj))
 
     def sync(self):
         check_cuvs(cuvsStreamSync(self.c_obj))

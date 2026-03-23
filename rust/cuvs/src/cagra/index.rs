@@ -78,19 +78,19 @@ impl<'a> Index<'a> {
         params: &IndexParams,
         dataset: &'a ManagedTensor,
     ) -> Result<Index<'a>> {
-        let inner = Self::create_handle()?;
+        let index = Index {
+            inner: Self::create_handle()?,
+            _data: DatasetOwnership::Borrowed(PhantomData),
+        };
         unsafe {
             check_cuvs(ffi::cuvsCagraBuild(
                 res.0,
                 params.0,
                 dataset.as_ptr(),
-                inner,
+                index.inner,
             ))?;
         }
-        Ok(Index {
-            inner,
-            _data: DatasetOwnership::Borrowed(PhantomData),
-        })
+        Ok(index)
     }
 
     /// Creates a new empty index
@@ -190,18 +190,18 @@ impl<'a> Index<'a> {
     /// * `filename` - The name of the file that stores the index
     pub fn deserialize(res: &Resources, filename: &str) -> Result<Index<'a>> {
         let c_filename = CString::new(filename).expect("filename contains null byte");
-        let inner = Self::create_handle()?;
+        let index = Index {
+            inner: Self::create_handle()?,
+            _data: DatasetOwnership::Borrowed(PhantomData),
+        };
         unsafe {
             check_cuvs(ffi::cuvsCagraDeserialize(
                 res.0,
                 c_filename.as_ptr(),
-                inner,
+                index.inner,
             ))?;
         }
-        Ok(Index {
-            inner,
-            _data: DatasetOwnership::Borrowed(PhantomData),
-        })
+        Ok(index)
     }
 }
 
@@ -223,19 +223,22 @@ impl Index<'static> {
         params: &IndexParams,
         dataset: ManagedTensor,
     ) -> Result<Index<'static>> {
-        let inner = Self::create_handle()?;
+        // Wrap handle immediately so Drop runs on error
+        let mut index = Index {
+            inner: Self::create_handle()?,
+            _data: DatasetOwnership::Borrowed(PhantomData),
+        };
         unsafe {
             check_cuvs(ffi::cuvsCagraBuild(
                 res.0,
                 params.0,
                 dataset.as_ptr(),
-                inner,
+                index.inner,
             ))?;
         }
-        Ok(Index {
-            inner,
-            _data: DatasetOwnership::Owned(dataset),
-        })
+        // Transfer dataset ownership only after successful build
+        index._data = DatasetOwnership::Owned(dataset);
+        Ok(index)
     }
 }
 

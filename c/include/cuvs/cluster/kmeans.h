@@ -23,18 +23,25 @@ typedef enum {
   /**
    * Sample the centroids using the kmeans++ strategy
    */
-  KMeansPlusPlus = 0,
+  CUVS_KMEANS_INIT_PLUS_PLUS = 0,
 
   /**
    * Sample the centroids uniformly at random
    */
-  Random = 1,
+  CUVS_KMEANS_INIT_RANDOM = 1,
 
   /**
    * User provides the array of initial centroids
    */
-  Array = 2
+  CUVS_KMEANS_INIT_ARRAY = 2
 } cuvsKMeansInitMethod;
+
+/* Backward-compatible aliases — opt in with CUVS_ENABLE_DEPRECATED_ENUM_ALIASES */
+#ifdef CUVS_ENABLE_DEPRECATED_ENUM_ALIASES
+#define KMeansPlusPlus CUVS_KMEANS_INIT_PLUS_PLUS
+#define Random         CUVS_KMEANS_INIT_RANDOM
+#define Array          CUVS_KMEANS_INIT_ARRAY
+#endif
 
 /**
  * @brief Hyper-parameters for the kmeans algorithm
@@ -111,7 +118,7 @@ typedef struct cuvsKMeansParams* cuvsKMeansParams_t;
  * @param[in] params cuvsKMeansParams_t to allocate
  * @return cuvsError_t
  */
-cuvsError_t cuvsKMeansParamsCreate(cuvsKMeansParams_t* params);
+CUVS_API cuvsError_t cuvsKMeansParamsCreate(cuvsKMeansParams_t* params);
 
 /**
  * @brief De-allocate KMeans params
@@ -119,7 +126,7 @@ cuvsError_t cuvsKMeansParamsCreate(cuvsKMeansParams_t* params);
  * @param[in] params
  * @return cuvsError_t
  */
-cuvsError_t cuvsKMeansParamsDestroy(cuvsKMeansParams_t params);
+CUVS_API cuvsError_t cuvsKMeansParamsDestroy(cuvsKMeansParams_t params);
 
 /**
  * @brief Type of k-means algorithm.
@@ -159,13 +166,13 @@ typedef enum { CUVS_KMEANS_TYPE_KMEANS = 0, CUVS_KMEANS_TYPE_KMEANS_BALANCED = 1
  *                              closest cluster center.
  * @param[out]    n_iter        Number of iterations run.
  */
-cuvsError_t cuvsKMeansFit(cuvsResources_t res,
-                          cuvsKMeansParams_t params,
-                          DLManagedTensor* X,
-                          DLManagedTensor* sample_weight,
-                          DLManagedTensor* centroids,
-                          double* inertia,
-                          int* n_iter);
+CUVS_API cuvsError_t cuvsKMeansFit(cuvsResources_t res,
+                                   cuvsKMeansParams_t params,
+                                   DLManagedTensor* X,
+                                   DLManagedTensor* sample_weight,
+                                   DLManagedTensor* centroids,
+                                   double* inertia,
+                                   int* n_iter);
 
 /**
  * @brief Predict the closest cluster each sample in X belongs to.
@@ -186,14 +193,14 @@ cuvsError_t cuvsKMeansFit(cuvsResources_t res,
  * @param[out]    inertia          Sum of squared distances of samples to
  *                                 their closest cluster center.
  */
-cuvsError_t cuvsKMeansPredict(cuvsResources_t res,
-                              cuvsKMeansParams_t params,
-                              DLManagedTensor* X,
-                              DLManagedTensor* sample_weight,
-                              DLManagedTensor* centroids,
-                              DLManagedTensor* labels,
-                              bool normalize_weight,
-                              double* inertia);
+CUVS_API cuvsError_t cuvsKMeansPredict(cuvsResources_t res,
+                                       cuvsKMeansParams_t params,
+                                       DLManagedTensor* X,
+                                       DLManagedTensor* sample_weight,
+                                       DLManagedTensor* centroids,
+                                       DLManagedTensor* labels,
+                                       bool normalize_weight,
+                                       double* inertia);
 
 /**
  * @brief Compute cluster cost
@@ -208,10 +215,10 @@ cuvsError_t cuvsKMeansPredict(cuvsResources_t res,
  * @param[out] cost           Resulting cluster cost
  *
  */
-cuvsError_t cuvsKMeansClusterCost(cuvsResources_t res,
-                                  DLManagedTensor* X,
-                                  DLManagedTensor* centroids,
-                                  double* cost);
+CUVS_API cuvsError_t cuvsKMeansClusterCost(cuvsResources_t res,
+                                           DLManagedTensor* X,
+                                           DLManagedTensor* centroids,
+                                           double* cost);
 /**
  * @}
  */

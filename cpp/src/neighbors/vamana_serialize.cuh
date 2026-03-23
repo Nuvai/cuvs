@@ -23,6 +23,13 @@ namespace cuvs::neighbors::vamana {
   {                                                                             \
     cuvs::neighbors::vamana::detail::serialize<DTYPE, uint32_t>(                \
       handle, file_prefix, index_, include_dataset, sector_aligned);            \
+  };                                                                            \
+  void deserialize(raft::resources const& handle,                               \
+                   const std::string& file_prefix,                              \
+                   cuvs::neighbors::vamana::index<DTYPE, uint32_t>* index_)     \
+  {                                                                             \
+    cuvs::neighbors::vamana::detail::deserialize<DTYPE, uint32_t>(              \
+      handle, file_prefix, index_);                                             \
   };
 
 /** @} */  // end group vamana

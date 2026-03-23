@@ -40,12 +40,12 @@ extern "C" {
  * @param[in] metric distance to evaluate
  * @param[in] metric_arg metric argument (used for Minkowski distance)
  */
-cuvsError_t cuvsPairwiseDistance(cuvsResources_t res,
-                                 DLManagedTensor* x,
-                                 DLManagedTensor* y,
-                                 DLManagedTensor* dist,
-                                 cuvsDistanceType metric,
-                                 float metric_arg);
+CUVS_API cuvsError_t cuvsPairwiseDistance(cuvsResources_t res,
+                                          DLManagedTensor* x,
+                                          DLManagedTensor* y,
+                                          DLManagedTensor* dist,
+                                          cuvsDistanceType metric,
+                                          float metric_arg);
 #ifdef __cplusplus
 }
 #endif

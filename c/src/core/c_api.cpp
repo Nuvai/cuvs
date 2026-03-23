@@ -35,6 +35,25 @@ extern "C" cuvsError_t cuvsResourcesCreate(cuvsResources_t* res)
   });
 }
 
+extern "C" cuvsError_t cuvsResourcesCreateWithStream(cuvsResources_t* res, cudaStream_t stream)
+{
+  return cuvs::core::translate_exceptions([=] {
+    // Validate the stream handle before constructing resources around it.
+    // cudaStreamQuery returns cudaSuccess or cudaErrorNotReady for valid
+    // streams, and cudaErrorInvalidResourceHandle for bogus ones.
+    if (stream != nullptr) {
+      cudaError_t err = cudaStreamQuery(stream);
+      if (err != cudaSuccess && err != cudaErrorNotReady) {
+        // Reset the CUDA error state so it doesn't poison later calls.
+        cudaGetLastError();
+        throw std::invalid_argument("cuvsResourcesCreateWithStream: invalid cudaStream_t");
+      }
+    }
+    auto res_ptr = new raft::device_resources{rmm::cuda_stream_view{stream}};
+    *res         = reinterpret_cast<uintptr_t>(res_ptr);
+  });
+}
+
 extern "C" cuvsError_t cuvsResourcesDestroy(cuvsResources_t res)
 {
   return cuvs::core::translate_exceptions([=] {
