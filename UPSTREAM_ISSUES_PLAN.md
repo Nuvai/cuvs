@@ -120,7 +120,8 @@
 1. **Priorities 1–3 and 5 are fully resolved.** Only multi-GPU issues (#1829, #1773 Dask path) and Python-specific #1541 remain open.
 2. **Priority 4** (ABI stability infrastructure) is the next natural focus if binary distribution is planned.
 3. Track the UDF architecture issues (#1870–#1873) as they generalize the filtering support we already added.
-4. **Binary ADC follow-ups** (not blocking, can be fast follows):
-   - Oversampling + re-ranking utility (`search_with_reranking`) for >90% recall (Plan Part 3)
-   - Serialization support for `binary_dataset` (currently not persisted across serialize/deserialize)
-   - C-API dispatch for binary dataset (currently C++ only)
+4. **Binary ADC follow-ups completed in PR #8:**
+   - ✅ `search_with_reranking` utility (oversample + exact float re-rank)
+   - ✅ Serialization support for `binary_dataset` (tag 4, round-trips correctly)
+   - ✅ C-API `cuvsCagraUpdateDatasetBinary`
+   - ✅ Pre-existing deserialize switch fallthrough bug fixed
