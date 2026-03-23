@@ -10,7 +10,7 @@ from libcpp cimport bool
 # Import base single-GPU extension module for subclassing
 cimport cuvs.neighbors.cagra.cagra as _cagra
 from cuvs.common.c_api cimport cuvsError_t, cuvsResources_t
-from cuvs.common.cydlpack cimport DLManagedTensor
+from cuvs.common.cydlpack cimport DLManagedTensorVersioned
 from cuvs.neighbors.cagra.cagra cimport (
     IndexParams as SingleGpuIndexParams,
     SearchParams as SingleGpuSearchParams,
@@ -71,16 +71,16 @@ cdef extern from "cuvs/neighbors/mg_cagra.h" nogil:
 
     cuvsError_t cuvsMultiGpuCagraBuild(cuvsResources_t res,
                                        cuvsMultiGpuCagraIndexParams_t params,
-                                       DLManagedTensor* dataset_tensor,
+                                       DLManagedTensorVersioned* dataset_tensor,
                                        cuvsMultiGpuCagraIndex_t index) except +
 
     cuvsError_t cuvsMultiGpuCagraSearch(
         cuvsResources_t res,
         cuvsMultiGpuCagraSearchParams_t params,
         cuvsMultiGpuCagraIndex_t index,
-        DLManagedTensor* queries_tensor,
-        DLManagedTensor* neighbors_tensor,
-        DLManagedTensor* distances_tensor) except +
+        DLManagedTensorVersioned* queries_tensor,
+        DLManagedTensorVersioned* neighbors_tensor,
+        DLManagedTensorVersioned* distances_tensor) except +
 
     cuvsError_t cuvsMultiGpuCagraSerialize(
         cuvsResources_t res,
@@ -100,8 +100,8 @@ cdef extern from "cuvs/neighbors/mg_cagra.h" nogil:
     cuvsError_t cuvsMultiGpuCagraExtend(
         cuvsResources_t res,
         cuvsMultiGpuCagraIndex_t index,
-        DLManagedTensor* new_vectors_tensor,
-        DLManagedTensor* new_indices_tensor) except +
+        DLManagedTensorVersioned* new_vectors_tensor,
+        DLManagedTensorVersioned* new_indices_tensor) except +
 
 
 cdef class IndexParams(SingleGpuIndexParams):

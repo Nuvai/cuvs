@@ -143,14 +143,15 @@ CUVS_API cuvsError_t cuvsMultiGpuIvfPqIndexDestroy(cuvsMultiGpuIvfPqIndex_t inde
  *
  * @param[in] res cuvsResources_t opaque C handle
  * @param[in] params Multi-GPU IVF-PQ index parameters
- * @param[in] dataset_tensor DLManagedTensor* training dataset
+ * @param[in] dataset_tensor DLManagedTensorVersioned* training dataset
  * @param[out] index Multi-GPU IVF-PQ index
  * @return cuvsError_t
  */
 CUVS_API cuvsError_t cuvsMultiGpuIvfPqBuild(cuvsResources_t res,
                                             cuvsMultiGpuIvfPqIndexParams_t params,
-                                            DLManagedTensor* dataset_tensor,
+                                            DLManagedTensorVersioned* dataset_tensor,
                                             cuvsMultiGpuIvfPqIndex_t index);
+
 
 /**
  * @}
@@ -167,17 +168,18 @@ CUVS_API cuvsError_t cuvsMultiGpuIvfPqBuild(cuvsResources_t res,
  * @param[in] res cuvsResources_t opaque C handle
  * @param[in] params Multi-GPU IVF-PQ search parameters
  * @param[in] index Multi-GPU IVF-PQ index
- * @param[in] queries_tensor DLManagedTensor* queries dataset
- * @param[out] neighbors_tensor DLManagedTensor* output neighbors
- * @param[out] distances_tensor DLManagedTensor* output distances
+ * @param[in] queries_tensor DLManagedTensorVersioned* queries dataset
+ * @param[out] neighbors_tensor DLManagedTensorVersioned* output neighbors
+ * @param[out] distances_tensor DLManagedTensorVersioned* output distances
  * @return cuvsError_t
  */
 CUVS_API cuvsError_t cuvsMultiGpuIvfPqSearch(cuvsResources_t res,
                                              cuvsMultiGpuIvfPqSearchParams_t params,
                                              cuvsMultiGpuIvfPqIndex_t index,
-                                             DLManagedTensor* queries_tensor,
-                                             DLManagedTensor* neighbors_tensor,
-                                             DLManagedTensor* distances_tensor);
+                                             DLManagedTensorVersioned* queries_tensor,
+                                             DLManagedTensorVersioned* neighbors_tensor,
+                                             DLManagedTensorVersioned* distances_tensor);
+
 
 /**
  * @}
@@ -193,14 +195,15 @@ CUVS_API cuvsError_t cuvsMultiGpuIvfPqSearch(cuvsResources_t res,
  *
  * @param[in] res cuvsResources_t opaque C handle
  * @param[in,out] index Multi-GPU IVF-PQ index to extend
- * @param[in] new_vectors_tensor DLManagedTensor* new vectors to add
- * @param[in] new_indices_tensor DLManagedTensor* new indices (optional, can be NULL)
+ * @param[in] new_vectors_tensor DLManagedTensorVersioned* new vectors to add
+ * @param[in] new_indices_tensor DLManagedTensorVersioned* new indices (optional, can be NULL)
  * @return cuvsError_t
  */
 CUVS_API cuvsError_t cuvsMultiGpuIvfPqExtend(cuvsResources_t res,
                                              cuvsMultiGpuIvfPqIndex_t index,
-                                             DLManagedTensor* new_vectors_tensor,
-                                             DLManagedTensor* new_indices_tensor);
+                                             DLManagedTensorVersioned* new_vectors_tensor,
+                                             DLManagedTensorVersioned* new_indices_tensor);
+
 
 /**
  * @}

@@ -15,7 +15,7 @@ from cuvs.common.c_api cimport (
     cuvsStreamSet,
     cuvsStreamSync,
 )
-from cuvs.common.cydlpack cimport DLManagedTensor, dlpack_c
+from cuvs.common.cydlpack cimport DLManagedTensorVersioned, dlpack_c
 
 import numpy as np
 from pylibraft.common.cai_wrapper import wrap_array
@@ -71,10 +71,10 @@ cdef class MultiGpuResources:
     """
 
     def __cinit__(self, stream=None, device_ids=None):
-        cdef DLManagedTensor* device_ids_dlpack = NULL
+        cdef DLManagedTensorVersioned* device_ids_dlpack = NULL
 
         if device_ids is not None:
-            # Convert device_ids list to DLManagedTensor (keep on host/CPU)
+            # Convert device_ids list to DLManagedTensorVersioned (keep on host/CPU)
             # NumPy arrays are naturally on the host, which is what we need
             device_ids_array = np.asarray(device_ids, dtype=np.int32)
             ai = wrap_array(device_ids_array)

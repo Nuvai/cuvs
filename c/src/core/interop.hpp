@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2024, NVIDIA CORPORATION.
+ * SPDX-FileCopyrightText: Copyright (c) 2024-2026, NVIDIA CORPORATION.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -10,9 +10,13 @@
 namespace cuvs::core {
 
 /**
- * @defgroup interop Interoperability between `mdspan` and `DLManagedTensor`
+ * @defgroup interop Interoperability between `mdspan` and `DLManagedTensorVersioned`
  * @{
  */
+
+// ---------------------------------------------------------------------------
+// Device / host compatibility checks
+// ---------------------------------------------------------------------------
 
 /**
  * @brief Check if DLTensor has device accessible memory.
@@ -40,57 +44,64 @@ inline bool is_dlpack_host_compatible(DLTensor tensor)
   return detail::is_dlpack_host_compatible(tensor);
 }
 
-/**
- * @brief Check if DLManagedTensor has a row-major (c-contiguous) layout
- *
- * @param tensor DLManagedTensor object to check
- * @return bool
- */
-inline bool is_c_contiguous(DLManagedTensor* tensor) { return detail::is_c_contiguous(tensor); }
+// ---------------------------------------------------------------------------
+// Contiguity checks
+// ---------------------------------------------------------------------------
 
 /**
- * @brief Check if DLManagedTensor has a col-major (f-contiguous) layout
+ * @brief Check if DLManagedTensorVersioned has a row-major (c-contiguous) layout
  *
- * @param tensor DLManagedTensor object to check
+ * @param tensor DLManagedTensorVersioned object to check
  * @return bool
  */
-inline bool is_f_contiguous(DLManagedTensor* tensor) { return detail::is_f_contiguous(tensor); }
+inline bool is_c_contiguous(DLManagedTensorVersioned* tensor)
+{
+  return detail::is_c_contiguous(tensor);
+}
 
 /**
- * @brief Convert a DLManagedTensor to a mdspan
+ * @brief Check if DLManagedTensorVersioned has a col-major (f-contiguous) layout
+ *
+ * @param tensor DLManagedTensorVersioned object to check
+ * @return bool
+ */
+inline bool is_f_contiguous(DLManagedTensorVersioned* tensor)
+{
+  return detail::is_f_contiguous(tensor);
+}
+
+// ---------------------------------------------------------------------------
+// from_dlpack
+// ---------------------------------------------------------------------------
+
+/**
+ * @brief Convert a DLManagedTensorVersioned to a mdspan
  * NOTE: This function only supports compact row-major and col-major layouts.
  *
- * @code {.cpp}
- * #include <raft/core/device_mdspan.hpp>
- * #include <raft/core/interop.hpp>
- * // We have a `DLManagedTensor` with `DLDeviceType == kDLCUDA`,
- * // `DLDataType.code == kDLFloat` and `DLDataType.bits == 8`
- * DLManagedTensor tensor;
- * // declare the return type
- * using mdpsan_type = raft::device_mdspan<float, int64_t, raft::row_major>;
- * auto mds = raft::core::from_dlpack<mdspan_type>(&tensor);
- * @endcode
- *
  * @tparam MdspanType
- * @tparam typename
  * @param[in] managed_tensor
  * @return MdspanType
  */
 template <typename MdspanType, typename = raft::is_mdspan_t<MdspanType>>
-inline MdspanType from_dlpack(DLManagedTensor* managed_tensor)
+inline MdspanType from_dlpack(DLManagedTensorVersioned* managed_tensor)
 {
   return detail::from_dlpack<MdspanType>(managed_tensor);
 }
 
+// ---------------------------------------------------------------------------
+// to_dlpack
+// ---------------------------------------------------------------------------
+
 /**
- * @brief Convert a mdspan to a DLManagedTensor
+ * @brief Convert a mdspan to a DLManagedTensorVersioned
  *
- * Converts a mdspan to a DLManagedTensor object. This lets us pass non-owning
- * views from C++ to C code without copying.  Note that returned DLManagedTensor
- * is a non-owning view, and doesn't ensure that the underlying memory stays valid.
+ * Converts a mdspan to a DLManagedTensorVersioned object with version and flags set.
+ * This lets us pass non-owning views from C++ to C code without copying.
+ * Note that the returned tensor is a non-owning view, and doesn't ensure
+ * that the underlying memory stays valid.
  */
 template <typename MdspanType, typename = raft::is_mdspan_t<MdspanType>>
-void to_dlpack(MdspanType src, DLManagedTensor* dst)
+void to_dlpack(MdspanType src, DLManagedTensorVersioned* dst)
 {
   return detail::to_dlpack(src, dst);
 }

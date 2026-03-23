@@ -14,7 +14,7 @@ import static com.nvidia.cuvs.internal.panama.headers_h_1.cudaStream_t;
 import com.nvidia.cuvs.CuVSResources;
 import com.nvidia.cuvs.internal.panama.DLDataType;
 import com.nvidia.cuvs.internal.panama.DLDevice;
-import com.nvidia.cuvs.internal.panama.DLManagedTensor;
+import com.nvidia.cuvs.internal.panama.DLManagedTensorVersioned;
 import com.nvidia.cuvs.internal.panama.DLTensor;
 import com.nvidia.cuvs.internal.panama.headers_h;
 import java.lang.foreign.Arena;
@@ -310,7 +310,7 @@ public class Util {
   }
 
   /**
-   * Helper function for creating a DLManagedTensor instance
+   * Helper function for creating a DLManagedTensorVersioned instance
    *
    * @param arena      the Arena to use to allocate native memory for this data structure
    * @param data       the data pointer points to the allocated data
@@ -318,7 +318,7 @@ public class Util {
    * @param code       the type code of the matrix elements (e.g. kDLFloat())
    * @param bits       the size in bits of the matrix elements
    * @param deviceType the device where {@code data} is held (kDLCPU() or kDLCUDA())
-   * @return DLManagedTensor
+   * @return DLManagedTensorVersioned
    */
   public static MemorySegment prepareTensor(
       Arena arena, MemorySegment data, long[] shape, int code, int bits, int deviceType) {
@@ -326,7 +326,7 @@ public class Util {
   }
 
   /**
-   * Helper function for creating a DLManagedTensor instance
+   * Helper function for creating a DLManagedTensorVersioned instance
    *
    * @param arena      the Arena to use to allocate native memory for this data structure
    * @param data       the data pointer points to the allocated data
@@ -335,7 +335,7 @@ public class Util {
    * @param code       the type code of the matrix elements (e.g. kDLFloat())
    * @param bits       the size in bits of the matrix elements
    * @param deviceType the device where {@code data} is held (kDLCPU() or kDLCUDA())
-   * @return DLManagedTensor
+   * @return DLManagedTensorVersioned
    */
   public static MemorySegment prepareTensor(
       Arena arena,
@@ -346,7 +346,12 @@ public class Util {
       int bits,
       int deviceType) {
 
-    MemorySegment managedTensor = DLManagedTensor.allocate(arena);
+    MemorySegment managedTensor = DLManagedTensorVersioned.allocate(arena);
+
+    // Set DLPack 1.x version and flags fields
+    DLManagedTensorVersioned.version(managedTensor, DLPACK_VERSION());
+    DLManagedTensorVersioned.flags(managedTensor, (long) 0);
+
     MemorySegment tensor = DLTensor.allocate(arena);
 
     DLTensor.data(tensor, data);
@@ -371,10 +376,10 @@ public class Util {
       DLTensor.strides(tensor, MemorySegment.NULL);
     }
 
-    // Copy tensor information into the DLManagedTensor struct
-    DLManagedTensor.dl_tensor(managedTensor, tensor);
+    // Copy tensor information into the DLManagedTensorVersioned struct
+    DLManagedTensorVersioned.dl_tensor(managedTensor, tensor);
 
-    assert bits == DLDataType.bits(DLTensor.dtype(DLManagedTensor.dl_tensor(managedTensor)));
+    assert bits == DLDataType.bits(DLTensor.dtype(DLManagedTensorVersioned.dl_tensor(managedTensor)));
     return managedTensor;
   }
 }

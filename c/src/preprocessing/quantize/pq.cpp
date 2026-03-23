@@ -17,9 +17,9 @@ namespace {
 template <typename T, typename OutputT = uint8_t>
 void _transform(cuvsResources_t res,
                 cuvsProductQuantizer_t quantizer,
-                DLManagedTensor* dataset_tensor,
-                DLManagedTensor* codes_out_tensor,
-                DLManagedTensor* vq_labels_tensor)
+                DLManagedTensorVersioned* dataset_tensor,
+                DLManagedTensorVersioned* codes_out_tensor,
+                DLManagedTensorVersioned* vq_labels_tensor)
 {
   auto res_ptr = reinterpret_cast<raft::resources*>(res);
   auto q = reinterpret_cast<cuvs::preprocessing::quantize::pq::quantizer<T>*>(quantizer->addr);
@@ -57,7 +57,7 @@ void _transform(cuvsResources_t res,
 template <typename T>
 void* _build(cuvsResources_t res,
              cuvsProductQuantizerParams_t params,
-             DLManagedTensor* dataset_tensor)
+             DLManagedTensorVersioned* dataset_tensor)
 {
   auto dataset = dataset_tensor->dl_tensor;
 
@@ -95,9 +95,9 @@ void* _build(cuvsResources_t res,
 template <typename DataT, typename QuantT = uint8_t>
 void _inverse_transform(cuvsResources_t res,
                 cuvsProductQuantizer_t quantizer,
-                DLManagedTensor* pq_codes_tensor,
-                DLManagedTensor* out_tensor,
-                DLManagedTensor* vq_labels_tensor)
+                DLManagedTensorVersioned* pq_codes_tensor,
+                DLManagedTensorVersioned* out_tensor,
+                DLManagedTensorVersioned* vq_labels_tensor)
 {
   auto res_ptr = reinterpret_cast<raft::resources*>(res);
   auto q = reinterpret_cast<cuvs::preprocessing::quantize::pq::quantizer<DataT>*>(quantizer->addr);
@@ -150,7 +150,7 @@ extern "C" cuvsError_t cuvsProductQuantizerDestroy(cuvsProductQuantizer_t quanti
 
 extern "C" cuvsError_t cuvsProductQuantizerBuild(cuvsResources_t res,
                                                  cuvsProductQuantizerParams_t params,
-                                                 DLManagedTensor* dataset_tensor,
+                                                 DLManagedTensorVersioned* dataset_tensor,
                                                  cuvsProductQuantizer_t quantizer)
 {
   return cuvs::core::translate_exceptions([=] {
@@ -168,9 +168,9 @@ extern "C" cuvsError_t cuvsProductQuantizerBuild(cuvsResources_t res,
 
 extern "C" cuvsError_t cuvsProductQuantizerTransform(cuvsResources_t res,
                                                      cuvsProductQuantizer_t quantizer,
-                                                     DLManagedTensor* dataset_tensor,
-                                                     DLManagedTensor* codes_out_tensor,
-                                                     DLManagedTensor* vq_labels_tensor)
+                                                     DLManagedTensorVersioned* dataset_tensor,
+                                                     DLManagedTensorVersioned* codes_out_tensor,
+                                                     DLManagedTensorVersioned* vq_labels_tensor)
 {
   return cuvs::core::translate_exceptions([=] {
     auto dataset = dataset_tensor->dl_tensor;
@@ -186,9 +186,9 @@ extern "C" cuvsError_t cuvsProductQuantizerTransform(cuvsResources_t res,
 
 extern "C" cuvsError_t cuvsProductQuantizerInverseTransform(cuvsResources_t res,
                                                             cuvsProductQuantizer_t quantizer,
-                                                            DLManagedTensor* codes_tensor,
-                                                            DLManagedTensor* out_tensor,
-                                                            DLManagedTensor* vq_labels_tensor)
+                                                            DLManagedTensorVersioned* codes_tensor,
+                                                            DLManagedTensorVersioned* out_tensor,
+                                                            DLManagedTensorVersioned* vq_labels_tensor)
 {
   return cuvs::core::translate_exceptions([=] {
     auto out_dtype = out_tensor->dl_tensor.dtype;
@@ -244,7 +244,7 @@ extern "C" cuvsError_t cuvsProductQuantizerGetPqDim(cuvsProductQuantizer_t quant
 }
 
 extern "C" cuvsError_t cuvsProductQuantizerGetPqCodebook(cuvsProductQuantizer_t quantizer,
-                                                         DLManagedTensor* pq_codebook)
+                                                         DLManagedTensorVersioned* pq_codebook)
 {
   return cuvs::core::translate_exceptions([=] {
     if (quantizer != nullptr) {
@@ -266,7 +266,7 @@ extern "C" cuvsError_t cuvsProductQuantizerGetPqCodebook(cuvsProductQuantizer_t 
 }
 
 extern "C" cuvsError_t cuvsProductQuantizerGetVqCodebook(cuvsProductQuantizer_t quantizer,
-                                                         DLManagedTensor* vq_codebook)
+                                                         DLManagedTensorVersioned* vq_codebook)
 {
   return cuvs::core::translate_exceptions([=] {
     if (quantizer != nullptr) {
@@ -325,3 +325,4 @@ extern "C" cuvsError_t cuvsProductQuantizerGetUseVq(
     }
   });
 }
+

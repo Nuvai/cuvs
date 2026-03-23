@@ -153,8 +153,8 @@ cdef class Quantizer:
         Returns the PQ codebook
         """
         output = DeviceTensorView()
-        cdef cydlpack.DLManagedTensor* pq_codebook_dlpack = \
-            <cydlpack.DLManagedTensor*><size_t>output.get_handle()
+        cdef cydlpack.DLManagedTensorVersioned* pq_codebook_dlpack = \
+            <cydlpack.DLManagedTensorVersioned*><size_t>output.get_handle()
         check_cuvs(cuvsProductQuantizerGetPqCodebook(self.quantizer,
                                                      pq_codebook_dlpack))
         output.parent = self
@@ -166,8 +166,8 @@ cdef class Quantizer:
         Returns the VQ codebook
         """
         output = DeviceTensorView()
-        cdef cydlpack.DLManagedTensor* vq_codebook_dlpack = \
-            <cydlpack.DLManagedTensor*><size_t>output.get_handle()
+        cdef cydlpack.DLManagedTensorVersioned* vq_codebook_dlpack = \
+            <cydlpack.DLManagedTensorVersioned*><size_t>output.get_handle()
         check_cuvs(cuvsProductQuantizerGetVqCodebook(self.quantizer,
                                                      vq_codebook_dlpack))
         output.parent = self
@@ -225,7 +225,7 @@ def build(QuantizerParams params, dataset, resources=None):
     """
     dataset_ai = wrap_array(dataset)
 
-    cdef cydlpack.DLManagedTensor* dataset_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* dataset_dlpack = \
         cydlpack.dlpack_c(dataset_ai)
 
     _check_input_array(dataset_ai,
@@ -289,11 +289,11 @@ def transform(Quantizer quantizer, dataset, codes_output=None, vq_labels=None, r
 
     cdef cuvsResources_t res = <cuvsResources_t>resources.get_c_obj()
 
-    cdef cydlpack.DLManagedTensor* dataset_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* dataset_dlpack = \
         cydlpack.dlpack_c(dataset_ai)
-    cdef cydlpack.DLManagedTensor* codes_output_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* codes_output_dlpack = \
         cydlpack.dlpack_c(codes_output_ai)
-    cdef cydlpack.DLManagedTensor* vq_labels_dlpack = NULL
+    cdef cydlpack.DLManagedTensorVersioned* vq_labels_dlpack = NULL
     if quantizer.use_vq:
         if vq_labels is None:
             vq_labels = device_ndarray.empty((dataset_ai.shape[0],), dtype="uint32")
@@ -355,7 +355,7 @@ def inverse_transform(Quantizer quantizer, codes, output=None, vq_labels=None, r
         output = ndarray.empty((codes_ai.shape[0],
                                 original_cols), dtype=pq_cdbk.dtype)
 
-    cdef cydlpack.DLManagedTensor* vq_labels_dlpack = NULL
+    cdef cydlpack.DLManagedTensorVersioned* vq_labels_dlpack = NULL
 
     if vq_labels is not None:
         _check_input_array(vq_labels, [np.dtype("uint32")])
@@ -365,9 +365,9 @@ def inverse_transform(Quantizer quantizer, codes, output=None, vq_labels=None, r
 
     cdef cuvsResources_t res = <cuvsResources_t>resources.get_c_obj()
 
-    cdef cydlpack.DLManagedTensor* codes_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* codes_dlpack = \
         cydlpack.dlpack_c(codes_ai)
-    cdef cydlpack.DLManagedTensor* output_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* output_dlpack = \
         cydlpack.dlpack_c(output_ai)
 
     check_cuvs(cuvsProductQuantizerInverseTransform(res,

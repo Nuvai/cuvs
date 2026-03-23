@@ -71,9 +71,9 @@ def transform(dataset, output=None, resources=None):
 
     cdef cuvsResources_t res = <cuvsResources_t>resources.get_c_obj()
 
-    cdef cydlpack.DLManagedTensor* dataset_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* dataset_dlpack = \
         cydlpack.dlpack_c(dataset_ai)
-    cdef cydlpack.DLManagedTensor* output_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* output_dlpack = \
         cydlpack.dlpack_c(output_ai)
 
     check_cuvs(cuvsBinaryQuantizerTransform(res,

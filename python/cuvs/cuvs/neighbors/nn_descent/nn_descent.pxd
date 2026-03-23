@@ -8,7 +8,7 @@ from libc.stdint cimport uint32_t, uintptr_t
 from libcpp cimport bool
 
 from cuvs.common.c_api cimport cuvsError_t, cuvsResources_t
-from cuvs.common.cydlpack cimport DLDataType, DLManagedTensor
+from cuvs.common.cydlpack cimport DLDataType, DLManagedTensorVersioned
 from cuvs.distance_type cimport cuvsDistanceType
 
 
@@ -48,14 +48,14 @@ cdef extern from "cuvs/neighbors/nn_descent.h" nogil:
 
     cuvsError_t cuvsNNDescentIndexGetGraph(cuvsResources_t res,
                                            cuvsNNDescentIndex_t index,
-                                           DLManagedTensor * output)
+                                           DLManagedTensorVersioned * output)
 
     cuvsError_t cuvsNNDescentIndexGetDistances(cuvsResources_t res,
                                                cuvsNNDescentIndex_t index,
-                                               DLManagedTensor * output)
+                                               DLManagedTensorVersioned * output)
 
     cuvsError_t cuvsNNDescentBuild(cuvsResources_t res,
                                    cuvsNNDescentIndexParams* params,
-                                   DLManagedTensor* dataset,
-                                   DLManagedTensor* graph,
+                                   DLManagedTensorVersioned* dataset,
+                                   DLManagedTensorVersioned* graph,
                                    cuvsNNDescentIndex_t index) except +

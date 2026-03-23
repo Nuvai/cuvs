@@ -5,7 +5,7 @@
 # cython: language_level=3
 
 from cuvs.common.c_api cimport cuvsError_t, cuvsResources_t
-from cuvs.common.cydlpack cimport DLDataType, DLManagedTensor
+from cuvs.common.cydlpack cimport DLDataType, DLManagedTensorVersioned
 
 
 cdef extern from "cuvs/preprocessing/quantize/scalar.h" nogil:
@@ -34,15 +34,15 @@ cdef extern from "cuvs/preprocessing/quantize/scalar.h" nogil:
 
     cuvsError_t cuvsScalarQuantizerTrain(cuvsResources_t res,
                                          cuvsScalarQuantizerParams_t params,
-                                         DLManagedTensor* dataset,
+                                         DLManagedTensorVersioned* dataset,
                                          cuvsScalarQuantizer_t quantizer)
 
     cuvsError_t cuvsScalarQuantizerTransform(cuvsResources_t res,
                                              cuvsScalarQuantizer_t quantizer,
-                                             DLManagedTensor* dataset,
-                                             DLManagedTensor* out)
+                                             DLManagedTensorVersioned* dataset,
+                                             DLManagedTensorVersioned* out)
 
     cuvsError_t cuvsScalarQuantizerInverseTransform(cuvsResources_t res,
                                                     cuvsScalarQuantizer_t q,
-                                                    DLManagedTensor* dataset,
-                                                    DLManagedTensor* out)
+                                                    DLManagedTensorVersioned* dataset,
+                                                    DLManagedTensorVersioned* out)

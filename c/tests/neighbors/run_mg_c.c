@@ -9,7 +9,9 @@
 #include <cuvs/neighbors/mg_cagra.h>
 #include <cuvs/neighbors/mg_ivf_flat.h>
 #include <cuvs/neighbors/mg_ivf_pq.h>
+#include <dlpack/dlpack.h>
 #include <stdio.h>
+#include <string.h>
 
 typedef enum { MG_ALGO_IVF_FLAT, MG_ALGO_IVF_PQ, MG_ALGO_CAGRA } mg_algo_t;
 
@@ -48,7 +50,11 @@ int run_mg_ivf_flat_test(mg_test_params params,
   cuvsMultiGpuResourcesCreate(&res);
 
   // Create dataset tensor
-  DLManagedTensor dataset_tensor;
+  DLManagedTensorVersioned dataset_tensor;
+  memset(&dataset_tensor, 0, sizeof(dataset_tensor));
+  dataset_tensor.version.major = DLPACK_MAJOR_VERSION;
+  dataset_tensor.version.minor = DLPACK_MINOR_VERSION;
+  dataset_tensor.flags         = 0;
   dataset_tensor.dl_tensor.data               = index_data;
   dataset_tensor.dl_tensor.device.device_type = kDLCPU;  // Multi-GPU requires host memory
   dataset_tensor.dl_tensor.ndim               = 2;
@@ -112,7 +118,11 @@ int run_mg_ivf_flat_test(mg_test_params params,
   }
 
   // Create queries tensor
-  DLManagedTensor queries_tensor;
+  DLManagedTensorVersioned queries_tensor;
+  memset(&queries_tensor, 0, sizeof(queries_tensor));
+  queries_tensor.version.major = DLPACK_MAJOR_VERSION;
+  queries_tensor.version.minor = DLPACK_MINOR_VERSION;
+  queries_tensor.flags         = 0;
   queries_tensor.dl_tensor.data               = query_data;
   queries_tensor.dl_tensor.device.device_type = kDLCPU;  // Multi-GPU requires host memory
   queries_tensor.dl_tensor.ndim               = 2;
@@ -124,7 +134,11 @@ int run_mg_ivf_flat_test(mg_test_params params,
   queries_tensor.dl_tensor.strides            = NULL;
 
   // Create neighbors tensor
-  DLManagedTensor neighbors_tensor;
+  DLManagedTensorVersioned neighbors_tensor;
+  memset(&neighbors_tensor, 0, sizeof(neighbors_tensor));
+  neighbors_tensor.version.major = DLPACK_MAJOR_VERSION;
+  neighbors_tensor.version.minor = DLPACK_MINOR_VERSION;
+  neighbors_tensor.flags         = 0;
   neighbors_tensor.dl_tensor.data               = neighbors_data;
   neighbors_tensor.dl_tensor.device.device_type = kDLCPU;  // Multi-GPU requires host memory
   neighbors_tensor.dl_tensor.ndim               = 2;
@@ -136,7 +150,11 @@ int run_mg_ivf_flat_test(mg_test_params params,
   neighbors_tensor.dl_tensor.strides            = NULL;
 
   // Create distances tensor
-  DLManagedTensor distances_tensor;
+  DLManagedTensorVersioned distances_tensor;
+  memset(&distances_tensor, 0, sizeof(distances_tensor));
+  distances_tensor.version.major = DLPACK_MAJOR_VERSION;
+  distances_tensor.version.minor = DLPACK_MINOR_VERSION;
+  distances_tensor.flags         = 0;
   distances_tensor.dl_tensor.data               = distances_data;
   distances_tensor.dl_tensor.device.device_type = kDLCPU;  // Multi-GPU requires host memory
   distances_tensor.dl_tensor.ndim               = 2;
@@ -201,7 +219,11 @@ int run_mg_ivf_pq_test(mg_test_params params,
   cuvsMultiGpuResourcesCreate(&res);
 
   // Create dataset tensor
-  DLManagedTensor dataset_tensor;
+  DLManagedTensorVersioned dataset_tensor;
+  memset(&dataset_tensor, 0, sizeof(dataset_tensor));
+  dataset_tensor.version.major = DLPACK_MAJOR_VERSION;
+  dataset_tensor.version.minor = DLPACK_MINOR_VERSION;
+  dataset_tensor.flags         = 0;
   dataset_tensor.dl_tensor.data               = index_data;
   dataset_tensor.dl_tensor.device.device_type = kDLCPU;  // Multi-GPU requires host memory
   dataset_tensor.dl_tensor.ndim               = 2;
@@ -265,7 +287,11 @@ int run_mg_ivf_pq_test(mg_test_params params,
   }
 
   // Create queries tensor
-  DLManagedTensor queries_tensor;
+  DLManagedTensorVersioned queries_tensor;
+  memset(&queries_tensor, 0, sizeof(queries_tensor));
+  queries_tensor.version.major = DLPACK_MAJOR_VERSION;
+  queries_tensor.version.minor = DLPACK_MINOR_VERSION;
+  queries_tensor.flags         = 0;
   queries_tensor.dl_tensor.data               = query_data;
   queries_tensor.dl_tensor.device.device_type = kDLCPU;  // Multi-GPU requires host memory
   queries_tensor.dl_tensor.ndim               = 2;
@@ -277,7 +303,11 @@ int run_mg_ivf_pq_test(mg_test_params params,
   queries_tensor.dl_tensor.strides            = NULL;
 
   // Create neighbors tensor
-  DLManagedTensor neighbors_tensor;
+  DLManagedTensorVersioned neighbors_tensor;
+  memset(&neighbors_tensor, 0, sizeof(neighbors_tensor));
+  neighbors_tensor.version.major = DLPACK_MAJOR_VERSION;
+  neighbors_tensor.version.minor = DLPACK_MINOR_VERSION;
+  neighbors_tensor.flags         = 0;
   neighbors_tensor.dl_tensor.data               = neighbors_data;
   neighbors_tensor.dl_tensor.device.device_type = kDLCPU;  // Multi-GPU requires host memory
   neighbors_tensor.dl_tensor.ndim               = 2;
@@ -289,7 +319,11 @@ int run_mg_ivf_pq_test(mg_test_params params,
   neighbors_tensor.dl_tensor.strides            = NULL;
 
   // Create distances tensor
-  DLManagedTensor distances_tensor;
+  DLManagedTensorVersioned distances_tensor;
+  memset(&distances_tensor, 0, sizeof(distances_tensor));
+  distances_tensor.version.major = DLPACK_MAJOR_VERSION;
+  distances_tensor.version.minor = DLPACK_MINOR_VERSION;
+  distances_tensor.flags         = 0;
   distances_tensor.dl_tensor.data               = distances_data;
   distances_tensor.dl_tensor.device.device_type = kDLCPU;  // Multi-GPU requires host memory
   distances_tensor.dl_tensor.ndim               = 2;
@@ -354,7 +388,11 @@ int run_mg_cagra_test(mg_test_params params,
   cuvsMultiGpuResourcesCreate(&res);
 
   // Create dataset tensor
-  DLManagedTensor dataset_tensor;
+  DLManagedTensorVersioned dataset_tensor;
+  memset(&dataset_tensor, 0, sizeof(dataset_tensor));
+  dataset_tensor.version.major = DLPACK_MAJOR_VERSION;
+  dataset_tensor.version.minor = DLPACK_MINOR_VERSION;
+  dataset_tensor.flags         = 0;
   dataset_tensor.dl_tensor.data               = index_data;
   dataset_tensor.dl_tensor.device.device_type = kDLCPU;  // Multi-GPU requires host memory
   dataset_tensor.dl_tensor.ndim               = 2;
@@ -406,7 +444,11 @@ int run_mg_cagra_test(mg_test_params params,
   }
 
   // Create queries tensor
-  DLManagedTensor queries_tensor;
+  DLManagedTensorVersioned queries_tensor;
+  memset(&queries_tensor, 0, sizeof(queries_tensor));
+  queries_tensor.version.major = DLPACK_MAJOR_VERSION;
+  queries_tensor.version.minor = DLPACK_MINOR_VERSION;
+  queries_tensor.flags         = 0;
   queries_tensor.dl_tensor.data               = query_data;
   queries_tensor.dl_tensor.device.device_type = kDLCPU;  // Multi-GPU requires host memory
   queries_tensor.dl_tensor.ndim               = 2;
@@ -418,7 +460,11 @@ int run_mg_cagra_test(mg_test_params params,
   queries_tensor.dl_tensor.strides            = NULL;
 
   // Create neighbors tensor
-  DLManagedTensor neighbors_tensor;
+  DLManagedTensorVersioned neighbors_tensor;
+  memset(&neighbors_tensor, 0, sizeof(neighbors_tensor));
+  neighbors_tensor.version.major = DLPACK_MAJOR_VERSION;
+  neighbors_tensor.version.minor = DLPACK_MINOR_VERSION;
+  neighbors_tensor.flags         = 0;
   neighbors_tensor.dl_tensor.data               = neighbors_data;
   neighbors_tensor.dl_tensor.device.device_type = kDLCPU;  // Multi-GPU requires host memory
   neighbors_tensor.dl_tensor.ndim               = 2;
@@ -430,7 +476,11 @@ int run_mg_cagra_test(mg_test_params params,
   neighbors_tensor.dl_tensor.strides            = NULL;
 
   // Create distances tensor
-  DLManagedTensor distances_tensor;
+  DLManagedTensorVersioned distances_tensor;
+  memset(&distances_tensor, 0, sizeof(distances_tensor));
+  distances_tensor.version.major = DLPACK_MAJOR_VERSION;
+  distances_tensor.version.minor = DLPACK_MINOR_VERSION;
+  distances_tensor.flags         = 0;
   distances_tensor.dl_tensor.data               = distances_data;
   distances_tensor.dl_tensor.device.device_type = kDLCPU;  // Multi-GPU requires host memory
   distances_tensor.dl_tensor.ndim               = 2;
@@ -486,7 +536,11 @@ int generate_reference_results(mg_test_params params,
   cuvsResourcesCreate(&res);
 
   // Create dataset tensor
-  DLManagedTensor dataset_tensor;
+  DLManagedTensorVersioned dataset_tensor;
+  memset(&dataset_tensor, 0, sizeof(dataset_tensor));
+  dataset_tensor.version.major = DLPACK_MAJOR_VERSION;
+  dataset_tensor.version.minor = DLPACK_MINOR_VERSION;
+  dataset_tensor.flags         = 0;
   dataset_tensor.dl_tensor.data               = index_data;
   dataset_tensor.dl_tensor.device.device_type = kDLCUDA;  // Brute force can use device memory
   dataset_tensor.dl_tensor.ndim               = 2;
@@ -498,7 +552,11 @@ int generate_reference_results(mg_test_params params,
   dataset_tensor.dl_tensor.strides            = NULL;
 
   // Create queries tensor
-  DLManagedTensor queries_tensor;
+  DLManagedTensorVersioned queries_tensor;
+  memset(&queries_tensor, 0, sizeof(queries_tensor));
+  queries_tensor.version.major = DLPACK_MAJOR_VERSION;
+  queries_tensor.version.minor = DLPACK_MINOR_VERSION;
+  queries_tensor.flags         = 0;
   queries_tensor.dl_tensor.data               = query_data;
   queries_tensor.dl_tensor.device.device_type = kDLCUDA;  // Brute force can use device memory
   queries_tensor.dl_tensor.ndim               = 2;
@@ -510,7 +568,11 @@ int generate_reference_results(mg_test_params params,
   queries_tensor.dl_tensor.strides            = NULL;
 
   // Create neighbors tensor
-  DLManagedTensor neighbors_tensor;
+  DLManagedTensorVersioned neighbors_tensor;
+  memset(&neighbors_tensor, 0, sizeof(neighbors_tensor));
+  neighbors_tensor.version.major = DLPACK_MAJOR_VERSION;
+  neighbors_tensor.version.minor = DLPACK_MINOR_VERSION;
+  neighbors_tensor.flags         = 0;
   neighbors_tensor.dl_tensor.data               = ref_neighbors_data;
   neighbors_tensor.dl_tensor.device.device_type = kDLCUDA;
   neighbors_tensor.dl_tensor.ndim               = 2;
@@ -522,7 +584,11 @@ int generate_reference_results(mg_test_params params,
   neighbors_tensor.dl_tensor.strides            = NULL;
 
   // Create distances tensor
-  DLManagedTensor distances_tensor;
+  DLManagedTensorVersioned distances_tensor;
+  memset(&distances_tensor, 0, sizeof(distances_tensor));
+  distances_tensor.version.major = DLPACK_MAJOR_VERSION;
+  distances_tensor.version.minor = DLPACK_MINOR_VERSION;
+  distances_tensor.flags         = 0;
   distances_tensor.dl_tensor.data               = ref_distances_data;
   distances_tensor.dl_tensor.device.device_type = kDLCUDA;
   distances_tensor.dl_tensor.ndim               = 2;

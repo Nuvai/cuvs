@@ -18,8 +18,8 @@ namespace {
 template <typename T, typename OutputT = uint8_t>
 void _transform(cuvsResources_t res,
                 cuvsBinaryQuantizer_t quantizer,
-                DLManagedTensor* dataset_tensor,
-                DLManagedTensor* out_tensor)
+                DLManagedTensorVersioned* dataset_tensor,
+                DLManagedTensorVersioned* out_tensor)
 {
   auto res_ptr = reinterpret_cast<raft::resources*>(res);
   auto q = reinterpret_cast<cuvs::preprocessing::quantize::binary::quantizer<T>*>(quantizer->addr);
@@ -52,7 +52,7 @@ void _transform(cuvsResources_t res,
 template <typename T>
 void* _train(cuvsResources_t res,
              cuvsBinaryQuantizerParams_t params,
-             DLManagedTensor* dataset_tensor)
+             DLManagedTensorVersioned* dataset_tensor)
 {
   auto dataset = dataset_tensor->dl_tensor;
 
@@ -117,7 +117,7 @@ extern "C" cuvsError_t cuvsBinaryQuantizerDestroy(cuvsBinaryQuantizer_t quantize
 
 extern "C" cuvsError_t cuvsBinaryQuantizerTrain(cuvsResources_t res,
                                                 cuvsBinaryQuantizerParams_t params,
-                                                DLManagedTensor* dataset_tensor,
+                                                DLManagedTensorVersioned* dataset_tensor,
                                                 cuvsBinaryQuantizer_t quantizer)
 {
   return cuvs::core::translate_exceptions([=] {
@@ -139,8 +139,8 @@ extern "C" cuvsError_t cuvsBinaryQuantizerTrain(cuvsResources_t res,
 
 extern "C" cuvsError_t cuvsBinaryQuantizerTransformWithParams(cuvsResources_t res,
                                                               cuvsBinaryQuantizer_t quantizer,
-                                                              DLManagedTensor* dataset_tensor,
-                                                              DLManagedTensor* out_tensor)
+                                                              DLManagedTensorVersioned* dataset_tensor,
+                                                              DLManagedTensorVersioned* out_tensor)
 {
   return cuvs::core::translate_exceptions([=] {
     auto dataset = dataset_tensor->dl_tensor;
@@ -159,8 +159,8 @@ extern "C" cuvsError_t cuvsBinaryQuantizerTransformWithParams(cuvsResources_t re
 }
 
 extern "C" cuvsError_t cuvsBinaryQuantizerTransform(cuvsResources_t res,
-                                                    DLManagedTensor* dataset_tensor,
-                                                    DLManagedTensor* out_tensor)
+                                                    DLManagedTensorVersioned* dataset_tensor,
+                                                    DLManagedTensorVersioned* out_tensor)
 {
   cuvsBinaryQuantizerParams_t params;
   cuvsBinaryQuantizerParamsCreate(&params);
@@ -177,3 +177,4 @@ extern "C" cuvsError_t cuvsBinaryQuantizerTransform(cuvsResources_t res,
   cuvsBinaryQuantizerParamsDestroy(params);
   return result;
 }
+

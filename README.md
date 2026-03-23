@@ -125,7 +125,7 @@ cuvsResources_t res;
 cuvsCagraIndexParams_t index_params;
 cuvsCagraIndex_t index;
 
-DLManagedTensor *dataset;
+DLManagedTensorVersioned *dataset;
 load_dataset(dataset);
 
 cuvsResourcesCreate(&res);

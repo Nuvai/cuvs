@@ -11,7 +11,7 @@ from cuvs.common.c_api cimport (
     cuvsMatrixSliceRows,
     cuvsResources_t,
 )
-from cuvs.common.cydlpack cimport DLManagedTensor, dlpack_c
+from cuvs.common.cydlpack cimport DLManagedTensorVersioned, dlpack_c
 
 from pylibraft.common.cai_wrapper import wrap_array
 
@@ -36,7 +36,7 @@ cdef class DeviceTensorView:
     passed directly to cuvs python functions.
     """
 
-    cdef DLManagedTensor tensor
+    cdef DLManagedTensorVersioned tensor
     cdef public object parent
 
     def __init__(self, array_like=None):
@@ -71,7 +71,7 @@ cdef class DeviceTensorView:
 
         output = np.empty(self.shape, dtype=self.dtype)
         ai = wrap_array(output)
-        cdef DLManagedTensor* output_dlpack = dlpack_c(ai)
+        cdef DLManagedTensorVersioned* output_dlpack = dlpack_c(ai)
         check_cuvs(cuvsMatrixCopy(res, &self.tensor, output_dlpack))
         return output
 
@@ -98,8 +98,8 @@ cdef class DeviceTensorView:
         cdef cuvsResources_t res = <cuvsResources_t>resources.get_c_obj()
 
         output = DeviceTensorView()
-        cdef DLManagedTensor* output_dlpack = \
-            <DLManagedTensor*><size_t>output.get_handle()
+        cdef DLManagedTensorVersioned* output_dlpack = \
+            <DLManagedTensorVersioned*><size_t>output.get_handle()
         check_cuvs(cuvsMatrixSliceRows(res, &self.tensor, start, end,
                                        output_dlpack))
         output.parent = self  # keep memory alive on returned slice

@@ -26,7 +26,7 @@ namespace {
 template <typename T>
 void _build(cuvsResources_t res,
             cuvsHnswIndexParams_t params,
-            DLManagedTensor* dataset_tensor,
+            DLManagedTensorVersioned* dataset_tensor,
             cuvsHnswIndex_t hnsw_index)
 {
   auto res_ptr    = reinterpret_cast<raft::resources*>(res);
@@ -60,7 +60,7 @@ void _from_cagra(cuvsResources_t res,
                  cuvsHnswIndexParams_t params,
                  cuvsCagraIndex_t cagra_index,
                  cuvsHnswIndex_t hnsw_index,
-                 std::optional<DLManagedTensor*> dataset_tensor)
+                 std::optional<DLManagedTensorVersioned*> dataset_tensor)
 {
   auto res_ptr = reinterpret_cast<raft::resources*>(res);
   auto index   = reinterpret_cast<cuvs::neighbors::cagra::index<T, uint32_t>*>(cagra_index->addr);
@@ -85,7 +85,7 @@ void _from_cagra(cuvsResources_t res,
 template <typename T>
 void _extend(cuvsResources_t res,
              cuvsHnswExtendParams_t params,
-             DLManagedTensor* additional_dataset,
+             DLManagedTensorVersioned* additional_dataset,
              cuvsHnswIndex index)
 {
   auto res_ptr           = reinterpret_cast<raft::resources*>(res);
@@ -103,9 +103,9 @@ template <typename T>
 void _search(cuvsResources_t res,
              cuvsHnswSearchParams params,
              cuvsHnswIndex index,
-             DLManagedTensor* queries_tensor,
-             DLManagedTensor* neighbors_tensor,
-             DLManagedTensor* distances_tensor)
+             DLManagedTensorVersioned* queries_tensor,
+             DLManagedTensorVersioned* neighbors_tensor,
+             DLManagedTensorVersioned* distances_tensor)
 {
   auto res_ptr   = reinterpret_cast<raft::resources*>(res);
   auto index_ptr = reinterpret_cast<cuvs::neighbors::hnsw::index<T>*>(index.addr);
@@ -246,7 +246,7 @@ extern "C" cuvsError_t cuvsHnswFromCagraWithDataset(cuvsResources_t res,
                                                     cuvsHnswIndexParams_t params,
                                                     cuvsCagraIndex_t cagra_index,
                                                     cuvsHnswIndex_t hnsw_index,
-                                                    DLManagedTensor* dataset_tensor)
+                                                    DLManagedTensorVersioned* dataset_tensor)
 {
   return cuvs::core::translate_exceptions([=] {
     auto index        = *cagra_index;
@@ -267,7 +267,7 @@ extern "C" cuvsError_t cuvsHnswFromCagraWithDataset(cuvsResources_t res,
 
 extern "C" cuvsError_t cuvsHnswBuild(cuvsResources_t res,
                                      cuvsHnswIndexParams_t params,
-                                     DLManagedTensor* dataset,
+                                     DLManagedTensorVersioned* dataset,
                                      cuvsHnswIndex_t index)
 {
   return cuvs::core::translate_exceptions([=] {
@@ -290,7 +290,7 @@ extern "C" cuvsError_t cuvsHnswBuild(cuvsResources_t res,
 
 extern "C" cuvsError_t cuvsHnswExtend(cuvsResources_t res,
                                       cuvsHnswExtendParams_t params,
-                                      DLManagedTensor* additional_dataset,
+                                      DLManagedTensorVersioned* additional_dataset,
                                       cuvsHnswIndex_t index)
 {
   return cuvs::core::translate_exceptions([=] {
@@ -322,9 +322,9 @@ extern "C" cuvsError_t cuvsHnswSearchParamsDestroy(cuvsHnswSearchParams_t params
 extern "C" cuvsError_t cuvsHnswSearch(cuvsResources_t res,
                                       cuvsHnswSearchParams_t params,
                                       cuvsHnswIndex_t index_c_ptr,
-                                      DLManagedTensor* queries_tensor,
-                                      DLManagedTensor* neighbors_tensor,
-                                      DLManagedTensor* distances_tensor)
+                                      DLManagedTensorVersioned* queries_tensor,
+                                      DLManagedTensorVersioned* neighbors_tensor,
+                                      DLManagedTensorVersioned* distances_tensor)
 {
   return cuvs::core::translate_exceptions([=] {
     auto queries   = queries_tensor->dl_tensor;
@@ -404,3 +404,4 @@ extern "C" cuvsError_t cuvsHnswDeserialize(cuvsResources_t res,
     }
   });
 }
+

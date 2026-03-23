@@ -542,7 +542,7 @@ def build(IndexParams index_params, dataset, resources=None):
                                     np.dtype('uint8'),
                                     np.dtype('int8')])
 
-    cdef cydlpack.DLManagedTensor* dataset_dlpack = cydlpack.dlpack_c(dataset_ai)
+    cdef cydlpack.DLManagedTensorVersioned* dataset_dlpack = cydlpack.dlpack_c(dataset_ai)
     cdef cuvsResources_t res = <cuvsResources_t>resources.get_c_obj()
 
     cdef Index hnsw_index = Index()
@@ -595,7 +595,7 @@ def extend(ExtendParams extend_params, Index index, data, resources=None):
                                  np.dtype('uint8'),
                                  np.dtype('int8')])
 
-    cdef cydlpack.DLManagedTensor* data_dlpack = cydlpack.dlpack_c(data_ai)
+    cdef cydlpack.DLManagedTensorVersioned* data_dlpack = cydlpack.dlpack_c(data_ai)
     cdef cuvsResources_t res = <cuvsResources_t>resources.get_c_obj()
 
     check_cuvs(cuvsHnswExtend(
@@ -729,11 +729,11 @@ def search(SearchParams search_params,
                        exp_rows=n_queries, exp_cols=k)
 
     cdef cuvsHnswSearchParams* params = &search_params.params
-    cdef cydlpack.DLManagedTensor* queries_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* queries_dlpack = \
         cydlpack.dlpack_c(queries_ai)
-    cdef cydlpack.DLManagedTensor* neighbors_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* neighbors_dlpack = \
         cydlpack.dlpack_c(neighbors_ai)
-    cdef cydlpack.DLManagedTensor* distances_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* distances_dlpack = \
         cydlpack.dlpack_c(distances_ai)
     cdef cuvsResources_t res = <cuvsResources_t>resources.get_c_obj()
 

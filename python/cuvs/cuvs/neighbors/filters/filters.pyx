@@ -76,7 +76,7 @@ def from_bitmap(bitmap):
     bitmap_cai = wrap_array(bitmap)
     _check_input_array(bitmap_cai, [np.dtype('uint32')])
 
-    cdef cydlpack.DLManagedTensor* bitmap_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* bitmap_dlpack = \
         cydlpack.dlpack_c(bitmap_cai)
 
     cdef cuvsFilter filter
@@ -125,7 +125,7 @@ def from_bitset(bitset):
     bitset_cai = wrap_array(bitset)
     _check_input_array(bitset_cai, [np.dtype('uint32')])
 
-    cdef cydlpack.DLManagedTensor* bitset_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* bitset_dlpack = \
         cydlpack.dlpack_c(bitset_cai)
 
     cdef cuvsFilter filter

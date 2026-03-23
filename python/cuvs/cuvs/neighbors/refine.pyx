@@ -132,15 +132,15 @@ def refine(dataset,
     _check_input_array(distances_cai, [np.dtype('float32')],
                        exp_rows=n_queries, exp_cols=k)
 
-    cdef cydlpack.DLManagedTensor* dataset_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* dataset_dlpack = \
         cydlpack.dlpack_c(dataset_cai)
-    cdef cydlpack.DLManagedTensor* queries_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* queries_dlpack = \
         cydlpack.dlpack_c(queries_cai)
-    cdef cydlpack.DLManagedTensor* candidates_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* candidates_dlpack = \
         cydlpack.dlpack_c(candidates_cai)
-    cdef cydlpack.DLManagedTensor* indices_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* indices_dlpack = \
         cydlpack.dlpack_c(indices_cai)
-    cdef cydlpack.DLManagedTensor* distances_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* distances_dlpack = \
         cydlpack.dlpack_c(distances_cai)
 
     cdef cuvsDistanceType c_metric = <cuvsDistanceType>DISTANCE_TYPES[metric]

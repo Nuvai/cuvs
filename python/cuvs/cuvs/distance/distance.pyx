@@ -119,11 +119,11 @@ def pairwise_distance(X, Y, out=None, metric="euclidean", p=2.0,
     if x_dt != y_dt:
         raise ValueError("Inputs must have the same dtypes")
 
-    cdef cydlpack.DLManagedTensor* x_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* x_dlpack = \
         cydlpack.dlpack_c(x_cai)
-    cdef cydlpack.DLManagedTensor* y_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* y_dlpack = \
         cydlpack.dlpack_c(y_cai)
-    cdef cydlpack.DLManagedTensor* out_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* out_dlpack = \
         cydlpack.dlpack_c(out_cai)
 
     check_cuvs(cuvsPairwiseDistance(res,

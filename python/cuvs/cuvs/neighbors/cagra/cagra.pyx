@@ -464,8 +464,8 @@ cdef class Index:
 
         # get the cagra dataset from the index without copying as dlpack
         output = DeviceTensorView()
-        cdef cydlpack.DLManagedTensor * tensor = \
-            <cydlpack.DLManagedTensor*><size_t>output.get_handle()
+        cdef cydlpack.DLManagedTensorVersioned * tensor = \
+            <cydlpack.DLManagedTensorVersioned*><size_t>output.get_handle()
         check_cuvs(cuvsCagraIndexGetDataset(self.index, tensor))
 
         # since we're referencing memory internal to this cagra index in the
@@ -481,8 +481,8 @@ cdef class Index:
             raise ValueError("Index needs to be built before getting graph")
 
         output = DeviceTensorView()
-        cdef cydlpack.DLManagedTensor * tensor = \
-            <cydlpack.DLManagedTensor*><size_t>output.get_handle()
+        cdef cydlpack.DLManagedTensorVersioned * tensor = \
+            <cydlpack.DLManagedTensorVersioned*><size_t>output.get_handle()
         check_cuvs(cuvsCagraIndexGetGraph(self.index, tensor))
         output.parent = self
         return output
@@ -573,7 +573,7 @@ def build(IndexParams index_params, dataset, resources=None):
             )
 
     cdef Index idx = Index()
-    cdef cydlpack.DLManagedTensor* dataset_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* dataset_dlpack = \
         cydlpack.dlpack_c(dataset_ai)
     cdef cuvsCagraIndexParams* params = index_params.params
 
@@ -884,11 +884,11 @@ def search(SearchParams search_params,
         filter = no_filter()
 
     cdef cuvsCagraSearchParams* params = search_params.params
-    cdef cydlpack.DLManagedTensor* queries_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* queries_dlpack = \
         cydlpack.dlpack_c(queries_cai)
-    cdef cydlpack.DLManagedTensor* neighbors_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* neighbors_dlpack = \
         cydlpack.dlpack_c(neighbors_cai)
-    cdef cydlpack.DLManagedTensor* distances_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* distances_dlpack = \
         cydlpack.dlpack_c(distances_cai)
     cdef cuvsResources_t res = <cuvsResources_t>resources.get_c_obj()
 
@@ -1011,12 +1011,12 @@ def from_graph(graph, dataset, metric="sqeuclidean", resources=None):
                                     np.dtype('float16'),
                                     np.dtype('byte'),
                                     np.dtype('ubyte')])
-    cdef cydlpack.DLManagedTensor* dataset_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* dataset_dlpack = \
         cydlpack.dlpack_c(dataset_ai)
 
     graph_ai = wrap_array(graph)
     _check_input_array(graph_ai, [np.dtype('uint32')])
-    cdef cydlpack.DLManagedTensor* graph_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* graph_dlpack = \
         cydlpack.dlpack_c(graph_ai)
 
     check_cuvs(cuvsCagraIndexFromArgs(
@@ -1083,7 +1083,7 @@ def extend(ExtendParams params, Index index, additional_dataset,
                                     np.dtype("byte"),
                                     np.dtype("ubyte")])
 
-    cdef cydlpack.DLManagedTensor* dataset_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* dataset_dlpack = \
         cydlpack.dlpack_c(dataset_ai)
 
     cdef cuvsResources_t res = <cuvsResources_t>resources.get_c_obj()

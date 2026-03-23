@@ -119,7 +119,7 @@ CUVS_API cuvsError_t cuvsNNDescentIndexDestroy(cuvsNNDescentIndex_t index);
  * @{
  */
 /**
- * @brief Build a NN-Descent index with a `DLManagedTensor` which has underlying
+ * @brief Build a NN-Descent index with a `DLManagedTensorVersioned` which has underlying
  *        `DLDeviceType` equal to `kDLCUDA`, `kDLCUDAHost`, `kDLCUDAManaged`,
  *        or `kDLCPU`. Also, acceptable underlying types are:
  *        1. `kDLDataType.code == kDLFloat` and `kDLDataType.bits = 32`
@@ -135,8 +135,8 @@ CUVS_API cuvsError_t cuvsNNDescentIndexDestroy(cuvsNNDescentIndex_t index);
  * cuvsResources_t res;
  * cuvsError_t res_create_status = cuvsResourcesCreate(&res);
  *
- * // Assume a populated `DLManagedTensor` type here
- * DLManagedTensor dataset;
+ * // Assume a populated `DLManagedTensorVersioned` type here
+ * DLManagedTensorVersioned dataset;
  *
  * // Create default index params
  * cuvsNNDescentIndexParams_t index_params;
@@ -157,16 +157,17 @@ CUVS_API cuvsError_t cuvsNNDescentIndexDestroy(cuvsNNDescentIndex_t index);
  *
  * @param[in] res cuvsResources_t opaque C handle
  * @param[in] index_params cuvsNNDescentIndexParams_t used to build NN-Descent index
- * @param[in] dataset DLManagedTensor* training dataset on host or device memory
+ * @param[in] dataset DLManagedTensorVersioned* training dataset on host or device memory
  * @param[inout] graph Optional preallocated graph on host memory to store output
  * @param[out] index cuvsNNDescentIndex_t Newly built NN-Descent index
  * @return cuvsError_t
  */
 CUVS_API cuvsError_t cuvsNNDescentBuild(cuvsResources_t res,
                                         cuvsNNDescentIndexParams_t index_params,
-                                        DLManagedTensor* dataset,
-                                        DLManagedTensor* graph,
+                                        DLManagedTensorVersioned* dataset,
+                                        DLManagedTensorVersioned* graph,
                                         cuvsNNDescentIndex_t index);
+
 /**
  * @}
  */
@@ -181,7 +182,8 @@ CUVS_API cuvsError_t cuvsNNDescentBuild(cuvsResources_t res,
  */
 CUVS_API cuvsError_t cuvsNNDescentIndexGetGraph(cuvsResources_t res,
                                                 cuvsNNDescentIndex_t index,
-                                                DLManagedTensor* graph);
+                                                DLManagedTensorVersioned* graph);
+
 
 /**
  * @brief Get the distances from a build NN_Descent index
@@ -196,7 +198,9 @@ CUVS_API cuvsError_t cuvsNNDescentIndexGetGraph(cuvsResources_t res,
  */
 CUVS_API cuvsError_t cuvsNNDescentIndexGetDistances(cuvsResources_t res,
                                                     cuvsNNDescentIndex_t index,
-                                                    DLManagedTensor* distances);
+                                                    DLManagedTensorVersioned* distances);
+
+
 #ifdef __cplusplus
 }
 #endif

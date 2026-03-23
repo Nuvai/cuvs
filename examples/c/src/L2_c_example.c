@@ -38,10 +38,14 @@ void outputVector(float* Vec)
  * @param[in] x_d Pointer to a vector
  * @param[in] x_shape[] Two-dimensional array, which stores the number of rows
  * and columns of vectors.
- * @param[out] x_tensor Stores the initialized DLManagedTensor.
+ * @param[out] x_tensor Stores the initialized DLManagedTensorVersioned.
  */
-void tensor_initialize(float* x_d, int64_t x_shape[2], DLManagedTensor* x_tensor)
+void tensor_initialize(float* x_d, int64_t x_shape[2], DLManagedTensorVersioned* x_tensor)
 {
+  memset(x_tensor, 0, sizeof(*x_tensor));
+  x_tensor->version.major                = DLPACK_MAJOR_VERSION;
+  x_tensor->version.minor                = DLPACK_MINOR_VERSION;
+  x_tensor->flags                        = 0;
   x_tensor->dl_tensor.data               = x_d;
   x_tensor->dl_tensor.device.device_type = kDLCUDA;
   x_tensor->dl_tensor.ndim               = 2;
@@ -72,15 +76,15 @@ void l2_distance_calc(int64_t n_cols, float x[], float y[], float* ret)
   CHECK_CUDA(cudaMemcpy(x_d, x, sizeof(float) * N_ROWS * n_cols, cudaMemcpyDefault));
   CHECK_CUDA(cudaMemcpy(y_d, y, sizeof(float) * N_ROWS * n_cols, cudaMemcpyDefault));
 
-  DLManagedTensor x_tensor;
+  DLManagedTensorVersioned x_tensor;
   int64_t x_shape[2] = {N_ROWS, n_cols};
   tensor_initialize(x_d, x_shape, &x_tensor);
 
-  DLManagedTensor y_tensor;
+  DLManagedTensorVersioned y_tensor;
   int64_t y_shape[2] = {N_ROWS, n_cols};
   tensor_initialize(y_d, y_shape, &y_tensor);
 
-  DLManagedTensor dist_tensor;
+  DLManagedTensorVersioned dist_tensor;
   int64_t distances_shape[2] = {N_ROWS, N_ROWS};
   tensor_initialize(distance_d, distances_shape, &dist_tensor);
 

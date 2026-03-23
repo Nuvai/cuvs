@@ -4,10 +4,13 @@
 #
 # cython: language_level=3
 
-from libc.stdint cimport int32_t, int64_t, uint8_t, uint16_t, uint64_t
+from libc.stdint cimport int32_t, int64_t, uint8_t, uint16_t, uint32_t, uint64_t
 
 
 cdef extern from "dlpack/dlpack.h" nogil:
+    enum: DLPACK_MAJOR_VERSION
+    enum: DLPACK_MINOR_VERSION
+
     ctypedef enum DLDeviceType:
         kDLCPU
         kDLCUDA
@@ -50,10 +53,16 @@ cdef extern from "dlpack/dlpack.h" nogil:
         int64_t* strides
         uint64_t byte_offset
 
-    ctypedef struct DLManagedTensor:
-        DLTensor dl_tensor
+    ctypedef struct DLPackVersion:
+        uint32_t major
+        uint32_t minor
+
+    ctypedef struct DLManagedTensorVersioned:
+        DLPackVersion version
         void* manager_ctx
-        void (*deleter)(DLManagedTensor*)  # noqa: E211
+        void (*deleter)(DLManagedTensorVersioned*)  # noqa: E211
+        uint64_t flags
+        DLTensor dl_tensor
 
 
-cdef DLManagedTensor* dlpack_c(ary)
+cdef DLManagedTensorVersioned* dlpack_c(ary)

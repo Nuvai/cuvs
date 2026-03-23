@@ -27,7 +27,7 @@ namespace {
 
 template <typename T, typename LayoutT = raft::row_major, typename DistT = float>
 void* _build(cuvsResources_t res,
-             DLManagedTensor* dataset_tensor,
+             DLManagedTensorVersioned* dataset_tensor,
              cuvsDistanceType metric,
              T metric_arg)
 {
@@ -48,9 +48,9 @@ void* _build(cuvsResources_t res,
 template <typename T, typename QueriesLayoutT = raft::row_major, typename DistT = float>
 void _search(cuvsResources_t res,
              cuvsBruteForceIndex index,
-             DLManagedTensor* queries_tensor,
-             DLManagedTensor* neighbors_tensor,
-             DLManagedTensor* distances_tensor,
+             DLManagedTensorVersioned* queries_tensor,
+             DLManagedTensorVersioned* neighbors_tensor,
+             DLManagedTensorVersioned* distances_tensor,
              cuvsFilter prefilter)
 {
   auto res_ptr   = reinterpret_cast<raft::resources*>(res);
@@ -77,7 +77,7 @@ void _search(cuvsResources_t res,
                                          cuvs::neighbors::filtering::none_sample_filter{});
   } else if (prefilter.type == CUVS_FILTER_BITMAP) {
     using prefilter_bmp_type = cuvs::core::bitmap_view<uint32_t, int64_t>;
-    auto prefilter_ptr       = reinterpret_cast<DLManagedTensor*>(prefilter.addr);
+    auto prefilter_ptr       = reinterpret_cast<DLManagedTensorVersioned*>(prefilter.addr);
     auto prefilter_mds       = cuvs::core::from_dlpack<prefilter_mds_type>(prefilter_ptr);
     const auto prefilter     = cuvs::neighbors::filtering::bitmap_filter(
       prefilter_bmp_type((uint32_t*)prefilter_mds.data_handle(),
@@ -87,7 +87,7 @@ void _search(cuvsResources_t res,
       *res_ptr, params, *index_ptr, queries_mds, neighbors_mds, distances_mds, prefilter);
   } else if (prefilter.type == CUVS_FILTER_BITSET) {
     using prefilter_bst_type = cuvs::core::bitset_view<uint32_t, int64_t>;
-    auto prefilter_ptr       = reinterpret_cast<DLManagedTensor*>(prefilter.addr);
+    auto prefilter_ptr       = reinterpret_cast<DLManagedTensorVersioned*>(prefilter.addr);
     auto prefilter_mds       = cuvs::core::from_dlpack<prefilter_mds_type>(prefilter_ptr);
     const auto prefilter     = cuvs::neighbors::filtering::bitset_filter(
       prefilter_bst_type((uint32_t*)prefilter_mds.data_handle(), index_ptr->dataset().extent(0)));
@@ -140,7 +140,7 @@ extern "C" cuvsError_t cuvsBruteForceIndexDestroy(cuvsBruteForceIndex_t index_c_
 }
 
 extern "C" cuvsError_t cuvsBruteForceBuild(cuvsResources_t res,
-                                           DLManagedTensor* dataset_tensor,
+                                           DLManagedTensorVersioned* dataset_tensor,
                                            cuvsDistanceType metric,
                                            float metric_arg,
                                            cuvsBruteForceIndex_t index)
@@ -179,9 +179,9 @@ extern "C" cuvsError_t cuvsBruteForceBuild(cuvsResources_t res,
 
 extern "C" cuvsError_t cuvsBruteForceSearch(cuvsResources_t res,
                                             cuvsBruteForceIndex_t index_c_ptr,
-                                            DLManagedTensor* queries_tensor,
-                                            DLManagedTensor* neighbors_tensor,
-                                            DLManagedTensor* distances_tensor,
+                                            DLManagedTensorVersioned* queries_tensor,
+                                            DLManagedTensorVersioned* neighbors_tensor,
+                                            DLManagedTensorVersioned* distances_tensor,
                                             cuvsFilter prefilter)
 {
   return cuvs::core::translate_exceptions([=] {
@@ -269,3 +269,4 @@ extern "C" cuvsError_t cuvsBruteForceSerialize(cuvsResources_t res,
     }
   });
 }
+

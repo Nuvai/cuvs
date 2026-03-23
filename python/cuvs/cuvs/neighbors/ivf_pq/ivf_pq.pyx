@@ -310,8 +310,8 @@ cdef class Index:
             raise ValueError("Index needs to be built before getting centers")
 
         output = DeviceTensorView()
-        cdef cydlpack.DLManagedTensor * tensor = \
-            <cydlpack.DLManagedTensor*><size_t>output.get_handle()
+        cdef cydlpack.DLManagedTensorVersioned * tensor = \
+            <cydlpack.DLManagedTensorVersioned*><size_t>output.get_handle()
         check_cuvs(cuvsIvfPqIndexGetCenters(self.index, tensor))
         output.parent = self
         return output
@@ -326,8 +326,8 @@ cdef class Index:
                              " centers_padded")
 
         output = DeviceTensorView()
-        cdef cydlpack.DLManagedTensor * tensor = \
-            <cydlpack.DLManagedTensor*><size_t>output.get_handle()
+        cdef cydlpack.DLManagedTensorVersioned * tensor = \
+            <cydlpack.DLManagedTensorVersioned*><size_t>output.get_handle()
         check_cuvs(cuvsIvfPqIndexGetCentersPadded(self.index, tensor))
         output.parent = self
         return output
@@ -340,8 +340,8 @@ cdef class Index:
                              " pq centers")
 
         output = DeviceTensorView()
-        cdef cydlpack.DLManagedTensor * tensor = \
-            <cydlpack.DLManagedTensor*><size_t>output.get_handle()
+        cdef cydlpack.DLManagedTensorVersioned * tensor = \
+            <cydlpack.DLManagedTensorVersioned*><size_t>output.get_handle()
         check_cuvs(cuvsIvfPqIndexGetPqCenters(self.index, tensor))
         output.parent = self
         return output
@@ -355,8 +355,8 @@ cdef class Index:
                              " centers_rot")
 
         output = DeviceTensorView()
-        cdef cydlpack.DLManagedTensor * tensor = \
-            <cydlpack.DLManagedTensor*><size_t>output.get_handle()
+        cdef cydlpack.DLManagedTensorVersioned * tensor = \
+            <cydlpack.DLManagedTensorVersioned*><size_t>output.get_handle()
         check_cuvs(cuvsIvfPqIndexGetCentersRot(self.index, tensor))
         output.parent = self
         return output
@@ -370,8 +370,8 @@ cdef class Index:
                              " rotation_matrix")
 
         output = DeviceTensorView()
-        cdef cydlpack.DLManagedTensor * tensor = \
-            <cydlpack.DLManagedTensor*><size_t>output.get_handle()
+        cdef cydlpack.DLManagedTensorVersioned * tensor = \
+            <cydlpack.DLManagedTensorVersioned*><size_t>output.get_handle()
         check_cuvs(cuvsIvfPqIndexGetRotationMatrix(self.index, tensor))
         output.parent = self
         return output
@@ -383,8 +383,8 @@ cdef class Index:
             raise ValueError("Index needs to be built before getting"
                              " list sizes")
         output = DeviceTensorView()
-        cdef cydlpack.DLManagedTensor * tensor = \
-            <cydlpack.DLManagedTensor*><size_t>output.get_handle()
+        cdef cydlpack.DLManagedTensorVersioned * tensor = \
+            <cydlpack.DLManagedTensorVersioned*><size_t>output.get_handle()
         check_cuvs(cuvsIvfPqIndexGetListSizes(self.index, tensor))
         output.parent = self
         return output
@@ -437,7 +437,7 @@ cdef class Index:
         _check_input_array(out_codes_cai, [np.dtype("ubyte")],
                            exp_rows=n_rows, exp_cols=n_cols)
 
-        cdef cydlpack.DLManagedTensor* out_codes_dlpack = \
+        cdef cydlpack.DLManagedTensorVersioned* out_codes_dlpack = \
             cydlpack.dlpack_c(out_codes_cai)
 
         cdef cuvsResources_t res = <cuvsResources_t>resources.get_c_obj()
@@ -460,8 +460,8 @@ cdef class Index:
             Number of rows in the list
         """
         output = DeviceTensorView()
-        cdef cydlpack.DLManagedTensor * tensor = \
-            <cydlpack.DLManagedTensor*><size_t>output.get_handle()
+        cdef cydlpack.DLManagedTensorVersioned * tensor = \
+            <cydlpack.DLManagedTensorVersioned*><size_t>output.get_handle()
         check_cuvs(cuvsIvfPqIndexGetListIndices(self.index, label, tensor))
         output.parent = self
 
@@ -522,7 +522,7 @@ def build(IndexParams index_params, dataset, resources=None):
 
     cdef Index idx = Index()
     cdef cuvsError_t build_status
-    cdef cydlpack.DLManagedTensor* dataset_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* dataset_dlpack = \
         cydlpack.dlpack_c(dataset_ai)
     cdef cuvsIvfPqIndexParams* params = index_params.params
 
@@ -628,13 +628,13 @@ def build_precomputed(IndexParams index_params, uint32_t dim, pq_centers, center
     cdef Index idx = Index()
 
     # Convert to DLPack
-    cdef cydlpack.DLManagedTensor* pq_centers_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* pq_centers_dlpack = \
         cydlpack.dlpack_c(pq_centers_ai)
-    cdef cydlpack.DLManagedTensor* centers_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* centers_dlpack = \
         cydlpack.dlpack_c(centers_ai)
-    cdef cydlpack.DLManagedTensor* centers_rot_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* centers_rot_dlpack = \
         cydlpack.dlpack_c(centers_rot_ai)
-    cdef cydlpack.DLManagedTensor* rotation_matrix_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* rotation_matrix_dlpack = \
         cydlpack.dlpack_c(rotation_matrix_ai)
 
     cdef cuvsIvfPqIndexParams* params = index_params.params
@@ -821,11 +821,11 @@ def search(SearchParams search_params,
 
     cdef cuvsIvfPqSearchParams* params = search_params.params
     cdef cuvsError_t search_status
-    cdef cydlpack.DLManagedTensor* queries_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* queries_dlpack = \
         cydlpack.dlpack_c(queries_cai)
-    cdef cydlpack.DLManagedTensor* neighbors_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* neighbors_dlpack = \
         cydlpack.dlpack_c(neighbors_cai)
-    cdef cydlpack.DLManagedTensor* distances_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* distances_dlpack = \
         cydlpack.dlpack_c(distances_cai)
     cdef cuvsResources_t res = <cuvsResources_t>resources.get_c_obj()
 
@@ -973,10 +973,10 @@ def extend(Index index, new_vectors, new_indices, resources=None):
     _check_input_array(new_indices_ai, [np.dtype('int64')])
     cdef cuvsResources_t res = <cuvsResources_t>resources.get_c_obj()
 
-    cdef cydlpack.DLManagedTensor* new_vectors_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* new_vectors_dlpack = \
         cydlpack.dlpack_c(new_vectors_ai)
 
-    cdef cydlpack.DLManagedTensor* new_indices_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* new_indices_dlpack = \
         cydlpack.dlpack_c(new_indices_ai)
 
     with cuda_interruptible():
@@ -1038,11 +1038,11 @@ def transform(Index index, input_dataset, output_labels=None, output_dataset=Non
 
     cdef cuvsResources_t res = <cuvsResources_t>resources.get_c_obj()
 
-    cdef cydlpack.DLManagedTensor* input_dataset_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* input_dataset_dlpack = \
         cydlpack.dlpack_c(input_dataset_ai)
-    cdef cydlpack.DLManagedTensor* output_labels_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* output_labels_dlpack = \
         cydlpack.dlpack_c(output_labels_ai)
-    cdef cydlpack.DLManagedTensor* output_dataset_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* output_dataset_dlpack = \
         cydlpack.dlpack_c(output_dataset_ai)
 
     with cuda_interruptible():

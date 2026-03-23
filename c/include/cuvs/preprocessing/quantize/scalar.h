@@ -85,8 +85,9 @@ CUVS_API cuvsError_t cuvsScalarQuantizerDestroy(cuvsScalarQuantizer_t quantizer)
  */
 CUVS_API cuvsError_t cuvsScalarQuantizerTrain(cuvsResources_t res,
                                               cuvsScalarQuantizerParams_t params,
-                                              DLManagedTensor* dataset,
+                                              DLManagedTensorVersioned* dataset,
                                               cuvsScalarQuantizer_t quantizer);
+
 
 /**
  * @brief Applies quantization transform to given dataset
@@ -98,8 +99,9 @@ CUVS_API cuvsError_t cuvsScalarQuantizerTrain(cuvsResources_t res,
  */
 CUVS_API cuvsError_t cuvsScalarQuantizerTransform(cuvsResources_t res,
                                                   cuvsScalarQuantizer_t quantizer,
-                                                  DLManagedTensor* dataset,
-                                                  DLManagedTensor* out);
+                                                  DLManagedTensorVersioned* dataset,
+                                                  DLManagedTensorVersioned* out);
+
 
 /**
  * @brief Perform inverse quantization step on previously quantized dataset
@@ -115,8 +117,9 @@ CUVS_API cuvsError_t cuvsScalarQuantizerTransform(cuvsResources_t res,
  */
 CUVS_API cuvsError_t cuvsScalarQuantizerInverseTransform(cuvsResources_t res,
                                                          cuvsScalarQuantizer_t quantizer,
-                                                         DLManagedTensor* dataset,
-                                                         DLManagedTensor* out);
+                                                         DLManagedTensorVersioned* dataset,
+                                                         DLManagedTensorVersioned* out);
+
 
 /**
  * @}

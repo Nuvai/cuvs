@@ -4,7 +4,7 @@ package cuvs
 // #include <dlpack/dlpack.h>
 // #include <cuvs/core/c_api.h>
 //
-// static inline void call_deleter(DLManagedTensor* tensor) {
+// static inline void call_deleter(DLManagedTensorVersioned* tensor) {
 //   if (tensor && tensor->deleter) {
 //     tensor->deleter(tensor);
 //     tensor->deleter = NULL;
@@ -22,10 +22,10 @@ type TensorNumberType interface {
 	int64 | uint32 | float32
 }
 
-// ManagedTensor is a wrapper around a dlpack DLManagedTensor object.
+// ManagedTensor is a wrapper around a dlpack DLManagedTensorVersioned object.
 // This lets you pass matrices in device or host memory into cuvs.
 type Tensor[T any] struct {
-	C_tensor *C.DLManagedTensor
+	C_tensor *C.DLManagedTensorVersioned
 	shape    []int64
 }
 
@@ -57,12 +57,17 @@ func NewTensor[T TensorNumberType](data [][]T) (Tensor[T], error) {
 	shapeSlice[0] = C.int64_t(len(data))
 	shapeSlice[1] = C.int64_t(len(data[0]))
 
-	// Create DLManagedTensor
-	dlm := (*C.DLManagedTensor)(C.malloc(C.size_t(unsafe.Sizeof(C.DLManagedTensor{}))))
+	// Create DLManagedTensorVersioned
+	dlm := (*C.DLManagedTensorVersioned)(C.malloc(C.size_t(unsafe.Sizeof(C.DLManagedTensorVersioned{}))))
 	if dlm == nil {
+		C.free(shapePtr)
+		C.free(dataPtr)
 		return Tensor[T]{}, errors.New("tensor allocation failed")
 	}
 
+	dlm.version.major = C.DLPACK_MAJOR_VERSION
+	dlm.version.minor = C.DLPACK_MINOR_VERSION
+	dlm.flags = 0
 	dlm.dl_tensor.data = dataPtr
 	dlm.dl_tensor.device = C.DLDevice{
 		device_type: C.DLDeviceType(C.kDLCPU),
@@ -108,12 +113,17 @@ func NewVector[T TensorNumberType](data []T) (Tensor[T], error) {
 	shapeSlice := unsafe.Slice((*C.int64_t)(shapePtr), 1)
 	shapeSlice[0] = C.int64_t(len(data))
 
-	// Create DLManagedTensor
-	dlm := (*C.DLManagedTensor)(C.malloc(C.size_t(unsafe.Sizeof(C.DLManagedTensor{}))))
+	// Create DLManagedTensorVersioned
+	dlm := (*C.DLManagedTensorVersioned)(C.malloc(C.size_t(unsafe.Sizeof(C.DLManagedTensorVersioned{}))))
 	if dlm == nil {
+		C.free(shapePtr)
+		C.free(dataPtr)
 		return Tensor[T]{}, errors.New("tensor allocation failed")
 	}
 
+	dlm.version.major = C.DLPACK_MAJOR_VERSION
+	dlm.version.minor = C.DLPACK_MINOR_VERSION
+	dlm.flags = 0
 	dlm.dl_tensor.data = dataPtr
 	dlm.dl_tensor.device = C.DLDevice{
 		device_type: C.DLDeviceType(C.kDLCPU),
@@ -149,8 +159,9 @@ func NewTensorOnDevice[T TensorNumberType](res *Resource, shape []int64) (Tensor
 		shapeSlice[i] = C.int64_t(dim)
 	}
 
-	dlm := (*C.DLManagedTensor)(C.malloc(C.size_t(unsafe.Sizeof(C.DLManagedTensor{}))))
+	dlm := (*C.DLManagedTensorVersioned)(C.malloc(C.size_t(unsafe.Sizeof(C.DLManagedTensorVersioned{}))))
 	if dlm == nil {
+		C.free(shapePtr)
 		return Tensor[T]{}, errors.New("tensor allocation failed")
 	}
 	dtype := getDLDataType[T]()
@@ -164,6 +175,9 @@ func NewTensorOnDevice[T TensorNumberType](res *Resource, shape []int64) (Tensor
 		return Tensor[T]{}, err
 	}
 
+	dlm.version.major = C.DLPACK_MAJOR_VERSION
+	dlm.version.minor = C.DLPACK_MINOR_VERSION
+	dlm.flags = 0
 	dlm.dl_tensor.data = deviceDataPtr
 	dlm.dl_tensor.device = C.DLDevice{
 		device_type: C.DLDeviceType(C.kDLCUDA),

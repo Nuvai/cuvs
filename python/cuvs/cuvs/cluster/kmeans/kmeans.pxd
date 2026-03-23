@@ -8,7 +8,7 @@ from libc.stdint cimport uintptr_t
 from libcpp cimport bool
 
 from cuvs.common.c_api cimport cuvsError_t, cuvsResources_t
-from cuvs.common.cydlpack cimport DLDataType, DLManagedTensor
+from cuvs.common.cydlpack cimport DLDataType, DLManagedTensorVersioned
 from cuvs.distance_type cimport cuvsDistanceType
 
 
@@ -44,22 +44,22 @@ cdef extern from "cuvs/cluster/kmeans.h" nogil:
 
     cuvsError_t cuvsKMeansFit(cuvsResources_t res,
                               cuvsKMeansParams_t params,
-                              DLManagedTensor* X,
-                              DLManagedTensor* sample_weight,
-                              DLManagedTensor * centroids,
+                              DLManagedTensorVersioned* X,
+                              DLManagedTensorVersioned* sample_weight,
+                              DLManagedTensorVersioned * centroids,
                               double * inertia,
                               int * n_iter) except +
 
     cuvsError_t cuvsKMeansPredict(cuvsResources_t res,
                                   cuvsKMeansParams_t params,
-                                  DLManagedTensor* X,
-                                  DLManagedTensor* sample_weight,
-                                  DLManagedTensor * centroids,
-                                  DLManagedTensor * labels,
+                                  DLManagedTensorVersioned* X,
+                                  DLManagedTensorVersioned* sample_weight,
+                                  DLManagedTensorVersioned * centroids,
+                                  DLManagedTensorVersioned * labels,
                                   bool normalize_weight,
                                   double * inertia)
 
     cuvsError_t cuvsKMeansClusterCost(cuvsResources_t res,
-                                      DLManagedTensor* X,
-                                      DLManagedTensor* centroids,
+                                      DLManagedTensorVersioned* X,
+                                      DLManagedTensorVersioned* centroids,
                                       double* cost)

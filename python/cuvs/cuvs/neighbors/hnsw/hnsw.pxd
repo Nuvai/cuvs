@@ -9,7 +9,7 @@ from libc.stdint cimport int32_t, uintptr_t
 from libcpp cimport bool
 
 from cuvs.common.c_api cimport cuvsError_t, cuvsResources_t
-from cuvs.common.cydlpack cimport DLDataType, DLManagedTensor
+from cuvs.common.cydlpack cimport DLDataType, DLManagedTensorVersioned
 from cuvs.distance_type cimport cuvsDistanceType
 from cuvs.neighbors.cagra.cagra cimport cuvsCagraIndex_t
 
@@ -74,12 +74,12 @@ cdef extern from "cuvs/neighbors/hnsw.h" nogil:
 
     cuvsError_t cuvsHnswBuild(cuvsResources_t res,
                               cuvsHnswIndexParams_t params,
-                              DLManagedTensor* dataset,
+                              DLManagedTensorVersioned* dataset,
                               cuvsHnswIndex_t index) except +
 
     cuvsError_t cuvsHnswExtend(cuvsResources_t res,
                                cuvsHnswExtendParams_t params,
-                               DLManagedTensor* data,
+                               DLManagedTensorVersioned* data,
                                cuvsHnswIndex_t index) except +
 
     ctypedef struct cuvsHnswSearchParams:
@@ -91,9 +91,9 @@ cdef extern from "cuvs/neighbors/hnsw.h" nogil:
     cuvsError_t cuvsHnswSearch(cuvsResources_t res,
                                cuvsHnswSearchParams* params,
                                cuvsHnswIndex_t index,
-                               DLManagedTensor* queries,
-                               DLManagedTensor* neighbors,
-                               DLManagedTensor* distances) except +
+                               DLManagedTensorVersioned* queries,
+                               DLManagedTensorVersioned* neighbors,
+                               DLManagedTensorVersioned* distances) except +
 
     cuvsError_t cuvsHnswSerialize(cuvsResources_t res,
                                   const char * filename,

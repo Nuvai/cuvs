@@ -294,7 +294,9 @@ CUVS_API cuvsError_t cuvsIvfPqIndexGetPqLen(cuvsIvfPqIndex_t index, int64_t* pq_
  * @param[out] centers Output tensor that will be populated with a non-owning view of the data
  * @return cuvsError_t
  */
-CUVS_API cuvsError_t cuvsIvfPqIndexGetCenters(cuvsIvfPqIndex_t index, DLManagedTensor* centers);
+CUVS_API cuvsError_t cuvsIvfPqIndexGetCenters(cuvsIvfPqIndex_t index,
+                                              DLManagedTensorVersioned* centers);
+
 
 /**
  * @brief Get the padded cluster centers [n_lists, dim_ext]
@@ -307,7 +309,9 @@ CUVS_API cuvsError_t cuvsIvfPqIndexGetCenters(cuvsIvfPqIndex_t index, DLManagedT
  * @param[out] centers Output tensor that will be populated with a non-owning view of the data
  * @return cuvsError_t
  */
-CUVS_API cuvsError_t cuvsIvfPqIndexGetCentersPadded(cuvsIvfPqIndex_t index, DLManagedTensor* centers);
+CUVS_API cuvsError_t cuvsIvfPqIndexGetCentersPadded(cuvsIvfPqIndex_t index,
+                                                    DLManagedTensorVersioned* centers);
+
 
 /**
  * @brief Get the PQ cluster centers
@@ -319,7 +323,9 @@ CUVS_API cuvsError_t cuvsIvfPqIndexGetCentersPadded(cuvsIvfPqIndex_t index, DLMa
  * @param[out] pq_centers Output tensor that will be populated with a non-owning view of the data
  * @return cuvsError_t
  */
-CUVS_API cuvsError_t cuvsIvfPqIndexGetPqCenters(cuvsIvfPqIndex_t index, DLManagedTensor* pq_centers);
+CUVS_API cuvsError_t cuvsIvfPqIndexGetPqCenters(cuvsIvfPqIndex_t index,
+                                                DLManagedTensorVersioned* pq_centers);
+
 
 /**
  * @brief Get the rotated cluster centers [n_lists, rot_dim]
@@ -329,7 +335,9 @@ CUVS_API cuvsError_t cuvsIvfPqIndexGetPqCenters(cuvsIvfPqIndex_t index, DLManage
  * @param[out] centers_rot Output tensor that will be populated with a non-owning view of the data
  * @return cuvsError_t
  */
-CUVS_API cuvsError_t cuvsIvfPqIndexGetCentersRot(cuvsIvfPqIndex_t index, DLManagedTensor* centers_rot);
+CUVS_API cuvsError_t cuvsIvfPqIndexGetCentersRot(cuvsIvfPqIndex_t index,
+                                                 DLManagedTensorVersioned* centers_rot);
+
 
 /**
  * @brief Get the rotation matrix [rot_dim, dim]
@@ -341,7 +349,8 @@ CUVS_API cuvsError_t cuvsIvfPqIndexGetCentersRot(cuvsIvfPqIndex_t index, DLManag
  * @return cuvsError_t
  */
 CUVS_API cuvsError_t cuvsIvfPqIndexGetRotationMatrix(cuvsIvfPqIndex_t index,
-                                                     DLManagedTensor* rotation_matrix);
+                                                     DLManagedTensorVersioned* rotation_matrix);
+
 
 /**
  * @brief Get the sizes of each list
@@ -350,7 +359,9 @@ CUVS_API cuvsError_t cuvsIvfPqIndexGetRotationMatrix(cuvsIvfPqIndex_t index,
  * @param[out] list_sizes Output tensor that will be populated with a non-owning view of the data
  * @return cuvsError_t
  */
-CUVS_API cuvsError_t cuvsIvfPqIndexGetListSizes(cuvsIvfPqIndex_t index, DLManagedTensor* list_sizes);
+CUVS_API cuvsError_t cuvsIvfPqIndexGetListSizes(cuvsIvfPqIndex_t index,
+                                                DLManagedTensorVersioned* list_sizes);
+
 
 /**
  * @brief Unpack `n_rows` consecutive PQ encoded vectors of a single list (cluster) in the
@@ -363,7 +374,7 @@ CUVS_API cuvsError_t cuvsIvfPqIndexGetListSizes(cuvsIvfPqIndex_t index, DLManage
  *   the destination buffer [n_rows, ceildiv(index.pq_dim() * index.pq_bits(), 8)].
  *   The length `n_rows` defines how many records to unpack,
  *   offset + n_rows must be smaller than or equal to the list size.
- *   This DLManagedTensor must already point to allocated device memory
+ *   This DLManagedTensorVersioned must already point to allocated device memory
  * @param[in] label
  *   The id of the list (cluster) to decode.
  * @param[in] offset
@@ -371,9 +382,10 @@ CUVS_API cuvsError_t cuvsIvfPqIndexGetListSizes(cuvsIvfPqIndex_t index, DLManage
  */
 CUVS_API cuvsError_t cuvsIvfPqIndexUnpackContiguousListData(cuvsResources_t res,
                                                             cuvsIvfPqIndex_t index,
-                                                            DLManagedTensor* out_codes,
+                                                            DLManagedTensorVersioned* out_codes,
                                                             uint32_t label,
                                                             uint32_t offset);
+
 /**
  * @brief Get the indices of each vector in a ivf-pq list
  *
@@ -386,7 +398,8 @@ CUVS_API cuvsError_t cuvsIvfPqIndexUnpackContiguousListData(cuvsResources_t res,
  */
 CUVS_API cuvsError_t cuvsIvfPqIndexGetListIndices(cuvsIvfPqIndex_t index,
                                                   uint32_t label,
-                                                  DLManagedTensor* out_labels);
+                                                  DLManagedTensorVersioned* out_labels);
+
 /**
  * @}
  */
@@ -396,7 +409,7 @@ CUVS_API cuvsError_t cuvsIvfPqIndexGetListIndices(cuvsIvfPqIndex_t index,
  * @{
  */
 /**
- * @brief Build a IVF-PQ index with a `DLManagedTensor` which has underlying
+ * @brief Build a IVF-PQ index with a `DLManagedTensorVersioned` which has underlying
  *        `DLDeviceType` equal to `kDLCUDA`, `kDLCUDAHost`, `kDLCUDAManaged`,
  *        or `kDLCPU`. Also, acceptable underlying types are:
  *        1. `kDLDataType.code == kDLFloat` and `kDLDataType.bits = 32`
@@ -412,8 +425,8 @@ CUVS_API cuvsError_t cuvsIvfPqIndexGetListIndices(cuvsIvfPqIndex_t index,
  * cuvsResources_t res;
  * cuvsError_t res_create_status = cuvsResourcesCreate(&res);
  *
- * // Assume a populated `DLManagedTensor` type here
- * DLManagedTensor dataset;
+ * // Assume a populated `DLManagedTensorVersioned` type here
+ * DLManagedTensorVersioned dataset;
  *
  * // Create default index params
  * cuvsIvfPqIndexParams_t index_params;
@@ -434,14 +447,15 @@ CUVS_API cuvsError_t cuvsIvfPqIndexGetListIndices(cuvsIvfPqIndex_t index,
  *
  * @param[in] res cuvsResources_t opaque C handle
  * @param[in] params cuvsIvfPqIndexParams_t used to build IVF-PQ index
- * @param[in] dataset DLManagedTensor* training dataset
+ * @param[in] dataset DLManagedTensorVersioned* training dataset
  * @param[out] index cuvsIvfPqIndex_t Newly built IVF-PQ index
  * @return cuvsError_t
  */
 CUVS_API cuvsError_t cuvsIvfPqBuild(cuvsResources_t res,
                                     cuvsIvfPqIndexParams_t params,
-                                    DLManagedTensor* dataset,
+                                    DLManagedTensorVersioned* dataset,
                                     cuvsIvfPqIndex_t index);
+
 
 /**
  * @brief Build a view-type IVF-PQ index from device memory precomputed centroids and codebook.
@@ -475,11 +489,12 @@ CUVS_API cuvsError_t cuvsIvfPqBuild(cuvsResources_t res,
 CUVS_API cuvsError_t cuvsIvfPqBuildPrecomputed(cuvsResources_t res,
                                                cuvsIvfPqIndexParams_t params,
                                                uint32_t dim,
-                                               DLManagedTensor* pq_centers,
-                                               DLManagedTensor* centers,
-                                               DLManagedTensor* centers_rot,
-                                               DLManagedTensor* rotation_matrix,
+                                               DLManagedTensorVersioned* pq_centers,
+                                               DLManagedTensorVersioned* centers,
+                                               DLManagedTensorVersioned* centers_rot,
+                                               DLManagedTensorVersioned* rotation_matrix,
                                                cuvsIvfPqIndex_t index);
+
 /**
  * @}
  */
@@ -489,7 +504,7 @@ CUVS_API cuvsError_t cuvsIvfPqBuildPrecomputed(cuvsResources_t res,
  * @{
  */
 /**
- * @brief Search a IVF-PQ index with a `DLManagedTensor` which has underlying
+ * @brief Search a IVF-PQ index with a `DLManagedTensorVersioned` which has underlying
  *        `DLDeviceType` equal to `kDLCUDA`, `kDLCUDAHost`, `kDLCUDAManaged`.
  *        It is also important to note that the IVF-PQ Index must have been built
  *        with the same type of `queries`, such that `index.dtype.code ==
@@ -507,10 +522,10 @@ CUVS_API cuvsError_t cuvsIvfPqBuildPrecomputed(cuvsResources_t res,
  * cuvsResources_t res;
  * cuvsError_t res_create_status = cuvsResourcesCreate(&res);
  *
- * // Assume a populated `DLManagedTensor` type here
- * DLManagedTensor dataset;
- * DLManagedTensor queries;
- * DLManagedTensor neighbors;
+ * // Assume a populated `DLManagedTensorVersioned` type here
+ * DLManagedTensorVersioned dataset;
+ * DLManagedTensorVersioned queries;
+ * DLManagedTensorVersioned neighbors;
  *
  * // Create default search params
  * cuvsIvfPqSearchParams_t search_params;
@@ -529,18 +544,19 @@ CUVS_API cuvsError_t cuvsIvfPqBuildPrecomputed(cuvsResources_t res,
  * @param[in] res cuvsResources_t opaque C handle
  * @param[in] search_params cuvsIvfPqSearchParams_t used to search IVF-PQ index
  * @param[in] index cuvsIvfPqIndex which has been returned by `cuvsIvfPqBuild`
- * @param[in] queries DLManagedTensor* queries dataset to search
- * @param[out] neighbors DLManagedTensor* output `k` neighbors for queries
- * @param[out] distances DLManagedTensor* output `k` distances for queries
+ * @param[in] queries DLManagedTensorVersioned* queries dataset to search
+ * @param[out] neighbors DLManagedTensorVersioned* output `k` neighbors for queries
+ * @param[out] distances DLManagedTensorVersioned* output `k` distances for queries
  * @param[in] filter cuvsFilter filter to apply to the search
  */
 CUVS_API cuvsError_t cuvsIvfPqSearch(cuvsResources_t res,
                                      cuvsIvfPqSearchParams_t search_params,
                                      cuvsIvfPqIndex_t index,
-                                     DLManagedTensor* queries,
-                                     DLManagedTensor* neighbors,
-                                     DLManagedTensor* distances,
+                                     DLManagedTensorVersioned* queries,
+                                     DLManagedTensorVersioned* neighbors,
+                                     DLManagedTensorVersioned* distances,
                                      cuvsFilter filter);
+
 /**
  * @}
  */
@@ -593,15 +609,16 @@ CUVS_API cuvsError_t cuvsIvfPqDeserialize(cuvsResources_t res, const char* filen
  * @brief Extend the index with the new data.
  *
  * @param[in] res cuvsResources_t opaque C handle
- * @param[in] new_vectors DLManagedTensor* the new vectors to add to the index
- * @param[in] new_indices DLManagedTensor* vector of new indices for the new vectors
+ * @param[in] new_vectors DLManagedTensorVersioned* the new vectors to add to the index
+ * @param[in] new_indices DLManagedTensorVersioned* vector of new indices for the new vectors
  * @param[inout] index IVF-PQ index to be extended
  * @return cuvsError_t
  */
 CUVS_API cuvsError_t cuvsIvfPqExtend(cuvsResources_t res,
-                                     DLManagedTensor* new_vectors,
-                                     DLManagedTensor* new_indices,
+                                     DLManagedTensorVersioned* new_vectors,
+                                     DLManagedTensorVersioned* new_indices,
                                      cuvsIvfPqIndex_t index);
+
 /**
  * @}
  */
@@ -615,16 +632,17 @@ CUVS_API cuvsError_t cuvsIvfPqExtend(cuvsResources_t res,
  *
  * @param[in] res cuvsResources_t opaque C handle
  * @param[in] index IVF-PQ index
- * @param[in] input_dataset DLManagedTensor* vectors to transform
- * @param[out] output_labels DLManagedTensor* Vector of cluster labels for each vector in the input
- * @param[out] output_dataset DLManagedTensor* input vectors after pq-encoding
+ * @param[in] input_dataset DLManagedTensorVersioned* vectors to transform
+ * @param[out] output_labels DLManagedTensorVersioned* Vector of cluster labels for each vector in the input
+ * @param[out] output_dataset DLManagedTensorVersioned* input vectors after pq-encoding
  * @return cuvsError_t
  */
 CUVS_API cuvsError_t cuvsIvfPqTransform(cuvsResources_t res,
                                         cuvsIvfPqIndex_t index,
-                                        DLManagedTensor* input_dataset,
-                                        DLManagedTensor* output_labels,
-                                        DLManagedTensor* output_dataset);
+                                        DLManagedTensorVersioned* input_dataset,
+                                        DLManagedTensorVersioned* output_labels,
+                                        DLManagedTensorVersioned* output_dataset);
+
 /**
  * @}
  */

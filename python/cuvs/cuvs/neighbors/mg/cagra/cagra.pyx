@@ -173,7 +173,7 @@ def build(IndexParams index_params, dataset, resources=None):
     _check_memory_location(dataset, expected_host=True, name="dataset")
 
     cdef Index idx = Index()
-    cdef cydlpack.DLManagedTensor* dataset_dlpack = (
+    cdef cydlpack.DLManagedTensorVersioned* dataset_dlpack = (
         cydlpack.dlpack_c(dataset_ai))
     cdef cuvsMultiGpuCagraIndexParams_t params = index_params.mg_params
 
@@ -365,11 +365,11 @@ def search(SearchParams search_params, Index index, queries,
     _check_memory_location(distances, expected_host=True,
                            name="distances")
 
-    cdef cydlpack.DLManagedTensor* queries_dlpack = (
+    cdef cydlpack.DLManagedTensorVersioned* queries_dlpack = (
         cydlpack.dlpack_c(queries_ai))
-    cdef cydlpack.DLManagedTensor* neighbors_dlpack = (
+    cdef cydlpack.DLManagedTensorVersioned* neighbors_dlpack = (
         cydlpack.dlpack_c(neighbors_ai))
-    cdef cydlpack.DLManagedTensor* distances_dlpack = (
+    cdef cydlpack.DLManagedTensorVersioned* distances_dlpack = (
         cydlpack.dlpack_c(distances_ai))
 
     # Perform search
@@ -436,9 +436,9 @@ def extend(Index index, new_vectors, new_indices=None, resources=None):
     # Get resources
     cdef cuvsResources_t res = <cuvsResources_t>resources.get_c_obj()
 
-    cdef cydlpack.DLManagedTensor* new_vectors_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* new_vectors_dlpack = \
         cydlpack.dlpack_c(new_vectors_ai)
-    cdef cydlpack.DLManagedTensor* new_indices_dlpack = NULL
+    cdef cydlpack.DLManagedTensorVersioned* new_indices_dlpack = NULL
 
     if new_indices is not None:
         new_indices_ai = wrap_array(new_indices)

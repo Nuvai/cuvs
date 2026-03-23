@@ -22,7 +22,7 @@
 namespace {
 
 template <typename T>
-void* _build(cuvsResources_t res, cuvsVamanaIndexParams* params, DLManagedTensor* dataset_tensor)
+void* _build(cuvsResources_t res, cuvsVamanaIndexParams* params, DLManagedTensorVersioned* dataset_tensor)
 {
   auto res_ptr = reinterpret_cast<raft::resources*>(res);
 
@@ -127,7 +127,7 @@ extern "C" cuvsError_t cuvsVamanaIndexGetDims(cuvsVamanaIndex_t index, int* dim)
 
 extern "C" cuvsError_t cuvsVamanaBuild(cuvsResources_t res,
                                        cuvsVamanaIndexParams_t params,
-                                       DLManagedTensor* dataset_tensor,
+                                       DLManagedTensorVersioned* dataset_tensor,
                                        cuvsVamanaIndex_t index)
 {
   return cuvs::core::translate_exceptions([=] {

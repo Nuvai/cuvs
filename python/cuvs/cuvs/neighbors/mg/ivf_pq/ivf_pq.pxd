@@ -8,7 +8,7 @@ from libc.stdint cimport int64_t, uintptr_t
 from libcpp cimport bool
 
 from cuvs.common.c_api cimport cuvsError_t, cuvsResources_t
-from cuvs.common.cydlpack cimport DLDataType, DLManagedTensor
+from cuvs.common.cydlpack cimport DLDataType, DLManagedTensorVersioned
 from cuvs.neighbors.ivf_pq.ivf_pq cimport (
     IndexParams as SingleGpuIndexParams,
     SearchParams as SingleGpuSearchParams,
@@ -70,22 +70,22 @@ cdef extern from "cuvs/neighbors/mg_ivf_pq.h" nogil:
 
     cuvsError_t cuvsMultiGpuIvfPqBuild(cuvsResources_t res,
                                        cuvsMultiGpuIvfPqIndexParams_t params,
-                                       DLManagedTensor* dataset_tensor,
+                                       DLManagedTensorVersioned* dataset_tensor,
                                        cuvsMultiGpuIvfPqIndex_t index) except +
 
     cuvsError_t cuvsMultiGpuIvfPqSearch(
         cuvsResources_t res,
         cuvsMultiGpuIvfPqSearchParams_t params,
         cuvsMultiGpuIvfPqIndex_t index,
-        DLManagedTensor* queries_tensor,
-        DLManagedTensor* neighbors_tensor,
-        DLManagedTensor* distances_tensor) except +
+        DLManagedTensorVersioned* queries_tensor,
+        DLManagedTensorVersioned* neighbors_tensor,
+        DLManagedTensorVersioned* distances_tensor) except +
 
     cuvsError_t cuvsMultiGpuIvfPqExtend(
         cuvsResources_t res,
         cuvsMultiGpuIvfPqIndex_t index,
-        DLManagedTensor* new_vectors_tensor,
-        DLManagedTensor* new_indices_tensor) except +
+        DLManagedTensorVersioned* new_vectors_tensor,
+        DLManagedTensorVersioned* new_indices_tensor) except +
 
     cuvsError_t cuvsMultiGpuIvfPqSerialize(
         cuvsResources_t res,

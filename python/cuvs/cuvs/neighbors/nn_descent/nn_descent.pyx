@@ -182,7 +182,7 @@ cdef class Index:
 
         output = np.empty((self.num_rows, self.graph_degree), dtype='uint32')
         ai = wrap_array(output)
-        cdef cydlpack.DLManagedTensor* output_dlpack = cydlpack.dlpack_c(ai)
+        cdef cydlpack.DLManagedTensorVersioned* output_dlpack = cydlpack.dlpack_c(ai)
         check_cuvs(cuvsNNDescentIndexGetGraph(res, self.index, output_dlpack))
         return output
 
@@ -196,7 +196,7 @@ cdef class Index:
 
         output = np.empty((self.num_rows, self.graph_degree), dtype='float32')
         ai = wrap_array(output)
-        cdef cydlpack.DLManagedTensor* output_dlpack = cydlpack.dlpack_c(ai)
+        cdef cydlpack.DLManagedTensorVersioned* output_dlpack = cydlpack.dlpack_c(ai)
         check_cuvs(cuvsNNDescentIndexGetDistances(res,
                                                   self.index,
                                                   output_dlpack))
@@ -243,13 +243,13 @@ def build(IndexParams index_params, dataset, graph=None, resources=None):
                                     np.dtype('ubyte')])
 
     cdef Index idx = Index()
-    cdef cydlpack.DLManagedTensor* dataset_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* dataset_dlpack = \
         cydlpack.dlpack_c(dataset_ai)
     cdef cuvsNNDescentIndexParams* params = index_params.params
 
     cdef cuvsResources_t res = <cuvsResources_t>resources.get_c_obj()
 
-    cdef cydlpack.DLManagedTensor* graph_dlpack = NULL
+    cdef cydlpack.DLManagedTensorVersioned* graph_dlpack = NULL
     if graph is not None:
         if params.return_distances:
             # When using a pre-existing graph - having return_distances set to

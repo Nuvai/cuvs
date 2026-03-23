@@ -29,8 +29,8 @@ namespace {
 template <typename T, typename IdxT = uint32_t>
 void* _build(cuvsResources_t res,
              cuvsNNDescentIndexParams params,
-             DLManagedTensor* dataset_tensor,
-             DLManagedTensor* graph_tensor)
+             DLManagedTensorVersioned* dataset_tensor,
+             DLManagedTensorVersioned* graph_tensor)
 {
   auto res_ptr = reinterpret_cast<raft::resources*>(res);
   auto dataset = dataset_tensor->dl_tensor;
@@ -65,7 +65,7 @@ void* _build(cuvsResources_t res,
 }
 
 template <typename output_mdspan_type>
-void _get_graph(cuvsResources_t res, cuvsNNDescentIndex_t index, DLManagedTensor* graph)
+void _get_graph(cuvsResources_t res, cuvsNNDescentIndex_t index, DLManagedTensorVersioned* graph)
 {
   auto dtype = index->dtype;
   if ((dtype.code == kDLUInt) && (dtype.bits == 32)) {
@@ -87,7 +87,7 @@ void _get_graph(cuvsResources_t res, cuvsNNDescentIndex_t index, DLManagedTensor
 }
 
 template <typename output_mdspan_type>
-void _get_distances(cuvsResources_t res, cuvsNNDescentIndex_t index, DLManagedTensor* distances)
+void _get_distances(cuvsResources_t res, cuvsNNDescentIndex_t index, DLManagedTensorVersioned* distances)
 {
   auto dtype = index->dtype;
   if ((dtype.code == kDLUInt) && (dtype.bits == 32)) {
@@ -137,8 +137,8 @@ extern "C" cuvsError_t cuvsNNDescentIndexDestroy(cuvsNNDescentIndex_t index_c_pt
 
 extern "C" cuvsError_t cuvsNNDescentBuild(cuvsResources_t res,
                                           cuvsNNDescentIndexParams_t params,
-                                          DLManagedTensor* dataset_tensor,
-                                          DLManagedTensor* graph_tensor,
+                                          DLManagedTensorVersioned* dataset_tensor,
+                                          DLManagedTensorVersioned* graph_tensor,
                                           cuvsNNDescentIndex_t index)
 {
   return cuvs::core::translate_exceptions([=] {
@@ -190,7 +190,7 @@ extern "C" cuvsError_t cuvsNNDescentIndexParamsDestroy(cuvsNNDescentIndexParams_
 
 extern "C" cuvsError_t cuvsNNDescentIndexGetGraph(cuvsResources_t res,
                                                   cuvsNNDescentIndex_t index,
-                                                  DLManagedTensor* graph)
+                                                  DLManagedTensorVersioned* graph)
 {
   return cuvs::core::translate_exceptions([=] {
     if (cuvs::core::is_dlpack_device_compatible(graph->dl_tensor)) {
@@ -205,7 +205,7 @@ extern "C" cuvsError_t cuvsNNDescentIndexGetGraph(cuvsResources_t res,
 
 extern "C" cuvsError_t cuvsNNDescentIndexGetDistances(cuvsResources_t res,
                                                       cuvsNNDescentIndex_t index,
-                                                      DLManagedTensor* distances)
+                                                      DLManagedTensorVersioned* distances)
 {
   return cuvs::core::translate_exceptions([=] {
     if (cuvs::core::is_dlpack_device_compatible(distances->dl_tensor)) {

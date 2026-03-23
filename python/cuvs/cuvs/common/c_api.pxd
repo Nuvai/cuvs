@@ -8,7 +8,7 @@
 from cuda.bindings.cyruntime cimport cudaStream_t
 from libc.stdint cimport int64_t, uintptr_t
 
-from cuvs.common.cydlpack cimport DLManagedTensor
+from cuvs.common.cydlpack cimport DLManagedTensorVersioned
 
 
 cdef extern from "cuvs/core/c_api.h":
@@ -29,14 +29,14 @@ cdef extern from "cuvs/core/c_api.h":
     cuvsError_t cuvsMultiGpuResourcesCreate(cuvsResources_t* res)
     cuvsError_t cuvsMultiGpuResourcesCreateWithDeviceIds(
         cuvsResources_t* res,
-        DLManagedTensor* device_ids)
+        DLManagedTensorVersioned* device_ids)
     cuvsError_t cuvsMultiGpuResourcesDestroy(cuvsResources_t res)
     cuvsError_t cuvsMultiGpuResourcesSetMemoryPool(cuvsResources_t res,
                                                    int percent_of_free_memory)
 
-    cuvsError_t cuvsMatrixCopy(cuvsResources_t res, DLManagedTensor * src,
-                               DLManagedTensor * dst)
+    cuvsError_t cuvsMatrixCopy(cuvsResources_t res, DLManagedTensorVersioned * src,
+                               DLManagedTensorVersioned * dst)
 
-    cuvsError_t cuvsMatrixSliceRows(cuvsResources_t res, DLManagedTensor* src,
+    cuvsError_t cuvsMatrixSliceRows(cuvsResources_t res, DLManagedTensorVersioned* src,
                                     int64_t start, int64_t end,
-                                    DLManagedTensor* dst)
+                                    DLManagedTensorVersioned* dst)

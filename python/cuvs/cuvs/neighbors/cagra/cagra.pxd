@@ -16,7 +16,7 @@ from libc.stdint cimport (
 from libcpp cimport bool
 
 from cuvs.common.c_api cimport cuvsError_t, cuvsResources_t
-from cuvs.common.cydlpack cimport DLDataType, DLManagedTensor
+from cuvs.common.cydlpack cimport DLDataType, DLManagedTensorVersioned
 from cuvs.distance_type cimport cuvsDistanceType
 from cuvs.neighbors.filters.filters cimport cuvsFilter
 from cuvs.neighbors.ivf_pq.ivf_pq cimport (
@@ -142,21 +142,21 @@ cdef extern from "cuvs/neighbors/cagra.h" nogil:
     cuvsError_t cuvsCagraIndexGetGraphDegree(cuvsCagraIndex_t index,
                                              int64_t* degree)
     cuvsError_t cuvsCagraIndexGetGraph(cuvsCagraIndex_t index,
-                                       DLManagedTensor * graph)
+                                       DLManagedTensorVersioned * graph)
     cuvsError_t cuvsCagraIndexGetDataset(cuvsCagraIndex_t index,
-                                         DLManagedTensor * dataset)
+                                         DLManagedTensorVersioned * dataset)
 
     cuvsError_t cuvsCagraBuild(cuvsResources_t res,
                                cuvsCagraIndexParams* params,
-                               DLManagedTensor* dataset,
+                               DLManagedTensorVersioned* dataset,
                                cuvsCagraIndex_t index)
 
     cuvsError_t cuvsCagraSearch(cuvsResources_t res,
                                 cuvsCagraSearchParams* params,
                                 cuvsCagraIndex_t index,
-                                DLManagedTensor* queries,
-                                DLManagedTensor* neighbors,
-                                DLManagedTensor* distances,
+                                DLManagedTensorVersioned* queries,
+                                DLManagedTensorVersioned* neighbors,
+                                DLManagedTensorVersioned* distances,
                                 cuvsFilter filter)
 
     cuvsError_t cuvsCagraSerialize(cuvsResources_t res,
@@ -174,8 +174,8 @@ cdef extern from "cuvs/neighbors/cagra.h" nogil:
 
     cuvsError_t cuvsCagraIndexFromArgs(cuvsResources_t res,
                                        cuvsDistanceType metric,
-                                       DLManagedTensor * graph,
-                                       DLManagedTensor * dataset,
+                                       DLManagedTensorVersioned * graph,
+                                       DLManagedTensorVersioned * dataset,
                                        cuvsCagraIndex_t index)
 
     ctypedef struct cuvsCagraExtendParams:
@@ -187,7 +187,7 @@ cdef extern from "cuvs/neighbors/cagra.h" nogil:
     cuvsError_t cuvsCagraExtendParamsDestroy(cuvsCagraExtendParams_t params)
     cuvsError_t cuvsCagraExtend(cuvsResources_t res,
                                 cuvsCagraExtendParams_t params,
-                                DLManagedTensor* additional_dataset,
+                                DLManagedTensorVersioned* additional_dataset,
                                 cuvsCagraIndex_t index)
 
 

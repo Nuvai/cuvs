@@ -168,11 +168,12 @@ typedef enum { CUVS_KMEANS_TYPE_KMEANS = 0, CUVS_KMEANS_TYPE_KMEANS_BALANCED = 1
  */
 CUVS_API cuvsError_t cuvsKMeansFit(cuvsResources_t res,
                                    cuvsKMeansParams_t params,
-                                   DLManagedTensor* X,
-                                   DLManagedTensor* sample_weight,
-                                   DLManagedTensor* centroids,
+                                   DLManagedTensorVersioned* X,
+                                   DLManagedTensorVersioned* sample_weight,
+                                   DLManagedTensorVersioned* centroids,
                                    double* inertia,
                                    int* n_iter);
+
 
 /**
  * @brief Predict the closest cluster each sample in X belongs to.
@@ -195,12 +196,13 @@ CUVS_API cuvsError_t cuvsKMeansFit(cuvsResources_t res,
  */
 CUVS_API cuvsError_t cuvsKMeansPredict(cuvsResources_t res,
                                        cuvsKMeansParams_t params,
-                                       DLManagedTensor* X,
-                                       DLManagedTensor* sample_weight,
-                                       DLManagedTensor* centroids,
-                                       DLManagedTensor* labels,
+                                       DLManagedTensorVersioned* X,
+                                       DLManagedTensorVersioned* sample_weight,
+                                       DLManagedTensorVersioned* centroids,
+                                       DLManagedTensorVersioned* labels,
                                        bool normalize_weight,
                                        double* inertia);
+
 
 /**
  * @brief Compute cluster cost
@@ -216,9 +218,11 @@ CUVS_API cuvsError_t cuvsKMeansPredict(cuvsResources_t res,
  *
  */
 CUVS_API cuvsError_t cuvsKMeansClusterCost(cuvsResources_t res,
-                                           DLManagedTensor* X,
-                                           DLManagedTensor* centroids,
+                                           DLManagedTensorVersioned* X,
+                                           DLManagedTensorVersioned* centroids,
                                            double* cost);
+
+
 /**
  * @}
  */
