@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+use std::ffi::CString;
 use std::io::{stderr, Write};
 use std::marker::PhantomData;
 
@@ -132,6 +133,73 @@ impl<'a> Index<'a> {
                 prefilter,
             ))
         }
+    }
+
+    /// Save the CAGRA index to file.
+    ///
+    /// Experimental, both the API and the serialization format are subject to change.
+    ///
+    /// # Arguments
+    ///
+    /// * `res` - Resources to use
+    /// * `filename` - The file name for saving the index
+    /// * `include_dataset` - Whether to write out the dataset to the file
+    pub fn serialize(&self, res: &Resources, filename: &str, include_dataset: bool) -> Result<()> {
+        let c_filename = CString::new(filename).expect("filename contains null byte");
+        unsafe {
+            check_cuvs(ffi::cuvsCagraSerialize(
+                res.0,
+                c_filename.as_ptr(),
+                self.inner,
+                include_dataset,
+            ))
+        }
+    }
+
+    /// Save the CAGRA index to file in hnswlib format.
+    ///
+    /// NOTE: The saved index can only be read by the hnswlib wrapper in cuVS,
+    /// as the serialization format is not compatible with the original hnswlib.
+    ///
+    /// Experimental, both the API and the serialization format are subject to change.
+    ///
+    /// # Arguments
+    ///
+    /// * `res` - Resources to use
+    /// * `filename` - The file name for saving the index
+    pub fn serialize_to_hnswlib(&self, res: &Resources, filename: &str) -> Result<()> {
+        let c_filename = CString::new(filename).expect("filename contains null byte");
+        unsafe {
+            check_cuvs(ffi::cuvsCagraSerializeToHnswlib(
+                res.0,
+                c_filename.as_ptr(),
+                self.inner,
+            ))
+        }
+    }
+
+    /// Load a CAGRA index from file.
+    ///
+    /// Experimental, both the API and the serialization format are subject to change.
+    ///
+    /// # Arguments
+    ///
+    /// * `res` - Resources to use
+    /// * `filename` - The name of the file that stores the index
+    pub fn deserialize(res: &Resources, filename: &str) -> Result<Index<'a>> {
+        let c_filename = CString::new(filename).expect("filename contains null byte");
+        let inner = Self::create_handle()?;
+        unsafe {
+            check_cuvs(ffi::cuvsCagraDeserialize(
+                res.0,
+                c_filename.as_ptr(),
+                inner,
+            ))?;
+        }
+        Ok(Index {
+            inner,
+            _data: DatasetOwnership::Borrowed(PhantomData),
+        })
     }
 }
 
@@ -307,6 +375,87 @@ mod tests {
                 search_iter
             );
         }
+    }
+
+    #[test]
+    fn test_cagra_serialize_deserialize() {
+        let res = Resources::new().unwrap();
+
+        let n_datapoints = 256;
+        let n_features = 16;
+        let dataset =
+            ndarray::Array::<f32, _>::random((n_datapoints, n_features), Uniform::new(0., 1.0));
+
+        let build_params = IndexParams::new().unwrap();
+        let tensor = ManagedTensor::from(&dataset);
+        let index =
+            Index::build(&res, &build_params, &tensor).expect("failed to create cagra index");
+
+        let dir = std::env::temp_dir();
+        let filepath = dir.join("test_cagra_index.bin");
+        let filepath_str = filepath.to_str().unwrap();
+        index
+            .serialize(&res, filepath_str, true)
+            .expect("failed to serialize cagra index");
+
+        assert!(filepath.exists());
+        assert!(std::fs::metadata(&filepath).unwrap().len() > 0);
+
+        let loaded_index: Index<'_> =
+            Index::deserialize(&res, filepath_str).expect("failed to deserialize cagra index");
+
+        let n_queries = 4;
+        let k = 10;
+        let queries = dataset.slice(s![0..n_queries, ..]);
+        let queries = ManagedTensor::from(&queries).to_device(&res).unwrap();
+        let mut neighbors_host = ndarray::Array::<u32, _>::zeros((n_queries, k));
+        let neighbors = ManagedTensor::from(&neighbors_host)
+            .to_device(&res)
+            .unwrap();
+        let mut distances_host = ndarray::Array::<f32, _>::zeros((n_queries, k));
+        let distances = ManagedTensor::from(&distances_host)
+            .to_device(&res)
+            .unwrap();
+
+        let search_params = SearchParams::new().unwrap();
+        loaded_index
+            .search(&res, &search_params, &queries, &neighbors, &distances)
+            .expect("failed to search deserialized index");
+
+        distances.to_host(&res, &mut distances_host).unwrap();
+        neighbors.to_host(&res, &mut neighbors_host).unwrap();
+
+        assert_eq!(neighbors_host[[0, 0]], 0);
+        assert_eq!(neighbors_host[[1, 0]], 1);
+
+        let _ = std::fs::remove_file(&filepath);
+    }
+
+    #[test]
+    fn test_cagra_serialize_to_hnswlib() {
+        let res = Resources::new().unwrap();
+
+        let n_datapoints = 256;
+        let n_features = 16;
+        let dataset =
+            ndarray::Array::<f32, _>::random((n_datapoints, n_features), Uniform::new(0., 1.0));
+
+        let build_params = IndexParams::new().unwrap();
+        let tensor = ManagedTensor::from(&dataset);
+        let index =
+            Index::build(&res, &build_params, &tensor).expect("failed to create cagra index");
+
+        let dir = std::env::temp_dir();
+        let filepath = dir.join("test_cagra_index_hnsw.bin");
+        let filepath_str = filepath.to_str().unwrap();
+        index
+            .serialize_to_hnswlib(&res, filepath_str)
+            .expect("failed to serialize to hnswlib format");
+
+        assert!(filepath.exists());
+        assert!(std::fs::metadata(&filepath).unwrap().len() > 0);
+
+        let _ = std::fs::remove_file(&filepath);
     }
 
     /// Test that an index built with build_owned can be searched after the

@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+use std::ffi::CString;
 use std::io::{stderr, Write};
 use std::marker::PhantomData;
 
@@ -132,6 +133,49 @@ impl<'a> Index<'a> {
                 prefilter,
             ))
         }
+    }
+
+    /// Save the IVF-Flat index to file.
+    ///
+    /// Experimental, both the API and the serialization format are subject to change.
+    ///
+    /// # Arguments
+    ///
+    /// * `res` - Resources to use
+    /// * `filename` - The file name for saving the index
+    pub fn serialize(&self, res: &Resources, filename: &str) -> Result<()> {
+        let c_filename = CString::new(filename).expect("filename contains null byte");
+        unsafe {
+            check_cuvs(ffi::cuvsIvfFlatSerialize(
+                res.0,
+                c_filename.as_ptr(),
+                self.inner,
+            ))
+        }
+    }
+
+    /// Load an IVF-Flat index from file.
+    ///
+    /// Experimental, both the API and the serialization format are subject to change.
+    ///
+    /// # Arguments
+    ///
+    /// * `res` - Resources to use
+    /// * `filename` - The name of the file that stores the index
+    pub fn deserialize(res: &Resources, filename: &str) -> Result<Index<'a>> {
+        let c_filename = CString::new(filename).expect("filename contains null byte");
+        let inner = Self::create_handle()?;
+        unsafe {
+            check_cuvs(ffi::cuvsIvfFlatDeserialize(
+                res.0,
+                c_filename.as_ptr(),
+                inner,
+            ))?;
+        }
+        Ok(Index {
+            inner,
+            _data: DatasetOwnership::Borrowed(PhantomData),
+        })
     }
 }
 

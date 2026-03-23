@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+use std::ffi::CString;
 use std::io::{stderr, Write};
 use std::marker::PhantomData;
 
@@ -126,6 +127,49 @@ impl<'a> Index<'a> {
                 distances.as_ptr(),
             ))
         }
+    }
+
+    /// Save the IVF-PQ index to file.
+    ///
+    /// Experimental, both the API and the serialization format are subject to change.
+    ///
+    /// # Arguments
+    ///
+    /// * `res` - Resources to use
+    /// * `filename` - The file name for saving the index
+    pub fn serialize(&self, res: &Resources, filename: &str) -> Result<()> {
+        let c_filename = CString::new(filename).expect("filename contains null byte");
+        unsafe {
+            check_cuvs(ffi::cuvsIvfPqSerialize(
+                res.0,
+                c_filename.as_ptr(),
+                self.inner,
+            ))
+        }
+    }
+
+    /// Load an IVF-PQ index from file.
+    ///
+    /// Experimental, both the API and the serialization format are subject to change.
+    ///
+    /// # Arguments
+    ///
+    /// * `res` - Resources to use
+    /// * `filename` - The name of the file that stores the index
+    pub fn deserialize(res: &Resources, filename: &str) -> Result<Index<'a>> {
+        let c_filename = CString::new(filename).expect("filename contains null byte");
+        let inner = Self::create_handle()?;
+        unsafe {
+            check_cuvs(ffi::cuvsIvfPqDeserialize(
+                res.0,
+                c_filename.as_ptr(),
+                inner,
+            ))?;
+        }
+        Ok(Index {
+            inner,
+            _data: DatasetOwnership::Borrowed(PhantomData),
+        })
     }
 }
 
@@ -291,6 +335,60 @@ mod tests {
                 search_iter
             );
         }
+    }
+
+    #[test]
+    fn test_ivf_pq_serialize_deserialize() {
+        let res = Resources::new().unwrap();
+        let build_params = IndexParams::new().unwrap().set_n_lists(64);
+
+        let n_datapoints = 1024;
+        let n_features = 16;
+        let dataset =
+            ndarray::Array::<f32, _>::random((n_datapoints, n_features), Uniform::new(0., 1.0));
+
+        let dataset_device = ManagedTensor::from(&dataset).to_device(&res).unwrap();
+        let index = Index::build_owned(&res, &build_params, dataset_device)
+            .expect("failed to create ivf-pq index");
+
+        let dir = std::env::temp_dir();
+        let filepath = dir.join("test_ivf_pq_index.bin");
+        let filepath_str = filepath.to_str().unwrap();
+        index
+            .serialize(&res, filepath_str)
+            .expect("failed to serialize ivf-pq index");
+
+        assert!(filepath.exists());
+        assert!(std::fs::metadata(&filepath).unwrap().len() > 0);
+
+        let loaded_index: Index<'_> =
+            Index::deserialize(&res, filepath_str).expect("failed to deserialize ivf-pq index");
+
+        let n_queries = 4;
+        let k = 10;
+        let queries = dataset.slice(s![0..n_queries, ..]);
+        let queries = ManagedTensor::from(&queries).to_device(&res).unwrap();
+        let mut neighbors_host = ndarray::Array::<i64, _>::zeros((n_queries, k));
+        let neighbors = ManagedTensor::from(&neighbors_host)
+            .to_device(&res)
+            .unwrap();
+        let mut distances_host = ndarray::Array::<f32, _>::zeros((n_queries, k));
+        let distances = ManagedTensor::from(&distances_host)
+            .to_device(&res)
+            .unwrap();
+
+        let search_params = SearchParams::new().unwrap();
+        loaded_index
+            .search(&res, &search_params, &queries, &neighbors, &distances)
+            .expect("failed to search deserialized index");
+
+        distances.to_host(&res, &mut distances_host).unwrap();
+        neighbors.to_host(&res, &mut neighbors_host).unwrap();
+
+        assert_eq!(neighbors_host[[0, 0]], 0);
+        assert_eq!(neighbors_host[[1, 0]], 1);
+
+        let _ = std::fs::remove_file(&filepath);
     }
 
     /// Test that an index built with build (borrowed) ties the dataset lifetime.
