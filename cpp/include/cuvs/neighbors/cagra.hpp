@@ -3437,6 +3437,40 @@ void build_knn_graph(raft::resources const& res,
                      raft::host_matrix_view<uint32_t, int64_t, raft::row_major> knn_graph,
                      cuvs::neighbors::cagra::graph_build_params::ivf_pq_params build_params);
 
+/**
+ * @brief Search with oversampling and re-ranking against the original float dataset.
+ *
+ * Designed for use with lossy compressed datasets (e.g., binary_dataset with ADC) where
+ * approximate distances are used for graph traversal, then exact float distances refine
+ * the final top-k. Follows the Lucene BBQ pattern.
+ *
+ * Workflow:
+ *   1. Search the index with k_oversample = ceil(k * oversample_factor) candidates
+ *   2. Compute exact float distances between queries and the k_oversample candidates
+ *      using the original (uncompressed) dataset
+ *   3. Sort and return the top-k nearest neighbors
+ *
+ * @param[in] res raft resources
+ * @param[in] params search parameters for the approximate search phase
+ * @param[in] index CAGRA index (may have compressed dataset, e.g., binary_dataset)
+ * @param[in] queries float query vectors [n_queries, dim]
+ * @param[in] original_dataset the original float vectors used to build the index [n_rows, dim]
+ * @param[out] neighbors output neighbor indices [n_queries, k]
+ * @param[out] distances output exact float distances [n_queries, k]
+ * @param[in] metric distance metric for the re-ranking phase (default: L2Expanded)
+ * @param[in] oversample_factor how many candidates to retrieve before re-ranking (default: 2.0)
+ */
+void search_with_reranking(
+  raft::resources const& res,
+  const search_params& params,
+  const index<float, uint32_t>& idx,
+  raft::device_matrix_view<const float, int64_t, raft::row_major> queries,
+  raft::device_matrix_view<const float, int64_t, raft::row_major> original_dataset,
+  raft::device_matrix_view<int64_t, int64_t, raft::row_major> neighbors,
+  raft::device_matrix_view<float, int64_t, raft::row_major> distances,
+  cuvs::distance::DistanceType metric = cuvs::distance::DistanceType::L2Expanded,
+  float oversample_factor             = 2.0f);
+
 }  // namespace cuvs::neighbors::cagra
 
 namespace cuvs::neighbors::cagra::helpers {

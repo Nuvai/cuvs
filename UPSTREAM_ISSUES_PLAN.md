@@ -50,6 +50,14 @@
 | **#1637** | [BUG] Iterative CAGRA build fails with mmap'd memory | Added `cudaHostRegister`/`cudaHostUnregister` in `mmap_owner` (cagra_build.cuh) so mmap'd memory is properly registered with CUDA for device↔host transfers and correct `cudaPointerGetAttributes` behavior on UVM/HMM systems. |
 | **#1819** | [FEA] KMeans uint8/int8 support | Added `fit`, `predict`, `fit_predict` overloads for `int8_t` and `uint8_t` input data. Thin wrappers cast input to float via `thrust::transform` then delegate to existing float KMeans. Float centroids/inertia (integer centroids are meaningless after averaging). 6 new `.cu` files + header declarations. |
 
+### PR #7 — Binary Dataset + ADC Search for CAGRA (Issue #5)
+
+| # | Issue | Fix summary |
+|---|-------|-------------|
+| **#1906** | [FEA] Binary dataset support in CAGRA | **binary_dataset class** (`common.hpp`): `binary_dataset<IdxT>` follows `vpq_dataset` pattern — packed `uint8_t` data in `dataset<IdxT>` subclass, `dim()` returns original bit dimensionality, constructor validates `packed_dim >= ceil(dim/8)`. Type traits `is_binary_dataset_v`. **ADC kernel** (`compute_distance_binary_adc-impl.cuh`): computes `-dot(query, binary_vec)` via branchless `float(bit) * query_val`. Per-byte `ld.global.cg.u8` loads (alignment-safe for arbitrary `packed_dim`). Adjacent team threads read adjacent bytes for coalescing. Supports L2Expanded and InnerProduct only (L1 semantically wrong, L2Sqrt would NaN on negative output, Cosine needs norms, BitwiseHamming needs uint8 queries). **Descriptor spec** (`compute_distance_binary_adc.hpp`): `binary_adc_descriptor_spec` with metric validation in `priority()`. 3 generated kernel `.cu` files (TeamSize 8/16/32). **Search integration** (`cagra_search.cuh`): `dynamic_cast<binary_dataset>` branch with `RAFT_EXPECTS` metric guard. **Descriptor cache** (`factory.cuh`): `make_key` overload for `binary_dataset`. **Workflow:** `cagra::build(float, L2)` → `binary::train + transform` → `index.update_dataset(binary_dataset)` → `cagra::search(float queries)`. No new public API functions. |
+| — | [BUG] Go missing `DistanceBitwiseHamming` | Added `DistanceBitwiseHamming` constant in iota block + mapping to `C.CUVS_DISTANCE_BITWISE_HAMMING`. (`go/distance.go`) |
+| — | [FEA] Rust `BITWISE_HAMMING` re-export | Added `pub const BITWISE_HAMMING: DistanceType` friendly constant. (`rust/cuvs/src/distance_type.rs`) |
+
 ---
 
 ## Priority 1 — Critical Bugs (correctness / crashes)
@@ -84,7 +92,7 @@
 | **#1685** | [FEA] bf16 support | ✅ Fixed in PR #4 — full nv_bfloat16 support (build/search/extend/serialize/merge) |
 | **#1773** | [BUG] Single-GPU KMeans 2x memory footprint | ⬜ Upstream confirmed issue is in Dask/multi-GPU chunking, not single-GPU. Single-GPU KMeans runs 30GB on 32GB V100 fine. |
 | **#1672** | [FEA] Remove CAGRA `IndexWrapper` | ⬜ Already removed upstream (PR #1792). The C struct `cuvsCagraIndex` (type-erased handle) is the expected C-API pattern. |
-| **#1906** | [FEA] Binary dataset support in CAGRA | ⬜ Blocked on upstream PR #1846 (new datasets API). |
+| **#1906** | [FEA] Binary dataset support in CAGRA | ✅ Fixed in PR #7 — `binary_dataset` + ADC kernel + Go/Rust binding fixes. Chose Option C (hybrid): fresh impl following `vpq_dataset` pattern, no dependency on upstream PR #1846. |
 
 ## Priority 4 — ABI Stability & Packaging (important for distribution)
 
@@ -109,6 +117,10 @@
 
 ## Recommended Next Steps
 
-1. **Priorities 1–3 and 5 are substantially resolved.** Only multi-GPU issues (#1829, #1773 Dask path), upstream-blocked #1906, and Python-specific #1541 remain open.
+1. **Priorities 1–3 and 5 are fully resolved.** Only multi-GPU issues (#1829, #1773 Dask path) and Python-specific #1541 remain open.
 2. **Priority 4** (ABI stability infrastructure) is the next natural focus if binary distribution is planned.
 3. Track the UDF architecture issues (#1870–#1873) as they generalize the filtering support we already added.
+4. **Binary ADC follow-ups** (not blocking, can be fast follows):
+   - Oversampling + re-ranking utility (`search_with_reranking`) for >90% recall (Plan Part 3)
+   - Serialization support for `binary_dataset` (currently not persisted across serialize/deserialize)
+   - C-API dispatch for binary dataset (currently C++ only)
