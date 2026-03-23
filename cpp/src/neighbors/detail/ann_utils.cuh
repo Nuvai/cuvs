@@ -17,6 +17,7 @@
 #include <rmm/device_uvector.hpp>
 #include <rmm/resource_ref.hpp>
 
+#include <cuda_bf16.h>
 #include <cuda_fp16.hpp>
 
 #include <memory>
@@ -136,6 +137,11 @@ struct config<float> {
 };
 template <>
 struct config<half> {
+  using value_t                    = float;
+  static constexpr double kDivisor = 1.0;
+};
+template <>
+struct config<nv_bfloat16> {
   using value_t                    = float;
   static constexpr double kDivisor = 1.0;
 };

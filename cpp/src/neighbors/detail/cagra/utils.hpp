@@ -15,6 +15,7 @@
 #include <rmm/resource_ref.hpp>
 
 #include <cuda.h>
+#include <cuda_bf16.h>
 #include <cuda_fp16.h>
 
 #include <cfloat>
@@ -99,7 +100,17 @@ _RAFT_HOST_DEVICE constexpr unsigned size_of<float>()
   return 4;
 }
 template <>
+_RAFT_HOST_DEVICE constexpr unsigned size_of<double>()
+{
+  return 8;
+}
+template <>
 _RAFT_HOST_DEVICE constexpr unsigned size_of<half>()
+{
+  return 2;
+}
+template <>
+_RAFT_HOST_DEVICE constexpr unsigned size_of<nv_bfloat16>()
 {
   return 2;
 }

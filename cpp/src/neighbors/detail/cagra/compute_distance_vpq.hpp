@@ -7,6 +7,7 @@
 
 #include "compute_distance.hpp"
 
+#include <cuda_bf16.h>
 #include <cuvs/distance/distance.hpp>
 
 #include <type_traits>

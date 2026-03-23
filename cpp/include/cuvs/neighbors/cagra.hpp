@@ -19,6 +19,8 @@
 #include <raft/core/resource/stream_view.hpp>
 #include <raft/core/serialize.hpp>
 
+#include <cuda_bf16.h>
+
 #include <fcntl.h>
 #include <filesystem>
 #include <fstream>
@@ -1203,6 +1205,30 @@ auto build(raft::resources const& res,
            const cuvs::neighbors::cagra::index_params& params,
            raft::host_matrix_view<const uint8_t, int64_t, raft::row_major> dataset)
   -> cuvs::neighbors::cagra::index<uint8_t, uint32_t>;
+
+/** @brief Build a CAGRA index from a double-precision device dataset. */
+auto build(raft::resources const& res,
+           const cuvs::neighbors::cagra::index_params& params,
+           raft::device_matrix_view<const double, int64_t, raft::row_major> dataset)
+  -> cuvs::neighbors::cagra::index<double, uint32_t>;
+
+/** @brief Build a CAGRA index from a double-precision host dataset. */
+auto build(raft::resources const& res,
+           const cuvs::neighbors::cagra::index_params& params,
+           raft::host_matrix_view<const double, int64_t, raft::row_major> dataset)
+  -> cuvs::neighbors::cagra::index<double, uint32_t>;
+
+/** @brief Build a CAGRA index from a nv_bfloat16 device dataset. */
+auto build(raft::resources const& res,
+           const cuvs::neighbors::cagra::index_params& params,
+           raft::device_matrix_view<const nv_bfloat16, int64_t, raft::row_major> dataset)
+  -> cuvs::neighbors::cagra::index<nv_bfloat16, uint32_t>;
+
+/** @brief Build a CAGRA index from a nv_bfloat16 host dataset. */
+auto build(raft::resources const& res,
+           const cuvs::neighbors::cagra::index_params& params,
+           raft::host_matrix_view<const nv_bfloat16, int64_t, raft::row_major> dataset)
+  -> cuvs::neighbors::cagra::index<nv_bfloat16, uint32_t>;
 /**
  * @}
  */
@@ -1515,6 +1541,46 @@ void extend(
   std::optional<raft::device_matrix_view<uint8_t, int64_t, raft::layout_stride>>
     new_dataset_buffer_view                                                        = std::nullopt,
   std::optional<raft::device_matrix_view<uint32_t, int64_t>> new_graph_buffer_view = std::nullopt);
+
+/** @brief Add new vectors to a CAGRA index with double-precision device dataset. */
+void extend(
+  raft::resources const& handle,
+  const cagra::extend_params& params,
+  raft::device_matrix_view<const double, int64_t, raft::row_major> additional_dataset,
+  cuvs::neighbors::cagra::index<double, uint32_t>& idx,
+  std::optional<raft::device_matrix_view<double, int64_t, raft::layout_stride>>
+    new_dataset_buffer_view                                                        = std::nullopt,
+  std::optional<raft::device_matrix_view<uint32_t, int64_t>> new_graph_buffer_view = std::nullopt);
+
+/** @brief Add new vectors to a CAGRA index with double-precision host dataset. */
+void extend(
+  raft::resources const& handle,
+  const cagra::extend_params& params,
+  raft::host_matrix_view<const double, int64_t, raft::row_major> additional_dataset,
+  cuvs::neighbors::cagra::index<double, uint32_t>& idx,
+  std::optional<raft::device_matrix_view<double, int64_t, raft::layout_stride>>
+    new_dataset_buffer_view                                                        = std::nullopt,
+  std::optional<raft::device_matrix_view<uint32_t, int64_t>> new_graph_buffer_view = std::nullopt);
+
+/** @brief Add new vectors to a CAGRA index with nv_bfloat16 device dataset. */
+void extend(
+  raft::resources const& handle,
+  const cagra::extend_params& params,
+  raft::device_matrix_view<const nv_bfloat16, int64_t, raft::row_major> additional_dataset,
+  cuvs::neighbors::cagra::index<nv_bfloat16, uint32_t>& idx,
+  std::optional<raft::device_matrix_view<nv_bfloat16, int64_t, raft::layout_stride>>
+    new_dataset_buffer_view                                                        = std::nullopt,
+  std::optional<raft::device_matrix_view<uint32_t, int64_t>> new_graph_buffer_view = std::nullopt);
+
+/** @brief Add new vectors to a CAGRA index with nv_bfloat16 host dataset. */
+void extend(
+  raft::resources const& handle,
+  const cagra::extend_params& params,
+  raft::host_matrix_view<const nv_bfloat16, int64_t, raft::row_major> additional_dataset,
+  cuvs::neighbors::cagra::index<nv_bfloat16, uint32_t>& idx,
+  std::optional<raft::device_matrix_view<nv_bfloat16, int64_t, raft::layout_stride>>
+    new_dataset_buffer_view                                                        = std::nullopt,
+  std::optional<raft::device_matrix_view<uint32_t, int64_t>> new_graph_buffer_view = std::nullopt);
 /**
  * @}
  */
@@ -1622,6 +1688,26 @@ void search(raft::resources const& res,
             const cuvs::neighbors::filtering::base_filter& sample_filter =
               cuvs::neighbors::filtering::none_sample_filter{});
 
+/** @brief Search a CAGRA double-precision index with uint32_t output indices. */
+void search(raft::resources const& res,
+            cuvs::neighbors::cagra::search_params const& params,
+            const cuvs::neighbors::cagra::index<double, uint32_t>& index,
+            raft::device_matrix_view<const double, int64_t, raft::row_major> queries,
+            raft::device_matrix_view<uint32_t, int64_t, raft::row_major> neighbors,
+            raft::device_matrix_view<float, int64_t, raft::row_major> distances,
+            const cuvs::neighbors::filtering::base_filter& sample_filter =
+              cuvs::neighbors::filtering::none_sample_filter{});
+
+/** @brief Search a CAGRA nv_bfloat16 index with uint32_t output indices. */
+void search(raft::resources const& res,
+            cuvs::neighbors::cagra::search_params const& params,
+            const cuvs::neighbors::cagra::index<nv_bfloat16, uint32_t>& index,
+            raft::device_matrix_view<const nv_bfloat16, int64_t, raft::row_major> queries,
+            raft::device_matrix_view<uint32_t, int64_t, raft::row_major> neighbors,
+            raft::device_matrix_view<float, int64_t, raft::row_major> distances,
+            const cuvs::neighbors::filtering::base_filter& sample_filter =
+              cuvs::neighbors::filtering::none_sample_filter{});
+
 /**
  * @brief Search ANN using the constructed index.
  *
@@ -1718,6 +1804,26 @@ void search(raft::resources const& res,
             cuvs::neighbors::cagra::search_params const& params,
             const cuvs::neighbors::cagra::index<uint8_t, uint32_t>& index,
             raft::device_matrix_view<const uint8_t, int64_t, raft::row_major> queries,
+            raft::device_matrix_view<int64_t, int64_t, raft::row_major> neighbors,
+            raft::device_matrix_view<float, int64_t, raft::row_major> distances,
+            const cuvs::neighbors::filtering::base_filter& sample_filter =
+              cuvs::neighbors::filtering::none_sample_filter{});
+
+/** @brief Search a CAGRA double-precision index with int64_t output indices. */
+void search(raft::resources const& res,
+            cuvs::neighbors::cagra::search_params const& params,
+            const cuvs::neighbors::cagra::index<double, uint32_t>& index,
+            raft::device_matrix_view<const double, int64_t, raft::row_major> queries,
+            raft::device_matrix_view<int64_t, int64_t, raft::row_major> neighbors,
+            raft::device_matrix_view<float, int64_t, raft::row_major> distances,
+            const cuvs::neighbors::filtering::base_filter& sample_filter =
+              cuvs::neighbors::filtering::none_sample_filter{});
+
+/** @brief Search a CAGRA nv_bfloat16 index with int64_t output indices. */
+void search(raft::resources const& res,
+            cuvs::neighbors::cagra::search_params const& params,
+            const cuvs::neighbors::cagra::index<nv_bfloat16, uint32_t>& index,
+            raft::device_matrix_view<const nv_bfloat16, int64_t, raft::row_major> queries,
             raft::device_matrix_view<int64_t, int64_t, raft::row_major> neighbors,
             raft::device_matrix_view<float, int64_t, raft::row_major> distances,
             const cuvs::neighbors::filtering::base_filter& sample_filter =
@@ -2153,6 +2259,50 @@ void deserialize(raft::resources const& handle,
                  std::istream& is,
                  cuvs::neighbors::cagra::index<uint8_t, uint32_t>* index);
 
+/** @brief Save a double-precision CAGRA index to file. */
+void serialize(raft::resources const& handle,
+               const std::string& filename,
+               const cuvs::neighbors::cagra::index<double, uint32_t>& index,
+               bool include_dataset = true);
+
+/** @brief Load a double-precision CAGRA index from file. */
+void deserialize(raft::resources const& handle,
+                 const std::string& filename,
+                 cuvs::neighbors::cagra::index<double, uint32_t>* index);
+
+/** @brief Write a double-precision CAGRA index to an output stream. */
+void serialize(raft::resources const& handle,
+               std::ostream& os,
+               const cuvs::neighbors::cagra::index<double, uint32_t>& index,
+               bool include_dataset = true);
+
+/** @brief Load a double-precision CAGRA index from an input stream. */
+void deserialize(raft::resources const& handle,
+                 std::istream& is,
+                 cuvs::neighbors::cagra::index<double, uint32_t>* index);
+
+/** @brief Save a nv_bfloat16 CAGRA index to file. */
+void serialize(raft::resources const& handle,
+               const std::string& filename,
+               const cuvs::neighbors::cagra::index<nv_bfloat16, uint32_t>& index,
+               bool include_dataset = true);
+
+/** @brief Load a nv_bfloat16 CAGRA index from file. */
+void deserialize(raft::resources const& handle,
+                 const std::string& filename,
+                 cuvs::neighbors::cagra::index<nv_bfloat16, uint32_t>* index);
+
+/** @brief Write a nv_bfloat16 CAGRA index to an output stream. */
+void serialize(raft::resources const& handle,
+               std::ostream& os,
+               const cuvs::neighbors::cagra::index<nv_bfloat16, uint32_t>& index,
+               bool include_dataset = true);
+
+/** @brief Load a nv_bfloat16 CAGRA index from an input stream. */
+void deserialize(raft::resources const& handle,
+                 std::istream& is,
+                 cuvs::neighbors::cagra::index<nv_bfloat16, uint32_t>* index);
+
 /**
  * Write the CAGRA built index as a base layer HNSW index to an output stream
  * NOTE: The saved index can only be read by the hnswlib wrapper in cuVS,
@@ -2419,6 +2569,38 @@ void serialize_to_hnswlib(
   const std::string& filename,
   const cuvs::neighbors::cagra::index<uint8_t, uint32_t>& index,
   std::optional<raft::host_matrix_view<const uint8_t, int64_t, raft::row_major>> dataset =
+    std::nullopt);
+
+/** @brief Serialize a double-precision CAGRA index to hnswlib format (stream). */
+void serialize_to_hnswlib(
+  raft::resources const& handle,
+  std::ostream& os,
+  const cuvs::neighbors::cagra::index<double, uint32_t>& index,
+  std::optional<raft::host_matrix_view<const double, int64_t, raft::row_major>> dataset =
+    std::nullopt);
+
+/** @brief Serialize a double-precision CAGRA index to hnswlib format (file). */
+void serialize_to_hnswlib(
+  raft::resources const& handle,
+  const std::string& filename,
+  const cuvs::neighbors::cagra::index<double, uint32_t>& index,
+  std::optional<raft::host_matrix_view<const double, int64_t, raft::row_major>> dataset =
+    std::nullopt);
+
+/** @brief Serialize a nv_bfloat16 CAGRA index to hnswlib format (stream). */
+void serialize_to_hnswlib(
+  raft::resources const& handle,
+  std::ostream& os,
+  const cuvs::neighbors::cagra::index<nv_bfloat16, uint32_t>& index,
+  std::optional<raft::host_matrix_view<const nv_bfloat16, int64_t, raft::row_major>> dataset =
+    std::nullopt);
+
+/** @brief Serialize a nv_bfloat16 CAGRA index to hnswlib format (file). */
+void serialize_to_hnswlib(
+  raft::resources const& handle,
+  const std::string& filename,
+  const cuvs::neighbors::cagra::index<nv_bfloat16, uint32_t>& index,
+  std::optional<raft::host_matrix_view<const nv_bfloat16, int64_t, raft::row_major>> dataset =
     std::nullopt);
 
 /**
@@ -2493,6 +2675,22 @@ auto merge(raft::resources const& res,
            const cuvs::neighbors::filtering::base_filter& row_filter =
              cuvs::neighbors::filtering::none_sample_filter{})
   -> cuvs::neighbors::cagra::index<uint8_t, uint32_t>;
+
+/** @brief Merge multiple double-precision CAGRA indices into a single index. */
+auto merge(raft::resources const& res,
+           const cuvs::neighbors::cagra::index_params& params,
+           std::vector<cuvs::neighbors::cagra::index<double, uint32_t>*>& indices,
+           const cuvs::neighbors::filtering::base_filter& row_filter =
+             cuvs::neighbors::filtering::none_sample_filter{})
+  -> cuvs::neighbors::cagra::index<double, uint32_t>;
+
+/** @brief Merge multiple nv_bfloat16 CAGRA indices into a single index. */
+auto merge(raft::resources const& res,
+           const cuvs::neighbors::cagra::index_params& params,
+           std::vector<cuvs::neighbors::cagra::index<nv_bfloat16, uint32_t>*>& indices,
+           const cuvs::neighbors::filtering::base_filter& row_filter =
+             cuvs::neighbors::filtering::none_sample_filter{})
+  -> cuvs::neighbors::cagra::index<nv_bfloat16, uint32_t>;
 /**
  * @}
  */
@@ -3224,6 +3422,18 @@ void build_knn_graph(raft::resources const& res,
  */
 void build_knn_graph(raft::resources const& res,
                      raft::host_matrix_view<const uint8_t, int64_t, raft::row_major> dataset,
+                     raft::host_matrix_view<uint32_t, int64_t, raft::row_major> knn_graph,
+                     cuvs::neighbors::cagra::graph_build_params::ivf_pq_params build_params);
+
+/** @brief Build a kNN graph from a double-precision host dataset using IVF-PQ. */
+void build_knn_graph(raft::resources const& res,
+                     raft::host_matrix_view<const double, int64_t, raft::row_major> dataset,
+                     raft::host_matrix_view<uint32_t, int64_t, raft::row_major> knn_graph,
+                     cuvs::neighbors::cagra::graph_build_params::ivf_pq_params build_params);
+
+/** @brief Build a kNN graph from a nv_bfloat16 host dataset using IVF-PQ. */
+void build_knn_graph(raft::resources const& res,
+                     raft::host_matrix_view<const nv_bfloat16, int64_t, raft::row_major> dataset,
                      raft::host_matrix_view<uint32_t, int64_t, raft::row_major> knn_graph,
                      cuvs::neighbors::cagra::graph_build_params::ivf_pq_params build_params);
 
