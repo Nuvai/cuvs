@@ -27,7 +27,8 @@
 //!
 //!     // build the cagra index
 //!     let build_params = IndexParams::new()?;
-//!     let index = Index::build(&res, &build_params, &dataset)?;
+//!     let tensor = ManagedTensor::from(&dataset);
+//!     let index = Index::build(&res, &build_params, &tensor)?;
 //!     println!(
 //!         "Indexed {}x{} datapoints into cagra index",
 //!         n_datapoints, n_features
@@ -71,5 +72,5 @@ mod index_params;
 mod search_params;
 
 pub use index::Index;
-pub use index_params::{BuildAlgo, CompressionParams, IndexParams};
-pub use search_params::{HashMode, SearchAlgo, SearchParams};
+pub use index_params::{BuildAlgo, CompressionParams, IndexParams, IndexParamsBuilder};
+pub use search_params::{HashMode, SearchAlgo, SearchParams, SearchParamsBuilder};

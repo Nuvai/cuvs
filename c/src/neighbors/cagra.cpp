@@ -129,6 +129,28 @@ void* _build(cuvsResources_t res, cuvsCagraIndexParams params, DLManagedTensor* 
 }
 
 template <typename T>
+void _update_dataset(cuvsResources_t res,
+                     cuvsCagraIndex index,
+                     DLManagedTensor* dataset_tensor)
+{
+  auto dataset   = dataset_tensor->dl_tensor;
+  auto res_ptr   = reinterpret_cast<raft::resources*>(res);
+  auto index_ptr = reinterpret_cast<cuvs::neighbors::cagra::index<T, uint32_t>*>(index.addr);
+
+  if (cuvs::core::is_dlpack_device_compatible(dataset)) {
+    using mdspan_type = raft::device_matrix_view<T const, int64_t, raft::row_major>;
+    auto mds          = cuvs::core::from_dlpack<mdspan_type>(dataset_tensor);
+    index_ptr->update_dataset(*res_ptr, mds);
+  } else if (cuvs::core::is_dlpack_host_compatible(dataset)) {
+    using mdspan_type = raft::host_matrix_view<T const, int64_t, raft::row_major>;
+    auto mds          = cuvs::core::from_dlpack<mdspan_type>(dataset_tensor);
+    index_ptr->update_dataset(*res_ptr, mds);
+  } else {
+    RAFT_FAIL("Unsupported dataset DLtensor device type: %d", dataset.device.device_type);
+  }
+}
+
+template <typename T>
 void* _from_args(cuvsResources_t res,
                  cuvsDistanceType _metric,
                  DLManagedTensor* graph_tensor,
@@ -221,22 +243,26 @@ void _search(cuvsResources_t res,
   if (filter.type == NO_FILTER) {
     cuvs::neighbors::cagra::search(
       *res_ptr, search_params, *index_ptr, queries_mds, neighbors_mds, distances_mds);
+  } else if (filter.type == BITMAP) {
+    using filter_mdspan_type = raft::device_vector_view<std::uint32_t, int64_t>;
+    using filter_bmp_type    = cuvs::core::bitmap_view<std::uint32_t, int64_t>;
+    auto filter_tensor       = reinterpret_cast<DLManagedTensor*>(filter.addr);
+    auto filter_mds          = cuvs::core::from_dlpack<filter_mdspan_type>(filter_tensor);
+    const auto bitmap_filter_obj = cuvs::neighbors::filtering::bitmap_filter(
+      filter_bmp_type((std::uint32_t*)filter_mds.data_handle(), queries_mds.extent(0), index_ptr->size()));
+    cuvs::neighbors::cagra::search(
+      *res_ptr, search_params, *index_ptr, queries_mds, neighbors_mds, distances_mds, bitmap_filter_obj);
   } else if (filter.type == BITSET) {
-    using filter_mdspan_type    = raft::device_vector_view<std::uint32_t, int64_t, raft::row_major>;
-    auto removed_indices_tensor = reinterpret_cast<DLManagedTensor*>(filter.addr);
-    auto removed_indices = cuvs::core::from_dlpack<filter_mdspan_type>(removed_indices_tensor);
-    cuvs::core::bitset_view<std::uint32_t, int64_t> removed_indices_bitset(
-      removed_indices, index_ptr->dataset().extent(0));
-    auto bitset_filter_obj = cuvs::neighbors::filtering::bitset_filter(removed_indices_bitset);
-    cuvs::neighbors::cagra::search(*res_ptr,
-                                   search_params,
-                                   *index_ptr,
-                                   queries_mds,
-                                   neighbors_mds,
-                                   distances_mds,
-                                   bitset_filter_obj);
+    using filter_mdspan_type = raft::device_vector_view<std::uint32_t, int64_t>;
+    using filter_bst_type    = cuvs::core::bitset_view<std::uint32_t, int64_t>;
+    auto filter_tensor       = reinterpret_cast<DLManagedTensor*>(filter.addr);
+    auto filter_mds          = cuvs::core::from_dlpack<filter_mdspan_type>(filter_tensor);
+    const auto bitset_filter_obj = cuvs::neighbors::filtering::bitset_filter(
+      filter_bst_type((std::uint32_t*)filter_mds.data_handle(), index_ptr->size()));
+    cuvs::neighbors::cagra::search(
+      *res_ptr, search_params, *index_ptr, queries_mds, neighbors_mds, distances_mds, bitset_filter_obj);
   } else {
-    RAFT_FAIL("Unsupported filter type: BITMAP");
+    RAFT_FAIL("Unsupported filter type");
   }
 }
 
@@ -442,6 +468,7 @@ void convert_c_index_params(cuvsCagraIndexParams params,
   out->metric                    = static_cast<cuvs::distance::DistanceType>((int)params.metric);
   out->intermediate_graph_degree = params.intermediate_graph_degree;
   out->graph_degree              = params.graph_degree;
+  out->attach_dataset_on_build   = params.attach_dataset_on_build;
   _set_graph_build_params(out->graph_build_params, params, params.build_algo, n_rows, dim);
 
   if (auto* cparams = params.compression; cparams != nullptr) {
@@ -584,6 +611,27 @@ extern "C" cuvsError_t cuvsCagraBuild(cuvsResources_t res,
       RAFT_FAIL("Unsupported dataset DLtensor dtype: %d and bits: %d",
                 dataset.dtype.code,
                 dataset.dtype.bits);
+    }
+  });
+}
+
+extern "C" cuvsError_t cuvsCagraUpdateDataset(cuvsResources_t res,
+                                              DLManagedTensor* dataset_tensor,
+                                              cuvsCagraIndex_t index)
+{
+  return cuvs::core::translate_exceptions([=] {
+    if (index->dtype.code == kDLFloat && index->dtype.bits == 32) {
+      _update_dataset<float>(res, *index, dataset_tensor);
+    } else if (index->dtype.code == kDLFloat && index->dtype.bits == 16) {
+      _update_dataset<half>(res, *index, dataset_tensor);
+    } else if (index->dtype.code == kDLInt && index->dtype.bits == 8) {
+      _update_dataset<int8_t>(res, *index, dataset_tensor);
+    } else if (index->dtype.code == kDLUInt && index->dtype.bits == 8) {
+      _update_dataset<uint8_t>(res, *index, dataset_tensor);
+    } else {
+      RAFT_FAIL("Unsupported index dtype: %d and bits: %d",
+                index->dtype.code,
+                index->dtype.bits);
     }
   });
 }
@@ -736,7 +784,10 @@ extern "C" cuvsError_t cuvsCagraIndexParamsCreate(cuvsCagraIndexParams_t* params
                                                              .intermediate_graph_degree = 128,
                                                              .graph_degree              = 64,
                                                              .build_algo                = IVF_PQ,
-                                                             .nn_descent_niter          = 20};
+                                                             .nn_descent_niter          = 20,
+                                                             .compression               = nullptr,
+                                                             .graph_build_params        = nullptr,
+                                                             .attach_dataset_on_build   = true};
     (*params)->graph_build_params = new cuvsIvfPqParams{nullptr, nullptr, 1};
   });
 }
