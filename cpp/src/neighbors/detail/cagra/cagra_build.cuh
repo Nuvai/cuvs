@@ -19,6 +19,8 @@
 #include <raft/core/resource/cuda_stream.hpp>
 #include <raft/util/integer_utils.hpp>
 
+#include <thrust/transform.h>
+
 #include <cuvs/cluster/kmeans.hpp>
 #include <cuvs/distance/distance.hpp>
 #include <cuvs/neighbors/cagra.hpp>
@@ -2233,7 +2235,36 @@ index<T, IdxT> build(
           params.metric);
         ivf_pq_params.build_params.metric = params.metric;
       }
-      build_knn_graph(res, dataset, knn_graph->view(), ivf_pq_params);
+      // IVF-PQ and NN-Descent graph builders are only instantiated for float, half, int8_t, uint8_t.
+      // For other types (double, nv_bfloat16), cast the dataset to float for graph construction.
+      // This is safe because the kNN graph is topology-only (indices, no distances) and float
+      // precision is sufficient for approximate neighbor discovery.
+      if constexpr (std::is_same_v<T, float> || std::is_same_v<T, half> ||
+                    std::is_same_v<T, int8_t> || std::is_same_v<T, uint8_t>) {
+        build_knn_graph(res, dataset, knn_graph->view(), ivf_pq_params);
+      } else {
+        // IVF-PQ/NN-Descent are only instantiated for float/half/int8/uint8.
+        // For other types (double, nv_bfloat16), cast to float for graph build.
+        // This is safe: the kNN graph is topology-only and float precision is
+        // sufficient for approximate neighbor discovery.
+        auto stream = raft::resource::get_cuda_stream(res);
+        auto n_rows = dataset.extent(0);
+        auto n_cols = dataset.extent(1);
+        auto float_dataset = raft::make_device_matrix<float, int64_t>(res, n_rows, n_cols);
+        // Two-step: first materialize T on device, then convert T→float in-place.
+        auto tmp = raft::make_device_matrix<T, int64_t>(res, n_rows, n_cols);
+        raft::copy(res, tmp.view(), dataset);
+        thrust::transform(raft::resource::get_thrust_policy(res),
+                          tmp.data_handle(),
+                          tmp.data_handle() + n_rows * n_cols,
+                          float_dataset.data_handle(),
+                          [] __device__(T v) -> float { return static_cast<float>(v); });
+        raft::resource::sync_stream(res);
+        build_knn_graph(res,
+                        raft::make_const_mdspan(float_dataset.view()),
+                        knn_graph->view(),
+                        ivf_pq_params);
+      }
     } else {
       auto nn_descent_params =
         std::get<cagra::graph_build_params::nn_descent_params>(knn_build_params);
@@ -2259,7 +2290,27 @@ index<T, IdxT> build(
 
       // Use nn-descent to build CAGRA knn graph
       nn_descent_params.return_distances = false;
-      build_knn_graph<T, IdxT>(res, dataset, knn_graph->view(), nn_descent_params);
+      if constexpr (std::is_same_v<T, float> || std::is_same_v<T, half> ||
+                    std::is_same_v<T, int8_t> || std::is_same_v<T, uint8_t>) {
+        build_knn_graph<T, IdxT>(res, dataset, knn_graph->view(), nn_descent_params);
+      } else {
+        auto stream = raft::resource::get_cuda_stream(res);
+        auto n_rows = dataset.extent(0);
+        auto n_cols = dataset.extent(1);
+        auto float_dataset = raft::make_device_matrix<float, int64_t>(res, n_rows, n_cols);
+        auto tmp = raft::make_device_matrix<T, int64_t>(res, n_rows, n_cols);
+        raft::copy(res, tmp.view(), dataset);
+        thrust::transform(raft::resource::get_thrust_policy(res),
+                          tmp.data_handle(),
+                          tmp.data_handle() + n_rows * n_cols,
+                          float_dataset.data_handle(),
+                          [] __device__(T v) -> float { return static_cast<float>(v); });
+        raft::resource::sync_stream(res);
+        build_knn_graph<float, IdxT>(res,
+                                     raft::make_const_mdspan(float_dataset.view()),
+                                     knn_graph->view(),
+                                     nn_descent_params);
+      }
     }
 
     cagra_graph = raft::make_host_matrix<IdxT, int64_t>(dataset.extent(0), graph_degree);

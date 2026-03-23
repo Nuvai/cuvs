@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2024, NVIDIA CORPORATION.
+ * SPDX-FileCopyrightText: Copyright (c) 2024-2026, NVIDIA CORPORATION.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -17,14 +17,6 @@
 namespace cuvs::neighbors::cagra::detail {
 
 using namespace cuvs::distance;
-template struct vpq_descriptor_spec<DistanceType::L2Expanded,
-                                    16,
-                                    256,
-                                    8,
-                                    4,
-                                    half,
-                                    int8_t,
-                                    uint32_t,
-                                    float>;
+template struct vpq_descriptor_spec<DistanceType::L2Expanded, 16, 256, 8, 4, half, int8_t, uint32_t, float>;
 
 }  // namespace cuvs::neighbors::cagra::detail

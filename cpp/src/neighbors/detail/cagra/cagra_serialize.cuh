@@ -53,7 +53,13 @@ void serialize(raft::resources const& res,
   RAFT_LOG_DEBUG(
     "Saving CAGRA index, size %zu, dim %u", static_cast<size_t>(index_.size()), index_.dim());
 
-  std::string dtype_string = raft::detail::numpy_serializer::get_numpy_dtype<T>().to_string();
+  std::string dtype_string;
+  if constexpr (std::is_same_v<T, nv_bfloat16>) {
+    // nv_bfloat16 has no standard numpy dtype; use void type with 2-byte itemsize
+    dtype_string = "|V2";
+  } else {
+    dtype_string = raft::detail::numpy_serializer::get_numpy_dtype<T>().to_string();
+  }
   dtype_string.resize(4);
   os << dtype_string;
 

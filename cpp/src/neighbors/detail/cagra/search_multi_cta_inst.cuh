@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <cuda_bf16.h>
 #include "search_multi_cta_kernel-inl.cuh"
 #include <cuvs/neighbors/common.hpp>
 

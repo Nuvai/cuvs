@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <cstring>
 #include <future>
+#include <cuda_bf16.h>
 #include <dlpack/dlpack.h>
 
 #include <raft/core/error.hpp>
@@ -529,6 +530,14 @@ extern "C" cuvsError_t cuvsCagraIndexDestroy(cuvsCagraIndex_t index_c_ptr)
       auto index_ptr =
         reinterpret_cast<cuvs::neighbors::cagra::index<uint8_t, uint32_t>*>(index.addr);
       delete index_ptr;
+    } else if (index.dtype.code == kDLFloat && index.dtype.bits == 64) {
+      auto index_ptr =
+        reinterpret_cast<cuvs::neighbors::cagra::index<double, uint32_t>*>(index.addr);
+      delete index_ptr;
+    } else if (index.dtype.code == kDLBfloat && index.dtype.bits == 16) {
+      auto index_ptr =
+        reinterpret_cast<cuvs::neighbors::cagra::index<nv_bfloat16, uint32_t>*>(index.addr);
+      delete index_ptr;
     }
     delete index_c_ptr;
   });
@@ -569,6 +578,10 @@ extern "C" cuvsError_t cuvsCagraIndexGetDataset(cuvsCagraIndex_t index, DLManage
       get_dataset_view<int8_t, uint32_t>(index, dataset);
     } else if (index->dtype.code == kDLUInt && index->dtype.bits == 8) {
       get_dataset_view<uint8_t, uint32_t>(index, dataset);
+    } else if (index->dtype.code == kDLFloat && index->dtype.bits == 64) {
+      get_dataset_view<double, uint32_t>(index, dataset);
+    } else if (index->dtype.code == kDLBfloat && index->dtype.bits == 16) {
+      get_dataset_view<nv_bfloat16, uint32_t>(index, dataset);
     } else {
       RAFT_FAIL("Unsupported index dtype: %d and bits: %d", index->dtype.code, index->dtype.bits);
     }
@@ -586,6 +599,10 @@ extern "C" cuvsError_t cuvsCagraIndexGetGraph(cuvsCagraIndex_t index, DLManagedT
       get_graph_view<int8_t, uint32_t>(index, graph);
     } else if (index->dtype.code == kDLUInt && index->dtype.bits == 8) {
       get_graph_view<uint8_t, uint32_t>(index, graph);
+    } else if (index->dtype.code == kDLFloat && index->dtype.bits == 64) {
+      get_graph_view<double, uint32_t>(index, graph);
+    } else if (index->dtype.code == kDLBfloat && index->dtype.bits == 16) {
+      get_graph_view<nv_bfloat16, uint32_t>(index, graph);
     } else {
       RAFT_FAIL("Unsupported index dtype: %d and bits: %d", index->dtype.code, index->dtype.bits);
     }
@@ -608,6 +625,10 @@ extern "C" cuvsError_t cuvsCagraBuild(cuvsResources_t res,
       index->addr = reinterpret_cast<uintptr_t>(_build<int8_t>(res, *params, dataset_tensor));
     } else if (dataset.dtype.code == kDLUInt && dataset.dtype.bits == 8) {
       index->addr = reinterpret_cast<uintptr_t>(_build<uint8_t>(res, *params, dataset_tensor));
+    } else if (dataset.dtype.code == kDLFloat && dataset.dtype.bits == 64) {
+      index->addr = reinterpret_cast<uintptr_t>(_build<double>(res, *params, dataset_tensor));
+    } else if (dataset.dtype.code == kDLBfloat && dataset.dtype.bits == 16) {
+      index->addr = reinterpret_cast<uintptr_t>(_build<nv_bfloat16>(res, *params, dataset_tensor));
     } else {
       RAFT_FAIL("Unsupported dataset DLtensor dtype: %d and bits: %d",
                 dataset.dtype.code,
@@ -633,6 +654,10 @@ void _delete_cagra_index(void* addr, DLDataType dtype)
     delete reinterpret_cast<cuvs::neighbors::cagra::index<int8_t, uint32_t>*>(addr);
   } else if (dtype.code == kDLUInt && dtype.bits == 8) {
     delete reinterpret_cast<cuvs::neighbors::cagra::index<uint8_t, uint32_t>*>(addr);
+  } else if (dtype.code == kDLFloat && dtype.bits == 64) {
+    delete reinterpret_cast<cuvs::neighbors::cagra::index<double, uint32_t>*>(addr);
+  } else if (dtype.code == kDLBfloat && dtype.bits == 16) {
+    delete reinterpret_cast<cuvs::neighbors::cagra::index<nv_bfloat16, uint32_t>*>(addr);
   }
 }
 
@@ -710,6 +735,10 @@ extern "C" cuvsError_t cuvsCagraBuildAsync(cuvsResources_t res,
         return _build_with_own_res<int8_t>(index_params, dataset_tensor);
       } else if (dtype.code == kDLUInt && dtype.bits == 8) {
         return _build_with_own_res<uint8_t>(index_params, dataset_tensor);
+      } else if (dtype.code == kDLFloat && dtype.bits == 64) {
+        return _build_with_own_res<double>(index_params, dataset_tensor);
+      } else if (dtype.code == kDLBfloat && dtype.bits == 16) {
+        return _build_with_own_res<nv_bfloat16>(index_params, dataset_tensor);
       } else {
         RAFT_FAIL("Unsupported dataset DLtensor dtype: %d and bits: %d",
                   dtype.code, dtype.bits);
@@ -766,6 +795,10 @@ extern "C" cuvsError_t cuvsCagraUpdateDataset(cuvsResources_t res,
       _update_dataset<int8_t>(res, *index, dataset_tensor);
     } else if (index->dtype.code == kDLUInt && index->dtype.bits == 8) {
       _update_dataset<uint8_t>(res, *index, dataset_tensor);
+    } else if (index->dtype.code == kDLFloat && index->dtype.bits == 64) {
+      _update_dataset<double>(res, *index, dataset_tensor);
+    } else if (index->dtype.code == kDLBfloat && index->dtype.bits == 16) {
+      _update_dataset<nv_bfloat16>(res, *index, dataset_tensor);
     } else {
       RAFT_FAIL("Unsupported index dtype: %d and bits: %d",
                 index->dtype.code,
@@ -795,6 +828,12 @@ extern "C" cuvsError_t cuvsCagraIndexFromArgs(cuvsResources_t res,
     } else if (dataset.dtype.code == kDLUInt && dataset.dtype.bits == 8) {
       index->addr =
         reinterpret_cast<uintptr_t>(_from_args<uint8_t>(res, metric, graph_tensor, dataset_tensor));
+    } else if (dataset.dtype.code == kDLFloat && dataset.dtype.bits == 64) {
+      index->addr =
+        reinterpret_cast<uintptr_t>(_from_args<double>(res, metric, graph_tensor, dataset_tensor));
+    } else if (dataset.dtype.code == kDLBfloat && dataset.dtype.bits == 16) {
+      index->addr =
+        reinterpret_cast<uintptr_t>(_from_args<nv_bfloat16>(res, metric, graph_tensor, dataset_tensor));
     } else {
       RAFT_FAIL("Unsupported dataset DLtensor dtype: %d and bits: %d",
                 dataset.dtype.code,
@@ -820,6 +859,10 @@ extern "C" cuvsError_t cuvsCagraExtend(cuvsResources_t res,
       _extend<int8_t>(res, *params, index, additional_dataset_tensor);
     } else if (dataset.dtype.code == kDLUInt && dataset.dtype.bits == 8) {
       _extend<uint8_t>(res, *params, index, additional_dataset_tensor);
+    } else if (dataset.dtype.code == kDLFloat && dataset.dtype.bits == 64) {
+      _extend<double>(res, *params, index, additional_dataset_tensor);
+    } else if (dataset.dtype.code == kDLBfloat && dataset.dtype.bits == 16) {
+      _extend<nv_bfloat16>(res, *params, index, additional_dataset_tensor);
     } else {
       RAFT_FAIL("Unsupported dataset DLtensor dtype: %d and bits: %d",
                 dataset.dtype.code,
@@ -867,6 +910,12 @@ extern "C" cuvsError_t cuvsCagraSearch(cuvsResources_t res,
     } else if (queries.dtype.code == kDLUInt && queries.dtype.bits == 8) {
       _search<uint8_t>(
         res, *params, index, queries_tensor, neighbors_tensor, distances_tensor, filter);
+    } else if (queries.dtype.code == kDLFloat && queries.dtype.bits == 64) {
+      _search<double>(
+        res, *params, index, queries_tensor, neighbors_tensor, distances_tensor, filter);
+    } else if (queries.dtype.code == kDLBfloat && queries.dtype.bits == 16) {
+      _search<nv_bfloat16>(
+        res, *params, index, queries_tensor, neighbors_tensor, distances_tensor, filter);
     } else {
       RAFT_FAIL("Unsupported queries DLtensor dtype: %d and bits: %d",
                 queries.dtype.code,
@@ -909,6 +958,12 @@ extern "C" cuvsError_t cuvsCagraMerge(cuvsResources_t res,
     } else if (dtype.code == kDLUInt && dtype.bits == 8) {
       output_index->addr =
         reinterpret_cast<uintptr_t>(_merge<uint8_t>(res, *params, indices, num_indices, filter));
+    } else if (dtype.code == kDLFloat && dtype.bits == 64) {
+      output_index->addr =
+        reinterpret_cast<uintptr_t>(_merge<double>(res, *params, indices, num_indices, filter));
+    } else if (dtype.code == kDLBfloat && dtype.bits == 16) {
+      output_index->addr =
+        reinterpret_cast<uintptr_t>(_merge<nv_bfloat16>(res, *params, indices, num_indices, filter));
     } else {
       RAFT_FAIL("Unsupported index data type: code=%d, bits=%d", dtype.code, dtype.bits);
     }
@@ -1079,6 +1134,14 @@ extern "C" cuvsError_t cuvsCagraDeserialize(cuvsResources_t res,
     } else if (dtype.kind == 'u' && dtype.itemsize == 1) {
       index->addr       = reinterpret_cast<uintptr_t>(_deserialize<uint8_t>(res, filename));
       index->dtype.code = kDLUInt;
+    } else if (dtype.kind == 'f' && dtype.itemsize == 8) {
+      index->addr       = reinterpret_cast<uintptr_t>(_deserialize<double>(res, filename));
+      index->dtype.code = kDLFloat;
+    } else if (dtype.kind == 'V' && dtype.itemsize == 2) {
+      // bfloat16 is serialized as a 2-byte void type
+      index->addr       = reinterpret_cast<uintptr_t>(_deserialize<nv_bfloat16>(res, filename));
+      index->dtype.code = kDLBfloat;
+      index->dtype.bits = 16;
     } else {
       RAFT_FAIL("Unsupported dtype in file %s", filename);
     }
@@ -1099,6 +1162,10 @@ extern "C" cuvsError_t cuvsCagraSerialize(cuvsResources_t res,
       _serialize<int8_t>(res, filename, index, include_dataset);
     } else if (index->dtype.code == kDLUInt && index->dtype.bits == 8) {
       _serialize<uint8_t>(res, filename, index, include_dataset);
+    } else if (index->dtype.code == kDLFloat && index->dtype.bits == 64) {
+      _serialize<double>(res, filename, index, include_dataset);
+    } else if (index->dtype.code == kDLBfloat && index->dtype.bits == 16) {
+      _serialize<nv_bfloat16>(res, filename, index, include_dataset);
     } else {
       RAFT_FAIL("Unsupported index dtype: %d and bits: %d", index->dtype.code, index->dtype.bits);
     }
@@ -1118,6 +1185,10 @@ extern "C" cuvsError_t cuvsCagraSerializeToHnswlib(cuvsResources_t res,
       _serialize_to_hnswlib<int8_t>(res, filename, index);
     } else if (index->dtype.code == kDLUInt && index->dtype.bits == 8) {
       _serialize_to_hnswlib<uint8_t>(res, filename, index);
+    } else if (index->dtype.code == kDLFloat && index->dtype.bits == 64) {
+      _serialize_to_hnswlib<double>(res, filename, index);
+    } else if (index->dtype.code == kDLBfloat && index->dtype.bits == 16) {
+      _serialize_to_hnswlib<nv_bfloat16>(res, filename, index);
     } else {
       RAFT_FAIL("Unsupported index dtype: %d and bits: %d", index->dtype.code, index->dtype.bits);
     }
