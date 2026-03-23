@@ -10,8 +10,8 @@ license.workspace = true
 
 [dependencies]
 ffi = { package = "cuvs-sys", path = "../cuvs-sys", version = "26.6.0" }
-ndarray = "0.15"
+ndarray = "0.16"
 
 [dev-dependencies]
-ndarray-rand = "0.14"
+ndarray-rand = "0.16"
 mark-flaky-tests = "1"
