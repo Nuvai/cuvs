@@ -167,7 +167,9 @@ CUVS_API cuvsError_t cuvsIvfFlatIndexGetDim(cuvsIvfFlatIndex_t index, int64_t* d
  * @param[out] centers Preallocated array on host or device memory to store output, [n_lists, dim]
  * @return cuvsError_t
  */
-CUVS_API cuvsError_t cuvsIvfFlatIndexGetCenters(cuvsIvfFlatIndex_t index, DLManagedTensor* centers);
+CUVS_API cuvsError_t cuvsIvfFlatIndexGetCenters(cuvsIvfFlatIndex_t index,
+                                                DLManagedTensorVersioned* centers);
+
 
 /**
  * @}
@@ -178,7 +180,7 @@ CUVS_API cuvsError_t cuvsIvfFlatIndexGetCenters(cuvsIvfFlatIndex_t index, DLMana
  * @{
  */
 /**
- * @brief Build a IVF-Flat index with a `DLManagedTensor` which has underlying
+ * @brief Build a IVF-Flat index with a `DLManagedTensorVersioned` which has underlying
  *        `DLDeviceType` equal to `kDLCUDA`, `kDLCUDAHost`, `kDLCUDAManaged`,
  *        or `kDLCPU`. Also, acceptable underlying types are:
  *        1. `kDLDataType.code == kDLFloat` and `kDLDataType.bits = 32`
@@ -193,8 +195,8 @@ CUVS_API cuvsError_t cuvsIvfFlatIndexGetCenters(cuvsIvfFlatIndex_t index, DLMana
  * cuvsResources_t res;
  * cuvsError_t res_create_status = cuvsResourcesCreate(&res);
  *
- * // Assume a populated `DLManagedTensor` type here
- * DLManagedTensor dataset;
+ * // Assume a populated `DLManagedTensorVersioned` type here
+ * DLManagedTensorVersioned dataset;
  *
  * // Create default index params
  * cuvsIvfFlatIndexParams_t index_params;
@@ -215,14 +217,15 @@ CUVS_API cuvsError_t cuvsIvfFlatIndexGetCenters(cuvsIvfFlatIndex_t index, DLMana
  *
  * @param[in] res cuvsResources_t opaque C handle
  * @param[in] index_params cuvsIvfFlatIndexParams_t used to build IVF-Flat index
- * @param[in] dataset DLManagedTensor* training dataset
+ * @param[in] dataset DLManagedTensorVersioned* training dataset
  * @param[out] index cuvsIvfFlatIndex_t Newly built IVF-Flat index
  * @return cuvsError_t
  */
 CUVS_API cuvsError_t cuvsIvfFlatBuild(cuvsResources_t res,
                                       cuvsIvfFlatIndexParams_t index_params,
-                                      DLManagedTensor* dataset,
+                                      DLManagedTensorVersioned* dataset,
                                       cuvsIvfFlatIndex_t index);
+
 /**
  * @}
  */
@@ -232,7 +235,7 @@ CUVS_API cuvsError_t cuvsIvfFlatBuild(cuvsResources_t res,
  * @{
  */
 /**
- * @brief Search a IVF-Flat index with a `DLManagedTensor` which has underlying
+ * @brief Search a IVF-Flat index with a `DLManagedTensorVersioned` which has underlying
  *        `DLDeviceType` equal to `kDLCUDA`, `kDLCUDAHost`, `kDLCUDAManaged`.
  *        It is also important to note that the IVF-Flat Index must have been built
  *        with the same type of `queries`, such that `index.dtype.code ==
@@ -249,10 +252,10 @@ CUVS_API cuvsError_t cuvsIvfFlatBuild(cuvsResources_t res,
  * cuvsResources_t res;
  * cuvsError_t res_create_status = cuvsResourcesCreate(&res);
  *
- * // Assume a populated `DLManagedTensor` type here
- * DLManagedTensor dataset;
- * DLManagedTensor queries;
- * DLManagedTensor neighbors;
+ * // Assume a populated `DLManagedTensorVersioned` type here
+ * DLManagedTensorVersioned dataset;
+ * DLManagedTensorVersioned queries;
+ * DLManagedTensorVersioned neighbors;
  *
  * // Create default search params
  * cuvsIvfFlatSearchParams_t search_params;
@@ -270,19 +273,20 @@ CUVS_API cuvsError_t cuvsIvfFlatBuild(cuvsResources_t res,
  * @param[in] res cuvsResources_t opaque C handle
  * @param[in] search_params cuvsIvfFlatSearchParams_t used to search IVF-Flat index
  * @param[in] index ivfFlatIndex which has been returned by `ivfFlatBuild`
- * @param[in] queries DLManagedTensor* queries dataset to search
- * @param[out] neighbors DLManagedTensor* output `k` neighbors for queries
- * @param[out] distances DLManagedTensor* output `k` distances for queries
+ * @param[in] queries DLManagedTensorVersioned* queries dataset to search
+ * @param[out] neighbors DLManagedTensorVersioned* output `k` neighbors for queries
+ * @param[out] distances DLManagedTensorVersioned* output `k` distances for queries
  * @param[in] filter cuvsFilter input filter that can be used
               to filter queries and neighbors based on the given bitset.
  */
 CUVS_API cuvsError_t cuvsIvfFlatSearch(cuvsResources_t res,
                                        cuvsIvfFlatSearchParams_t search_params,
                                        cuvsIvfFlatIndex_t index,
-                                       DLManagedTensor* queries,
-                                       DLManagedTensor* neighbors,
-                                       DLManagedTensor* distances,
+                                       DLManagedTensorVersioned* queries,
+                                       DLManagedTensorVersioned* neighbors,
+                                       DLManagedTensorVersioned* distances,
                                        cuvsFilter filter);
+
 
 /**
  * @}
@@ -340,15 +344,16 @@ CUVS_API cuvsError_t cuvsIvfFlatDeserialize(cuvsResources_t res,
  * @brief Extend the index with the new data.
  *
  * @param[in] res cuvsResources_t opaque C handle
- * @param[in] new_vectors DLManagedTensor* the new vectors to add to the index
- * @param[in] new_indices DLManagedTensor* vector of new indices for the new vectors
+ * @param[in] new_vectors DLManagedTensorVersioned* the new vectors to add to the index
+ * @param[in] new_indices DLManagedTensorVersioned* vector of new indices for the new vectors
  * @param[inout] index IVF-Flat index to be extended
  * @return cuvsError_t
  */
 CUVS_API cuvsError_t cuvsIvfFlatExtend(cuvsResources_t res,
-                                       DLManagedTensor* new_vectors,
-                                       DLManagedTensor* new_indices,
+                                       DLManagedTensorVersioned* new_vectors,
+                                       DLManagedTensorVersioned* new_indices,
                                        cuvsIvfFlatIndex_t index);
+
 /**
  * @}
  */

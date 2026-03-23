@@ -53,7 +53,7 @@ CUVS_API cuvsError_t cuvsBruteForceIndexDestroy(cuvsBruteForceIndex_t index);
  * @{
  */
 /**
- * @brief Build a BRUTEFORCE index with a `DLManagedTensor` which has underlying
+ * @brief Build a BRUTEFORCE index with a `DLManagedTensorVersioned` which has underlying
  *        `DLDeviceType` equal to `kDLCUDA`, `kDLCUDAHost`, `kDLCUDAManaged`,
  *        or `kDLCPU`. Also, acceptable underlying types are:
  *        1. `kDLDataType.code == kDLFloat` and `kDLDataType.bits = 32`
@@ -67,8 +67,8 @@ CUVS_API cuvsError_t cuvsBruteForceIndexDestroy(cuvsBruteForceIndex_t index);
  * cuvsResources_t res;
  * cuvsError_t res_create_status = cuvsResourcesCreate(&res);
  *
- * // Assume a populated `DLManagedTensor` type here
- * DLManagedTensor dataset;
+ * // Assume a populated `DLManagedTensorVersioned` type here
+ * DLManagedTensorVersioned dataset;
  *
  * // Create BRUTEFORCE index
  * cuvsBruteForceIndex_t index;
@@ -83,17 +83,18 @@ CUVS_API cuvsError_t cuvsBruteForceIndexDestroy(cuvsBruteForceIndex_t index);
  * @endcode
  *
  * @param[in] res cuvsResources_t opaque C handle
- * @param[in] dataset DLManagedTensor* training dataset
+ * @param[in] dataset DLManagedTensorVersioned* training dataset
  * @param[in] metric metric
  * @param[in] metric_arg metric_arg
  * @param[out] index cuvsBruteForceIndex_t Newly built BRUTEFORCE index
  * @return cuvsError_t
  */
 CUVS_API cuvsError_t cuvsBruteForceBuild(cuvsResources_t res,
-                                         DLManagedTensor* dataset,
+                                         DLManagedTensorVersioned* dataset,
                                          cuvsDistanceType metric,
                                          float metric_arg,
                                          cuvsBruteForceIndex_t index);
+
 /**
  * @}
  */
@@ -103,7 +104,7 @@ CUVS_API cuvsError_t cuvsBruteForceBuild(cuvsResources_t res,
  * @{
  */
 /**
- * @brief Search a BRUTEFORCE index with a `DLManagedTensor` which has underlying
+ * @brief Search a BRUTEFORCE index with a `DLManagedTensorVersioned` which has underlying
  *        `DLDeviceType` equal to `kDLCUDA`, `kDLCUDAHost`, `kDLCUDAManaged`.
  *        It is also important to note that the BRUTEFORCE index must have been built
  *        with the same type of `queries`, such that `index.dtype.code ==
@@ -121,11 +122,11 @@ CUVS_API cuvsError_t cuvsBruteForceBuild(cuvsResources_t res,
  * cuvsResources_t res;
  * cuvsError_t res_create_status = cuvsResourcesCreate(&res);
  *
- * // Assume a populated `DLManagedTensor` type here
- * DLManagedTensor dataset;
- * DLManagedTensor queries;
- * DLManagedTensor neighbors;
- * DLManagedTensor bitmap;
+ * // Assume a populated `DLManagedTensorVersioned` type here
+ * DLManagedTensorVersioned dataset;
+ * DLManagedTensorVersioned queries;
+ * DLManagedTensorVersioned neighbors;
+ * DLManagedTensorVersioned bitmap;
  *
  * cuvsFilter prefilter{(uintptr_t)&bitmap, BITMAP};
  *
@@ -139,18 +140,19 @@ CUVS_API cuvsError_t cuvsBruteForceBuild(cuvsResources_t res,
  *
  * @param[in] res cuvsResources_t opaque C handle
  * @param[in] index cuvsBruteForceIndex which has been returned by `cuvsBruteForceBuild`
- * @param[in] queries DLManagedTensor* queries dataset to search
- * @param[out] neighbors DLManagedTensor* output `k` neighbors for queries
- * @param[out] distances DLManagedTensor* output `k` distances for queries
+ * @param[in] queries DLManagedTensorVersioned* queries dataset to search
+ * @param[out] neighbors DLManagedTensorVersioned* output `k` neighbors for queries
+ * @param[out] distances DLManagedTensorVersioned* output `k` distances for queries
  * @param[in] prefilter cuvsFilter input prefilter that can be used
               to filter queries and neighbors based on the given bitmap.
  */
 CUVS_API cuvsError_t cuvsBruteForceSearch(cuvsResources_t res,
                                           cuvsBruteForceIndex_t index,
-                                          DLManagedTensor* queries,
-                                          DLManagedTensor* neighbors,
-                                          DLManagedTensor* distances,
+                                          DLManagedTensorVersioned* queries,
+                                          DLManagedTensorVersioned* neighbors,
+                                          DLManagedTensorVersioned* distances,
                                           cuvsFilter prefilter);
+
 /**
  * @}
  */

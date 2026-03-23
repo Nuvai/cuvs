@@ -207,8 +207,8 @@ def fit(
     x_ai = wrap_array(X)
     _check_input_array(x_ai, [np.dtype('float32'), np.dtype('float64')])
 
-    cdef cydlpack.DLManagedTensor* x_dlpack = cydlpack.dlpack_c(x_ai)
-    cdef cydlpack.DLManagedTensor* sample_weight_dlpack = NULL
+    cdef cydlpack.DLManagedTensorVersioned* x_dlpack = cydlpack.dlpack_c(x_ai)
+    cdef cydlpack.DLManagedTensorVersioned* sample_weight_dlpack = NULL
 
     cdef cuvsResources_t res = <cuvsResources_t>resources.get_c_obj()
 
@@ -220,7 +220,7 @@ def fit(
                                          dtype=x_ai.dtype)
 
     centroids_ai = wrap_array(centroids)
-    cdef cydlpack.DLManagedTensor * centroids_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned * centroids_dlpack = \
         cydlpack.dlpack_c(centroids_ai)
 
     if sample_weights is not None:
@@ -296,9 +296,9 @@ def predict(
 
     x_ai = wrap_array(X)
     _check_input_array(x_ai, [np.dtype('float32'), np.dtype('float64')])
-    cdef cydlpack.DLManagedTensor* x_dlpack = cydlpack.dlpack_c(x_ai)
+    cdef cydlpack.DLManagedTensorVersioned* x_dlpack = cydlpack.dlpack_c(x_ai)
 
-    cdef cydlpack.DLManagedTensor* sample_weight_dlpack = NULL
+    cdef cydlpack.DLManagedTensorVersioned* sample_weight_dlpack = NULL
     if sample_weights is not None:
         sample_weight_dlpack = cydlpack.dlpack_c(wrap_array(sample_weights))
 
@@ -307,13 +307,13 @@ def predict(
 
     labels_ai = wrap_array(labels)
     _check_input_array(labels_ai, [np.dtype('int32')])
-    cdef cydlpack.DLManagedTensor * labels_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned * labels_dlpack = \
         cydlpack.dlpack_c(labels_ai)
 
     centroids_ai = wrap_array(centroids)
     _check_input_array(centroids_ai, [np.dtype('float32'),
                                       np.dtype('float64')])
-    cdef cydlpack.DLManagedTensor * centroids_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned * centroids_dlpack = \
         cydlpack.dlpack_c(centroids_ai)
 
     cdef cuvsResources_t res = <cuvsResources_t>resources.get_c_obj()
@@ -373,12 +373,12 @@ def cluster_cost(X, centroids, resources=None):
 
     x_ai = wrap_array(X)
     _check_input_array(x_ai, [np.dtype('float32'), np.dtype('float64')])
-    cdef cydlpack.DLManagedTensor* x_dlpack = cydlpack.dlpack_c(x_ai)
+    cdef cydlpack.DLManagedTensorVersioned* x_dlpack = cydlpack.dlpack_c(x_ai)
 
     centroids_ai = wrap_array(centroids)
     _check_input_array(centroids_ai, [np.dtype('float32'),
                                       np.dtype('float64')])
-    cdef cydlpack.DLManagedTensor* centroids_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* centroids_dlpack = \
         cydlpack.dlpack_c(centroids_ai)
 
     cdef double inertia = 0

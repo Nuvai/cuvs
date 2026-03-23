@@ -22,9 +22,9 @@ namespace {
 
 template <typename T, typename DistT, typename LayoutT = raft::row_major>
 void _pairwise_distance(cuvsResources_t res,
-                        DLManagedTensor* x_tensor,
-                        DLManagedTensor* y_tensor,
-                        DLManagedTensor* distances_tensor,
+                        DLManagedTensorVersioned* x_tensor,
+                        DLManagedTensorVersioned* y_tensor,
+                        DLManagedTensorVersioned* distances_tensor,
                         cuvsDistanceType metric,
                         float metric_arg)
 {
@@ -43,9 +43,9 @@ void _pairwise_distance(cuvsResources_t res,
 }  // namespace
 
 extern "C" cuvsError_t cuvsPairwiseDistance(cuvsResources_t res,
-                                            DLManagedTensor* x_tensor,
-                                            DLManagedTensor* y_tensor,
-                                            DLManagedTensor* distances_tensor,
+                                            DLManagedTensorVersioned* x_tensor,
+                                            DLManagedTensorVersioned* y_tensor,
+                                            DLManagedTensorVersioned* distances_tensor,
                                             cuvsDistanceType metric,
                                             float metric_arg)
 {
@@ -123,3 +123,4 @@ extern "C" cuvsError_t cuvsPairwiseDistance(cuvsResources_t res,
     }
   });
 }
+

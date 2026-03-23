@@ -15,7 +15,7 @@ Building an index
     cuvsCagraIndexParams_t index_params;
     cuvsCagraIndex_t index;
 
-    DLManagedTensor *dataset;
+    DLManagedTensorVersioned *dataset;
 
     // populate tensor with data
     load_dataset(dataset);
@@ -44,10 +44,10 @@ Searching an index
 
     // ... build index ...
 
-    DLManagedTensor *queries;
+    DLManagedTensorVersioned *queries;
 
-    DLManagedTensor *neighbors;
-    DLManagedTensor *distances;
+    DLManagedTensorVersioned *neighbors;
+    DLManagedTensorVersioned *distances;
 
     // populate tensor with data
     load_queries(queries);

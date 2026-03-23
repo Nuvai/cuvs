@@ -4,7 +4,9 @@
  */
 
 #include <cuvs/neighbors/brute_force.h>
+#include <dlpack/dlpack.h>
 #include <stdint.h>
+#include <string.h>
 
 void run_brute_force(int64_t n_rows,
                      int64_t n_queries,
@@ -23,7 +25,11 @@ void run_brute_force(int64_t n_rows,
   cuvsResourcesCreate(&res);
 
   // create dataset DLTensor
-  DLManagedTensor dataset_tensor;
+  DLManagedTensorVersioned dataset_tensor;
+  memset(&dataset_tensor, 0, sizeof(dataset_tensor));
+  dataset_tensor.version.major = DLPACK_MAJOR_VERSION;
+  dataset_tensor.version.minor = DLPACK_MINOR_VERSION;
+  dataset_tensor.flags         = 0;
   dataset_tensor.dl_tensor.data               = index_data;
   dataset_tensor.dl_tensor.device.device_type = kDLCUDA;
   dataset_tensor.dl_tensor.ndim               = 2;
@@ -42,7 +48,11 @@ void run_brute_force(int64_t n_rows,
   cuvsBruteForceBuild(res, &dataset_tensor, metric, 0.0f, index);
 
   // create queries DLTensor
-  DLManagedTensor queries_tensor;
+  DLManagedTensorVersioned queries_tensor;
+  memset(&queries_tensor, 0, sizeof(queries_tensor));
+  queries_tensor.version.major = DLPACK_MAJOR_VERSION;
+  queries_tensor.version.minor = DLPACK_MINOR_VERSION;
+  queries_tensor.flags         = 0;
   queries_tensor.dl_tensor.data               = (void*)query_data;
   queries_tensor.dl_tensor.device.device_type = kDLCUDA;
   queries_tensor.dl_tensor.ndim               = 2;
@@ -54,7 +64,11 @@ void run_brute_force(int64_t n_rows,
   queries_tensor.dl_tensor.strides            = NULL;
 
   // create neighbors DLTensor
-  DLManagedTensor neighbors_tensor;
+  DLManagedTensorVersioned neighbors_tensor;
+  memset(&neighbors_tensor, 0, sizeof(neighbors_tensor));
+  neighbors_tensor.version.major = DLPACK_MAJOR_VERSION;
+  neighbors_tensor.version.minor = DLPACK_MINOR_VERSION;
+  neighbors_tensor.flags         = 0;
   neighbors_tensor.dl_tensor.data               = (void*)neighbors_data;
   neighbors_tensor.dl_tensor.device.device_type = kDLCUDA;
   neighbors_tensor.dl_tensor.ndim               = 2;
@@ -66,7 +80,11 @@ void run_brute_force(int64_t n_rows,
   neighbors_tensor.dl_tensor.strides            = NULL;
 
   // create distances DLTensor
-  DLManagedTensor distances_tensor;
+  DLManagedTensorVersioned distances_tensor;
+  memset(&distances_tensor, 0, sizeof(distances_tensor));
+  distances_tensor.version.major = DLPACK_MAJOR_VERSION;
+  distances_tensor.version.minor = DLPACK_MINOR_VERSION;
+  distances_tensor.flags         = 0;
   distances_tensor.dl_tensor.data               = (void*)distances_data;
   distances_tensor.dl_tensor.device.device_type = kDLCUDA;
   distances_tensor.dl_tensor.ndim               = 2;
@@ -79,7 +97,11 @@ void run_brute_force(int64_t n_rows,
 
   cuvsFilter prefilter;
 
-  DLManagedTensor prefilter_tensor;
+  DLManagedTensorVersioned prefilter_tensor;
+  memset(&prefilter_tensor, 0, sizeof(prefilter_tensor));
+  prefilter_tensor.version.major = DLPACK_MAJOR_VERSION;
+  prefilter_tensor.version.minor = DLPACK_MINOR_VERSION;
+  prefilter_tensor.flags         = 0;
   if (prefilter_data == NULL || prefilter_type == NO_FILTER) {
     prefilter.type = NO_FILTER;
     prefilter.addr = (uintptr_t)NULL;

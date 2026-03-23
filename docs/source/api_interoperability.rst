@@ -4,11 +4,11 @@ Interoperability
 DLPack (C)
 ^^^^^^^^^^
 
-Approximate nearest neighbor (ANN) indexes provide an interface to build and search an index via a C API. [DLPack v0.8](https://github.com/dmlc/dlpack/blob/main/README.md), a tensor interface framework, is used as the standard to interact with our C API.
+Approximate nearest neighbor (ANN) indexes provide an interface to build and search an index via a C API. [DLPack v1.0](https://github.com/dmlc/dlpack/blob/main/README.md), a tensor interface framework, is used as the standard to interact with our C API.
 
-Representing a tensor with DLPack is simple, as it is a POD struct that stores information about the tensor at runtime. At the moment, `DLManagedTensor` from DLPack v0.8 is compatible with out C API however we will soon upgrade to `DLManagedTensorVersioned` from DLPack v1.0 as it will help us maintain ABI and API compatibility.
+Representing a tensor with DLPack is simple, as it is a POD struct that stores information about the tensor at runtime. The `DLManagedTensorVersioned` from DLPack v1.0 is used by our C API, providing ABI and API compatibility through explicit versioning.
 
-Here's an example on how to represent device memory using `DLManagedTensor`:
+Here's an example on how to represent device memory using `DLManagedTensorVersioned`:
 
 .. code-block:: c
 
@@ -22,7 +22,11 @@ Here's an example on how to represent device memory using `DLManagedTensor`:
     cudaMemcpy(dataset_dev, dataset, sizeof(float) * 2 * 1, cudaMemcpyDefault);
 
     // Use DLPack for representing the data as a tensor
-    DLManagedTensor dataset_tensor;
+    DLManagedTensorVersioned dataset_tensor;
+    memset(&dataset_tensor, 0, sizeof(dataset_tensor));
+    dataset_tensor.version.major                = DLPACK_MAJOR_VERSION;
+    dataset_tensor.version.minor                = DLPACK_MINOR_VERSION;
+    dataset_tensor.flags                        = 0;
     dataset_tensor.dl_tensor.data               = dataset;
     dataset_tensor.dl_tensor.device.device_type = kDLCUDA;
     dataset_tensor.dl_tensor.ndim               = 2;

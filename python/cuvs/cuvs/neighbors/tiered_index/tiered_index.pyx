@@ -200,7 +200,7 @@ def build(IndexParams index_params, dataset, resources=None):
     _check_input_array(dataset_ai, [np.dtype('float32')])
 
     cdef Index idx = Index()
-    cdef cydlpack.DLManagedTensor* dataset_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* dataset_dlpack = \
         cydlpack.dlpack_c(dataset_ai)
     cdef cuvsTieredIndexParams* params = index_params.params
 
@@ -300,11 +300,11 @@ def search(search_params,
     cdef void* params = <void*><size_t>search_params.get_handle()
 
     cdef cuvsError_t search_status
-    cdef cydlpack.DLManagedTensor* queries_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* queries_dlpack = \
         cydlpack.dlpack_c(queries_cai)
-    cdef cydlpack.DLManagedTensor* neighbors_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* neighbors_dlpack = \
         cydlpack.dlpack_c(neighbors_cai)
-    cdef cydlpack.DLManagedTensor* distances_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* distances_dlpack = \
         cydlpack.dlpack_c(distances_cai)
     cdef cuvsResources_t res = <cuvsResources_t>resources.get_c_obj()
 
@@ -365,7 +365,7 @@ def extend(Index index, new_vectors, resources=None):
 
     cdef cuvsResources_t res = <cuvsResources_t>resources.get_c_obj()
 
-    cdef cydlpack.DLManagedTensor* new_vectors_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* new_vectors_dlpack = \
         cydlpack.dlpack_c(new_vectors_ai)
 
     with cuda_interruptible():

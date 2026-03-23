@@ -57,7 +57,7 @@ void convert_c_index_params(cuvsTieredIndexParams params,
 }
 
 template <typename T>
-void* _build(cuvsResources_t res, cuvsTieredIndexParams params, DLManagedTensor* dataset_tensor)
+void* _build(cuvsResources_t res, cuvsTieredIndexParams params, DLManagedTensorVersioned* dataset_tensor)
 {
   auto res_ptr      = reinterpret_cast<raft::resources*>(res);
   using mdspan_type = raft::device_matrix_view<const T, int64_t, raft::row_major>;
@@ -97,9 +97,9 @@ template <typename UpstreamT>
 void _search(cuvsResources_t res,
              void* params,
              cuvsTieredIndex index,
-             DLManagedTensor* queries_tensor,
-             DLManagedTensor* neighbors_tensor,
-             DLManagedTensor* distances_tensor,
+             DLManagedTensorVersioned* queries_tensor,
+             DLManagedTensorVersioned* neighbors_tensor,
+             DLManagedTensorVersioned* distances_tensor,
              cuvsFilter filter)
 {
   auto res_ptr   = reinterpret_cast<raft::resources*>(res);
@@ -135,7 +135,7 @@ void _search(cuvsResources_t res,
       *res_ptr, search_params, *index_ptr, queries_mds, neighbors_mds, distances_mds);
   } else if (filter.type == CUVS_FILTER_BITSET) {
     using filter_mdspan_type    = raft::device_vector_view<std::uint32_t, int64_t, raft::row_major>;
-    auto removed_indices_tensor = reinterpret_cast<DLManagedTensor*>(filter.addr);
+    auto removed_indices_tensor = reinterpret_cast<DLManagedTensorVersioned*>(filter.addr);
     auto removed_indices = cuvs::core::from_dlpack<filter_mdspan_type>(removed_indices_tensor);
     cuvs::core::bitset_view<std::uint32_t, int64_t> removed_indices_bitset(removed_indices,
                                                                            index_ptr->size());
@@ -154,7 +154,7 @@ void _search(cuvsResources_t res,
 }
 
 template <typename UpstreamT>
-void _extend(cuvsResources_t res, DLManagedTensor* new_vectors, cuvsTieredIndex index)
+void _extend(cuvsResources_t res, DLManagedTensorVersioned* new_vectors, cuvsTieredIndex index)
 {
   auto res_ptr              = reinterpret_cast<raft::resources*>(res);
   auto index_ptr            = reinterpret_cast<tiered_index::index<UpstreamT>*>(index.addr);
@@ -247,7 +247,7 @@ extern "C" cuvsError_t cuvsTieredIndexDestroy(cuvsTieredIndex_t index_c_ptr)
 
 extern "C" cuvsError_t cuvsTieredIndexBuild(cuvsResources_t res,
                                             cuvsTieredIndexParams_t params,
-                                            DLManagedTensor* dataset_tensor,
+                                            DLManagedTensorVersioned* dataset_tensor,
                                             cuvsTieredIndex_t index)
 {
   return cuvs::core::translate_exceptions([=] {
@@ -267,9 +267,9 @@ extern "C" cuvsError_t cuvsTieredIndexBuild(cuvsResources_t res,
 extern "C" cuvsError_t cuvsTieredIndexSearch(cuvsResources_t res,
                                              void* search_params,
                                              cuvsTieredIndex_t index_c_ptr,
-                                             DLManagedTensor* queries_tensor,
-                                             DLManagedTensor* neighbors_tensor,
-                                             DLManagedTensor* distances_tensor,
+                                             DLManagedTensorVersioned* queries_tensor,
+                                             DLManagedTensorVersioned* neighbors_tensor,
+                                             DLManagedTensorVersioned* distances_tensor,
                                              cuvsFilter filter)
 
 {
@@ -332,7 +332,7 @@ extern "C" cuvsError_t cuvsTieredIndexParamsDestroy(cuvsTieredIndexParams_t para
 }
 
 extern "C" cuvsError_t cuvsTieredIndexExtend(cuvsResources_t res,
-                                             DLManagedTensor* new_vectors,
+                                             DLManagedTensorVersioned* new_vectors,
                                              cuvsTieredIndex_t index_c_ptr)
 {
   return cuvs::core::translate_exceptions([=] {

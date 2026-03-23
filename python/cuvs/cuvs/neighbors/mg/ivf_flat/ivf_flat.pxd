@@ -9,7 +9,7 @@ from libcpp cimport bool
 
 # Import base single-GPU extension module for subclassing
 from cuvs.common.c_api cimport cuvsError_t, cuvsResources_t
-from cuvs.common.cydlpack cimport DLDataType, DLManagedTensor
+from cuvs.common.cydlpack cimport DLDataType, DLManagedTensorVersioned
 from cuvs.neighbors.ivf_flat.ivf_flat cimport (
     IndexParams as SingleGpuIndexParams,
     SearchParams as SingleGpuSearchParams,
@@ -73,22 +73,22 @@ cdef extern from "cuvs/neighbors/mg_ivf_flat.h" nogil:
     cuvsError_t cuvsMultiGpuIvfFlatBuild(
         cuvsResources_t res,
         cuvsMultiGpuIvfFlatIndexParams_t params,
-        DLManagedTensor* dataset_tensor,
+        DLManagedTensorVersioned* dataset_tensor,
         cuvsMultiGpuIvfFlatIndex_t index) except +
 
     cuvsError_t cuvsMultiGpuIvfFlatSearch(
         cuvsResources_t res,
         cuvsMultiGpuIvfFlatSearchParams_t params,
         cuvsMultiGpuIvfFlatIndex_t index,
-        DLManagedTensor* queries_tensor,
-        DLManagedTensor* neighbors_tensor,
-        DLManagedTensor* distances_tensor) except +
+        DLManagedTensorVersioned* queries_tensor,
+        DLManagedTensorVersioned* neighbors_tensor,
+        DLManagedTensorVersioned* distances_tensor) except +
 
     cuvsError_t cuvsMultiGpuIvfFlatExtend(
         cuvsResources_t res,
         cuvsMultiGpuIvfFlatIndex_t index,
-        DLManagedTensor* new_vectors_tensor,
-        DLManagedTensor* new_indices_tensor) except +
+        DLManagedTensorVersioned* new_vectors_tensor,
+        DLManagedTensorVersioned* new_indices_tensor) except +
 
     cuvsError_t cuvsMultiGpuIvfFlatSerialize(
         cuvsResources_t res,

@@ -37,7 +37,7 @@ func CreateIndex() (*CagraIndex, error) {
 // * `dataset` - A row-major Tensor on either the host or device to index
 // * `index` - CagraIndex to build
 func BuildIndex[T any](Resources cuvs.Resource, params *IndexParams, dataset *cuvs.Tensor[T], index *CagraIndex) error {
-	err := cuvs.CheckCuvs(cuvs.CuvsError(C.cuvsCagraBuild(C.ulong(Resources.Resource), params.params, (*C.DLManagedTensor)(unsafe.Pointer(dataset.C_tensor)), index.index)))
+	err := cuvs.CheckCuvs(cuvs.CuvsError(C.cuvsCagraBuild(C.ulong(Resources.Resource), params.params, (*C.DLManagedTensorVersioned)(unsafe.Pointer(dataset.C_tensor)), index.index)))
 	if err != nil {
 		return err
 	}
@@ -61,7 +61,7 @@ func BuildIndexAsync[T any](Resources cuvs.Resource, params *IndexParams, datase
 	err := cuvs.CheckCuvs(cuvs.CuvsError(C.cuvsCagraBuildAsync(
 		C.ulong(Resources.Resource),
 		params.params,
-		(*C.DLManagedTensor)(unsafe.Pointer(dataset.C_tensor)),
+		(*C.DLManagedTensorVersioned)(unsafe.Pointer(dataset.C_tensor)),
 		&handle)))
 	if err != nil {
 		return nil, err
@@ -98,7 +98,7 @@ func ExtendIndex[T any](Resources cuvs.Resource, params *ExtendParams, additiona
 	if !index.trained {
 		return errors.New("index needs to be built before calling extend")
 	}
-	err := cuvs.CheckCuvs(cuvs.CuvsError(C.cuvsCagraExtend(C.ulong(Resources.Resource), params.params, (*C.DLManagedTensor)(unsafe.Pointer(additional_dataset.C_tensor)), index.index)))
+	err := cuvs.CheckCuvs(cuvs.CuvsError(C.cuvsCagraExtend(C.ulong(Resources.Resource), params.params, (*C.DLManagedTensorVersioned)(unsafe.Pointer(additional_dataset.C_tensor)), index.index)))
 	if err != nil {
 		return err
 	}
@@ -151,7 +151,7 @@ func SearchIndex[T any](Resources cuvs.Resource, params *SearchParams, index *Ca
 			addr:  C.uintptr_t(uintptr(unsafe.Pointer(allowListTensor.C_tensor))),
 		}
 	}
-	return cuvs.CheckCuvs(cuvs.CuvsError(C.cuvsCagraSearch(C.cuvsResources_t(Resources.Resource), params.params, index.index, (*C.DLManagedTensor)(unsafe.Pointer(queries.C_tensor)), (*C.DLManagedTensor)(unsafe.Pointer(neighbors.C_tensor)), (*C.DLManagedTensor)(unsafe.Pointer(distances.C_tensor)), filter)))
+	return cuvs.CheckCuvs(cuvs.CuvsError(C.cuvsCagraSearch(C.cuvsResources_t(Resources.Resource), params.params, index.index, (*C.DLManagedTensorVersioned)(unsafe.Pointer(queries.C_tensor)), (*C.DLManagedTensorVersioned)(unsafe.Pointer(neighbors.C_tensor)), (*C.DLManagedTensorVersioned)(unsafe.Pointer(distances.C_tensor)), filter)))
 }
 
 // Serialize a CAGRA index to file.

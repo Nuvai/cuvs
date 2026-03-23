@@ -24,12 +24,12 @@ namespace {
 template <typename T>
 void _refine(bool on_device,
              cuvsResources_t res,
-             DLManagedTensor* dataset_tensor,
-             DLManagedTensor* queries_tensor,
-             DLManagedTensor* candidates_tensor,
+             DLManagedTensorVersioned* dataset_tensor,
+             DLManagedTensorVersioned* queries_tensor,
+             DLManagedTensorVersioned* candidates_tensor,
              cuvsDistanceType metric,
-             DLManagedTensor* indices_tensor,
-             DLManagedTensor* distances_tensor)
+             DLManagedTensorVersioned* indices_tensor,
+             DLManagedTensorVersioned* distances_tensor)
 {
   auto res_ptr = reinterpret_cast<raft::resources*>(res);
 
@@ -60,12 +60,12 @@ void _refine(bool on_device,
 }  // namespace
 
 extern "C" cuvsError_t cuvsRefine(cuvsResources_t res,
-                                  DLManagedTensor* dataset_tensor,
-                                  DLManagedTensor* queries_tensor,
-                                  DLManagedTensor* candidates_tensor,
+                                  DLManagedTensorVersioned* dataset_tensor,
+                                  DLManagedTensorVersioned* queries_tensor,
+                                  DLManagedTensorVersioned* candidates_tensor,
                                   cuvsDistanceType metric,
-                                  DLManagedTensor* indices_tensor,
-                                  DLManagedTensor* distances_tensor)
+                                  DLManagedTensorVersioned* indices_tensor,
+                                  DLManagedTensorVersioned* distances_tensor)
 {
   return cuvs::core::translate_exceptions([=] {
     auto dataset    = dataset_tensor->dl_tensor;

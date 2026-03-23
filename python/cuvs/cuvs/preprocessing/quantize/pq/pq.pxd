@@ -9,7 +9,7 @@ from libcpp cimport bool
 
 from cuvs.cluster.kmeans.kmeans cimport cuvsKMeansType
 from cuvs.common.c_api cimport cuvsError_t, cuvsResources_t
-from cuvs.common.cydlpack cimport DLDataType, DLManagedTensor
+from cuvs.common.cydlpack cimport DLDataType, DLManagedTensorVersioned
 
 
 cdef extern from "cuvs/preprocessing/quantize/pq.h" nogil:
@@ -45,17 +45,17 @@ cdef extern from "cuvs/preprocessing/quantize/pq.h" nogil:
 
     cuvsError_t cuvsProductQuantizerTransform(cuvsResources_t res,
                                               cuvsProductQuantizer_t quantizer,
-                                              DLManagedTensor* dataset,
-                                              DLManagedTensor* codes_out,
-                                              DLManagedTensor* vq_labels)
+                                              DLManagedTensorVersioned* dataset,
+                                              DLManagedTensorVersioned* codes_out,
+                                              DLManagedTensorVersioned* vq_labels)
     cuvsError_t cuvsProductQuantizerInverseTransform(
         cuvsResources_t res, cuvsProductQuantizer_t quantizer,
-        DLManagedTensor* pq_codes, DLManagedTensor* out,
-        DLManagedTensor* vq_labels)
+        DLManagedTensorVersioned* pq_codes, DLManagedTensorVersioned* out,
+        DLManagedTensorVersioned* vq_labels)
 
     cuvsError_t cuvsProductQuantizerBuild(cuvsResources_t res,
                                           cuvsProductQuantizerParams_t params,
-                                          DLManagedTensor* dataset,
+                                          DLManagedTensorVersioned* dataset,
                                           cuvsProductQuantizer_t quantizer)
 
     cuvsError_t cuvsProductQuantizerGetPqBits(cuvsProductQuantizer_t quantizer,
@@ -65,10 +65,10 @@ cdef extern from "cuvs/preprocessing/quantize/pq.h" nogil:
                                              uint32_t* pq_dim)
 
     cuvsError_t cuvsProductQuantizerGetPqCodebook(
-        cuvsProductQuantizer_t quantizer, DLManagedTensor* pq_codebook)
+        cuvsProductQuantizer_t quantizer, DLManagedTensorVersioned* pq_codebook)
 
     cuvsError_t cuvsProductQuantizerGetVqCodebook(
-        cuvsProductQuantizer_t quantizer, DLManagedTensor* vq_codebook)
+        cuvsProductQuantizer_t quantizer, DLManagedTensorVersioned* vq_codebook)
 
     cuvsError_t cuvsProductQuantizerGetEncodedDim(
         cuvsProductQuantizer_t quantizer, uint32_t* encoded_dim)

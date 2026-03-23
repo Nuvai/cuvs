@@ -314,19 +314,19 @@ def build(dataset, k, params, *,
             core_out, [np.dtype("float32")], exp_rows=n_rows, exp_cols=None
         )
 
-    cdef cydlpack.DLManagedTensor* indices_dlpack = cydlpack.dlpack_c(
+    cdef cydlpack.DLManagedTensorVersioned* indices_dlpack = cydlpack.dlpack_c(
         indices_out
     )
 
-    cdef cydlpack.DLManagedTensor* distances_dlpack = NULL
+    cdef cydlpack.DLManagedTensorVersioned* distances_dlpack = NULL
     if distances_out is not None:
         distances_dlpack = cydlpack.dlpack_c(distances_out)
 
-    cdef cydlpack.DLManagedTensor* core_dlpack = NULL
+    cdef cydlpack.DLManagedTensorVersioned* core_dlpack = NULL
     if core_out is not None:
         core_dlpack = cydlpack.dlpack_c(core_out)
 
-    cdef cydlpack.DLManagedTensor* dataset_dlpack = cydlpack.dlpack_c(
+    cdef cydlpack.DLManagedTensorVersioned* dataset_dlpack = cydlpack.dlpack_c(
         dataset_ai
     )
 

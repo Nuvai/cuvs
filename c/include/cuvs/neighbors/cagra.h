@@ -568,7 +568,7 @@ CUVS_API cuvsError_t cuvsCagraIndexGetGraphDegree(cuvsCagraIndex_t index, int64_
  * cuvsCagraIndexDestroy is called on the cagra index - the returned
  * dataset view will be invalid.
  *
- * Note that the DLManagedTensor dataset returned will have an associated
+ * Note that the DLManagedTensorVersioned dataset returned will have an associated
  * 'deleter' function that must be called when the dataset is no longer
  * needed. This will free up host memory that stores the shape of the
  * dataset view.
@@ -577,7 +577,7 @@ CUVS_API cuvsError_t cuvsCagraIndexGetGraphDegree(cuvsCagraIndex_t index, int64_
  * @param[out] dataset the dataset used in cagra
  * @return cuvsError_t
  */
-CUVS_API cuvsError_t cuvsCagraIndexGetDataset(cuvsCagraIndex_t index, DLManagedTensor* dataset);
+CUVS_API cuvsError_t cuvsCagraIndexGetDataset(cuvsCagraIndex_t index, DLManagedTensorVersioned* dataset);
 
 /**
  * @brief Returns a view of the CAGRA graph
@@ -589,7 +589,7 @@ CUVS_API cuvsError_t cuvsCagraIndexGetDataset(cuvsCagraIndex_t index, DLManagedT
  * cuvsCagraIndexDestroy is called on the cagra index - the returned
  * graph view will be invalid.
  *
- * Note that the DLManagedTensor graph returned will have an associated
+ * Note that the DLManagedTensorVersioned graph returned will have an associated
  * 'deleter' function that must be called when the graph is no longer
  * needed. This will free up host memory that stores the metadata for the
  * graph view.
@@ -598,7 +598,7 @@ CUVS_API cuvsError_t cuvsCagraIndexGetDataset(cuvsCagraIndex_t index, DLManagedT
  * @param[out] graph the output knn graph.
  * @return cuvsError_t
  */
-CUVS_API cuvsError_t cuvsCagraIndexGetGraph(cuvsCagraIndex_t index, DLManagedTensor* graph);
+CUVS_API cuvsError_t cuvsCagraIndexGetGraph(cuvsCagraIndex_t index, DLManagedTensorVersioned* graph);
 
 /**
  * @}
@@ -610,7 +610,7 @@ CUVS_API cuvsError_t cuvsCagraIndexGetGraph(cuvsCagraIndex_t index, DLManagedTen
  */
 
 /**
- * @brief Build a CAGRA index with a `DLManagedTensor` which has underlying
+ * @brief Build a CAGRA index with a `DLManagedTensorVersioned` which has underlying
  *        `DLDeviceType` equal to `kDLCUDA`, `kDLCUDAHost`, `kDLCUDAManaged`,
  *        or `kDLCPU`. Also, acceptable underlying types are:
  *        1. `kDLDataType.code == kDLFloat` and `kDLDataType.bits = 32`
@@ -626,8 +626,8 @@ CUVS_API cuvsError_t cuvsCagraIndexGetGraph(cuvsCagraIndex_t index, DLManagedTen
  * cuvsResources_t res;
  * cuvsError_t res_create_status = cuvsResourcesCreate(&res);
  *
- * // Assume a populated `DLManagedTensor` type here
- * DLManagedTensor dataset;
+ * // Assume a populated `DLManagedTensorVersioned` type here
+ * DLManagedTensorVersioned dataset;
  *
  * // Create default index params
  * cuvsCagraIndexParams_t params;
@@ -648,14 +648,14 @@ CUVS_API cuvsError_t cuvsCagraIndexGetGraph(cuvsCagraIndex_t index, DLManagedTen
  *
  * @param[in] res cuvsResources_t opaque C handle
  * @param[in] params cuvsCagraIndexParams_t used to build CAGRA index
- * @param[in] dataset DLManagedTensor* training dataset
+ * @param[in] dataset DLManagedTensorVersioned* training dataset
  * @param[inout] index cuvsCagraIndex_t Newly built CAGRA index. This index needs to be already
  *                                      created with cuvsCagraIndexCreate.
  * @return cuvsError_t
  */
 CUVS_API cuvsError_t cuvsCagraBuild(cuvsResources_t res,
                                     cuvsCagraIndexParams_t params,
-                                    DLManagedTensor* dataset,
+                                    DLManagedTensorVersioned* dataset,
                                     cuvsCagraIndex_t index);
 
 /**
@@ -676,13 +676,13 @@ typedef uintptr_t cuvsCagraBuildHandle_t;
  *
  * @param[in]  res     cuvsResources_t opaque C handle
  * @param[in]  params  cuvsCagraIndexParams_t used to build CAGRA index
- * @param[in]  dataset DLManagedTensor* training dataset
+ * @param[in]  dataset DLManagedTensorVersioned* training dataset
  * @param[out] handle  Receives an opaque handle for the in-flight build
  * @return cuvsError_t
  */
 CUVS_API cuvsError_t cuvsCagraBuildAsync(cuvsResources_t res,
                                          cuvsCagraIndexParams_t params,
-                                         DLManagedTensor* dataset,
+                                         DLManagedTensorVersioned* dataset,
                                          cuvsCagraBuildHandle_t* handle);
 
 /**
@@ -722,12 +722,12 @@ CUVS_API cuvsError_t cuvsCagraBuildHandleDestroy(cuvsCagraBuildHandle_t handle);
  * zero-copy is used.
  *
  * @param[in] res cuvsResources_t opaque C handle
- * @param[in] dataset DLManagedTensor* dataset to attach
+ * @param[in] dataset DLManagedTensorVersioned* dataset to attach
  * @param[in] index cuvsCagraIndex_t the index to update
  * @return cuvsError_t
  */
 CUVS_API cuvsError_t cuvsCagraUpdateDataset(cuvsResources_t res,
-                                            DLManagedTensor* dataset,
+                                            DLManagedTensorVersioned* dataset,
                                             cuvsCagraIndex_t index);
 
 /**
@@ -739,13 +739,13 @@ CUVS_API cuvsError_t cuvsCagraUpdateDataset(cuvsResources_t res,
  * Computation (float queries vs packed binary data).
  *
  * @param[in] res cuvsResources_t opaque C handle
- * @param[in] dataset DLManagedTensor* uint8_t packed binary data [n_rows, ceil(original_dim/8)]
+ * @param[in] dataset DLManagedTensorVersioned* uint8_t packed binary data [n_rows, ceil(original_dim/8)]
  * @param[in] original_dim the original binary dimensionality (number of bits per vector)
  * @param[in] index cuvsCagraIndex_t the index to update
  * @return cuvsError_t
  */
 CUVS_API cuvsError_t cuvsCagraUpdateDatasetBinary(cuvsResources_t res,
-                                                   DLManagedTensor* dataset,
+                                                   DLManagedTensorVersioned* dataset,
                                                    uint32_t original_dim,
                                                    cuvsCagraIndex_t index);
 
@@ -759,7 +759,7 @@ CUVS_API cuvsError_t cuvsCagraUpdateDatasetBinary(cuvsResources_t res,
  */
 
 /**
- * @brief Extend a CAGRA index with a `DLManagedTensor` which has underlying
+ * @brief Extend a CAGRA index with a `DLManagedTensorVersioned` which has underlying
  *        `DLDeviceType` equal to `kDLCUDA`, `kDLCUDAHost`, `kDLCUDAManaged`,
  *        or `kDLCPU`. Also, acceptable underlying types are:
  *        1. `kDLDataType.code == kDLFloat` and `kDLDataType.bits = 32`
@@ -769,13 +769,13 @@ CUVS_API cuvsError_t cuvsCagraUpdateDatasetBinary(cuvsResources_t res,
  *
  * @param[in] res cuvsResources_t opaque C handle
  * @param[in] params cuvsCagraExtendParams_t used to extend CAGRA index
- * @param[in] additional_dataset DLManagedTensor* additional dataset
+ * @param[in] additional_dataset DLManagedTensorVersioned* additional dataset
  * @param[in,out] index cuvsCagraIndex_t CAGRA index
  * @return cuvsError_t
  */
 CUVS_API cuvsError_t cuvsCagraExtend(cuvsResources_t res,
                                      cuvsCagraExtendParams_t params,
-                                     DLManagedTensor* additional_dataset,
+                                     DLManagedTensorVersioned* additional_dataset,
                                      cuvsCagraIndex_t index);
 
 /**
@@ -787,7 +787,7 @@ CUVS_API cuvsError_t cuvsCagraExtend(cuvsResources_t res,
  * @{
  */
 /**
- * @brief Search a CAGRA index with a `DLManagedTensor` which has underlying
+ * @brief Search a CAGRA index with a `DLManagedTensorVersioned` which has underlying
  *        `DLDeviceType` equal to `kDLCUDA`, `kDLCUDAHost`, `kDLCUDAManaged`.
  *        It is also important to note that the CAGRA Index must have been built
  *        with the same type of `queries`, such that `index.dtype.code ==
@@ -809,10 +809,10 @@ CUVS_API cuvsError_t cuvsCagraExtend(cuvsResources_t res,
  * cuvsResources_t res;
  * cuvsError_t res_create_status = cuvsResourcesCreate(&res);
  *
- * // Assume a populated `DLManagedTensor` type here
- * DLManagedTensor dataset;
- * DLManagedTensor queries;
- * DLManagedTensor neighbors;
+ * // Assume a populated `DLManagedTensorVersioned` type here
+ * DLManagedTensorVersioned dataset;
+ * DLManagedTensorVersioned queries;
+ * DLManagedTensorVersioned neighbors;
  *
  * // Create default search params
  * cuvsCagraSearchParams_t params;
@@ -830,18 +830,18 @@ CUVS_API cuvsError_t cuvsCagraExtend(cuvsResources_t res,
  * @param[in] res cuvsResources_t opaque C handle
  * @param[in] params cuvsCagraSearchParams_t used to search CAGRA index
  * @param[in] index cuvsCagraIndex which has been returned by `cuvsCagraBuild`
- * @param[in] queries DLManagedTensor* queries dataset to search
- * @param[out] neighbors DLManagedTensor* output `k` neighbors for queries
- * @param[out] distances DLManagedTensor* output `k` distances for queries
+ * @param[in] queries DLManagedTensorVersioned* queries dataset to search
+ * @param[out] neighbors DLManagedTensorVersioned* output `k` neighbors for queries
+ * @param[out] distances DLManagedTensorVersioned* output `k` distances for queries
  * @param[in] filter cuvsFilter input filter that can be used
               to filter queries and neighbors based on the given bitset.
  */
 CUVS_API cuvsError_t cuvsCagraSearch(cuvsResources_t res,
                                      cuvsCagraSearchParams_t params,
                                      cuvsCagraIndex_t index,
-                                     DLManagedTensor* queries,
-                                     DLManagedTensor* neighbors,
-                                     DLManagedTensor* distances,
+                                     DLManagedTensorVersioned* queries,
+                                     DLManagedTensorVersioned* neighbors,
+                                     DLManagedTensorVersioned* distances,
                                      cuvsFilter filter);
 
 /**
@@ -942,9 +942,9 @@ CUVS_API cuvsError_t cuvsCagraDeserialize(cuvsResources_t res, const char* filen
  * cuvsCagraIndex_t index;
  * cuvsError_t index_create_status = cuvsCagraIndexCreate(&index);
  *
- * // Assume a populated `DLManagedTensor` type here for the graph and dataset
- * DLManagedTensor dataset;
- * DLManagedTensor graph;
+ * // Assume a populated `DLManagedTensorVersioned` type here for the graph and dataset
+ * DLManagedTensorVersioned dataset;
+ * DLManagedTensorVersioned graph;
  *
  * cuvsDistanceType metric = L2Expanded;
  *
@@ -955,8 +955,8 @@ CUVS_API cuvsError_t cuvsCagraDeserialize(cuvsResources_t res, const char* filen
  */
 CUVS_API cuvsError_t cuvsCagraIndexFromArgs(cuvsResources_t res,
                                             cuvsDistanceType metric,
-                                            DLManagedTensor* graph,
-                                            DLManagedTensor* dataset,
+                                            DLManagedTensorVersioned* graph,
+                                            DLManagedTensorVersioned* dataset,
                                             cuvsCagraIndex_t index);
 
 /**

@@ -195,8 +195,8 @@ cdef class Index:
             raise ValueError("Index needs to be built before getting centers")
 
         output = DeviceTensorView()
-        cdef cydlpack.DLManagedTensor * tensor = \
-            <cydlpack.DLManagedTensor*><size_t>output.get_handle()
+        cdef cydlpack.DLManagedTensorVersioned * tensor = \
+            <cydlpack.DLManagedTensorVersioned*><size_t>output.get_handle()
         check_cuvs(cuvsIvfFlatIndexGetCenters(self.index, tensor))
         output.parent = self
 
@@ -244,7 +244,7 @@ def build(IndexParams index_params, dataset, resources=None):
                                     np.dtype('byte'), np.dtype('ubyte')])
 
     cdef Index idx = Index()
-    cdef cydlpack.DLManagedTensor* dataset_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* dataset_dlpack = \
         cydlpack.dlpack_c(dataset_ai)
     cdef cuvsIvfFlatIndexParams* params = index_params.params
 
@@ -371,11 +371,11 @@ def search(SearchParams search_params,
 
     cdef cuvsIvfFlatSearchParams* params = search_params.params
     cdef cuvsError_t search_status
-    cdef cydlpack.DLManagedTensor* queries_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* queries_dlpack = \
         cydlpack.dlpack_c(queries_cai)
-    cdef cydlpack.DLManagedTensor* neighbors_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* neighbors_dlpack = \
         cydlpack.dlpack_c(neighbors_cai)
-    cdef cydlpack.DLManagedTensor* distances_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* distances_dlpack = \
         cydlpack.dlpack_c(distances_cai)
     cdef cuvsResources_t res = <cuvsResources_t>resources.get_c_obj()
 
@@ -519,10 +519,10 @@ def extend(Index index, new_vectors, new_indices, resources=None):
     _check_input_array(new_indices_ai, [np.dtype('int64')])
     cdef cuvsResources_t res = <cuvsResources_t>resources.get_c_obj()
 
-    cdef cydlpack.DLManagedTensor* new_vectors_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* new_vectors_dlpack = \
         cydlpack.dlpack_c(new_vectors_ai)
 
-    cdef cydlpack.DLManagedTensor* new_indices_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* new_indices_dlpack = \
         cydlpack.dlpack_c(new_indices_ai)
 
     with cuda_interruptible():

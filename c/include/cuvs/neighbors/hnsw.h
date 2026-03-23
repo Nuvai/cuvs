@@ -283,7 +283,8 @@ CUVS_API cuvsError_t cuvsHnswFromCagraWithDataset(cuvsResources_t res,
                                                   cuvsHnswIndexParams_t params,
                                                   cuvsCagraIndex_t cagra_index,
                                                   cuvsHnswIndex_t hnsw_index,
-                                                  DLManagedTensor* dataset_tensor);
+                                                  DLManagedTensorVersioned* dataset_tensor);
+
 
 /**
  * @}
@@ -306,7 +307,7 @@ CUVS_API cuvsError_t cuvsHnswFromCagraWithDataset(cuvsResources_t res,
  *
  * @param[in] res cuvsResources_t opaque C handle
  * @param[in] params cuvsHnswIndexParams_t with ACE parameters configured
- * @param[in] dataset DLManagedTensor* host dataset to build index from
+ * @param[in] dataset DLManagedTensorVersioned* host dataset to build index from
  * @param[out] index cuvsHnswIndex_t to return the built HNSW index
  *
  * @return cuvsError_t
@@ -338,8 +339,8 @@ CUVS_API cuvsError_t cuvsHnswFromCagraWithDataset(cuvsResources_t res,
  * cuvsHnswIndex_t hnsw_index;
  * cuvsHnswIndexCreate(&hnsw_index);
  *
- * // Assume dataset is a populated DLManagedTensor with host data
- * DLManagedTensor dataset;
+ * // Assume dataset is a populated DLManagedTensorVersioned with host data
+ * DLManagedTensorVersioned dataset;
  *
  * // Build the index
  * cuvsHnswBuild(res, params, &dataset, hnsw_index);
@@ -353,8 +354,9 @@ CUVS_API cuvsError_t cuvsHnswFromCagraWithDataset(cuvsResources_t res,
  */
 CUVS_API cuvsError_t cuvsHnswBuild(cuvsResources_t res,
                                    cuvsHnswIndexParams_t params,
-                                   DLManagedTensor* dataset,
+                                   DLManagedTensorVersioned* dataset,
                                    cuvsHnswIndex_t index);
+
 
 /**
  * @}
@@ -372,7 +374,7 @@ CUVS_API cuvsError_t cuvsHnswBuild(cuvsResources_t res,
 
  * @param[in] res cuvsResources_t opaque C handle
  * @param[in] params cuvsHnswExtendParams_t used to extend Hnsw index
- * @param[in] additional_dataset DLManagedTensor* additional dataset to extend the index
+ * @param[in] additional_dataset DLManagedTensorVersioned* additional dataset to extend the index
  * @param[inout] index cuvsHnswIndex_t to extend
   *
   * @return cuvsError_t
@@ -396,7 +398,7 @@ CUVS_API cuvsError_t cuvsHnswBuild(cuvsResources_t res,
   * cuvsHnswFromCagra(res, hnsw_params, cagra_index, hnsw_index);
   *
   * // Extend the HNSW index with additional vectors
-  * DLManagedTensor additional_dataset;
+  * DLManagedTensorVersioned additional_dataset;
   * cuvsHnswExtendParams_t extend_params;
   * cuvsHnswExtendParamsCreate(&extend_params);
   * cuvsHnswExtend(res, extend_params, additional_dataset, hnsw_index);
@@ -411,8 +413,9 @@ CUVS_API cuvsError_t cuvsHnswBuild(cuvsResources_t res,
 
 CUVS_API cuvsError_t cuvsHnswExtend(cuvsResources_t res,
                                     cuvsHnswExtendParams_t params,
-                                    DLManagedTensor* additional_dataset,
+                                    DLManagedTensorVersioned* additional_dataset,
                                     cuvsHnswIndex_t index);
+
 
 /**
  * @}
@@ -455,7 +458,7 @@ CUVS_API cuvsError_t cuvsHnswSearchParamsDestroy(cuvsHnswSearchParams_t params);
  * @{
  */
 /**
- * @brief Search a HNSW index with a `DLManagedTensor` which has underlying
+ * @brief Search a HNSW index with a `DLManagedTensorVersioned` which has underlying
  *        `DLDeviceType` equal to `kDLCPU`, `kDLCUDAHost`, or `kDLCUDAManaged`.
  *        It is also important to note that the HNSW Index must have been built
  *        with the same type of `queries`, such that `index.dtype.code ==
@@ -478,10 +481,10 @@ CUVS_API cuvsError_t cuvsHnswSearchParamsDestroy(cuvsHnswSearchParams_t params);
  * cuvsResources_t res;
  * cuvsError_t res_create_status = cuvsResourcesCreate(&res);
  *
- * // Assume a populated `DLManagedTensor` type here
- * DLManagedTensor dataset;
- * DLManagedTensor queries;
- * DLManagedTensor neighbors;
+ * // Assume a populated `DLManagedTensorVersioned` type here
+ * DLManagedTensorVersioned dataset;
+ * DLManagedTensorVersioned queries;
+ * DLManagedTensorVersioned neighbors;
  *
  * // Create default search params
  * cuvsHnswSearchParams_t params;
@@ -499,16 +502,17 @@ CUVS_API cuvsError_t cuvsHnswSearchParamsDestroy(cuvsHnswSearchParams_t params);
  * @param[in] res cuvsResources_t opaque C handle
  * @param[in] params cuvsHnswSearchParams_t used to search Hnsw index
  * @param[in] index cuvsHnswIndex which has been returned by `cuvsHnswFromCagra`
- * @param[in] queries DLManagedTensor* queries dataset to search
- * @param[out] neighbors DLManagedTensor* output `k` neighbors for queries
- * @param[out] distances DLManagedTensor* output `k` distances for queries
+ * @param[in] queries DLManagedTensorVersioned* queries dataset to search
+ * @param[out] neighbors DLManagedTensorVersioned* output `k` neighbors for queries
+ * @param[out] distances DLManagedTensorVersioned* output `k` distances for queries
  */
 CUVS_API cuvsError_t cuvsHnswSearch(cuvsResources_t res,
                                     cuvsHnswSearchParams_t params,
                                     cuvsHnswIndex_t index,
-                                    DLManagedTensor* queries,
-                                    DLManagedTensor* neighbors,
-                                    DLManagedTensor* distances);
+                                    DLManagedTensorVersioned* queries,
+                                    DLManagedTensorVersioned* neighbors,
+                                    DLManagedTensorVersioned* distances);
+
 
 /**
  * @}

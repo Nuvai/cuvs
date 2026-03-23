@@ -7,7 +7,7 @@ package com.nvidia.cuvs.internal;
 import static com.nvidia.cuvs.internal.panama.headers_h.*;
 
 import com.nvidia.cuvs.CuVSMatrix;
-import com.nvidia.cuvs.internal.panama.DLManagedTensor;
+import com.nvidia.cuvs.internal.panama.DLManagedTensorVersioned;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
@@ -47,10 +47,10 @@ public interface CuVSMatrixInternal extends CuVSMatrix {
   long rowStride();
 
   /**
-   * Creates a {@link DLManagedTensor} representing the matrix data and shape, to be
+   * Creates a {@link DLManagedTensorVersioned} representing the matrix data and shape, to be
    * passed to the CuVS C API.
    * @param arena The Arena to use to allocate DL data structures
-   * @return a {@link MemorySegment} for the newly allocated DLManagedTensor
+   * @return a {@link MemorySegment} for the newly allocated DLManagedTensorVersioned
    */
   MemorySegment toTensor(Arena arena);
 }

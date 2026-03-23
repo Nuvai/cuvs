@@ -25,10 +25,10 @@ extern "C" {
  * cuvsResources_t res;
  * cuvsError_t res_create_status = cuvsResourcesCreate(&res);
  *
- * // Assume a populated `DLManagedTensor` type here
- * DLManagedTensor x;
- * DLManagedTensor y;
- * DLManagedTensor dist;
+ * // Assume a populated `DLManagedTensorVersioned` type here
+ * DLManagedTensorVersioned x;
+ * DLManagedTensorVersioned y;
+ * DLManagedTensorVersioned dist;
  *
  * cuvsPairwiseDistance(res, &x, &y, &dist, L2SqrtUnexpanded, 2.0);
  * @endcode
@@ -41,11 +41,13 @@ extern "C" {
  * @param[in] metric_arg metric argument (used for Minkowski distance)
  */
 CUVS_API cuvsError_t cuvsPairwiseDistance(cuvsResources_t res,
-                                          DLManagedTensor* x,
-                                          DLManagedTensor* y,
-                                          DLManagedTensor* dist,
+                                          DLManagedTensorVersioned* x,
+                                          DLManagedTensorVersioned* y,
+                                          DLManagedTensorVersioned* dist,
                                           cuvsDistanceType metric,
                                           float metric_arg);
+
+
 #ifdef __cplusplus
 }
 #endif

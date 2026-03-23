@@ -5,10 +5,10 @@
 # cython: language_level=3
 
 from cuvs.common.c_api cimport cuvsError_t, cuvsResources_t
-from cuvs.common.cydlpack cimport DLDataType, DLManagedTensor
+from cuvs.common.cydlpack cimport DLDataType, DLManagedTensorVersioned
 
 
 cdef extern from "cuvs/preprocessing/quantize/binary.h" nogil:
     cuvsError_t cuvsBinaryQuantizerTransform(cuvsResources_t res,
-                                             DLManagedTensor* dataset,
-                                             DLManagedTensor* out)
+                                             DLManagedTensorVersioned* dataset,
+                                             DLManagedTensorVersioned* out)

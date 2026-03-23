@@ -41,10 +41,14 @@ inline void check_cuda(cudaError_t code, const char* file, int line)
  * @param[in] t_d Pointer to a vector
  * @param[in] t_shape[] Two-dimensional array, which stores the number of rows
  * and columns of vectors.
- * @param[out] t_tensor Stores the initialized DLManagedTensor.
+ * @param[out] t_tensor Stores the initialized DLManagedTensorVersioned.
  */
-void float_tensor_initialize(float* t_d, int64_t t_shape[2], DLManagedTensor* t_tensor)
+void float_tensor_initialize(float* t_d, int64_t t_shape[2], DLManagedTensorVersioned* t_tensor)
 {
+  memset(t_tensor, 0, sizeof(*t_tensor));
+  t_tensor->version.major                = DLPACK_MAJOR_VERSION;
+  t_tensor->version.minor                = DLPACK_MINOR_VERSION;
+  t_tensor->flags                        = 0;
   t_tensor->dl_tensor.data               = t_d;
   t_tensor->dl_tensor.device.device_type = kDLCUDA;
   t_tensor->dl_tensor.ndim               = 2;
@@ -61,10 +65,14 @@ void float_tensor_initialize(float* t_d, int64_t t_shape[2], DLManagedTensor* t_
  * @param[in] t_d Pointer to a vector
  * @param[in] t_shape[] Two-dimensional array, which stores the number of rows
  * and columns of vectors.
- * @param[out] t_tensor Stores the initialized DLManagedTensor.
+ * @param[out] t_tensor Stores the initialized DLManagedTensorVersioned.
  */
-void int_tensor_initialize(int64_t* t_d, int64_t t_shape[], DLManagedTensor* t_tensor)
+void int_tensor_initialize(int64_t* t_d, int64_t t_shape[], DLManagedTensorVersioned* t_tensor)
 {
+  memset(t_tensor, 0, sizeof(*t_tensor));
+  t_tensor->version.major                = DLPACK_MAJOR_VERSION;
+  t_tensor->version.minor                = DLPACK_MINOR_VERSION;
+  t_tensor->flags                        = 0;
   t_tensor->dl_tensor.data               = t_d;
   t_tensor->dl_tensor.device.device_type = kDLCUDA;
   t_tensor->dl_tensor.ndim               = 2;

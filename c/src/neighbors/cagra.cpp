@@ -108,7 +108,7 @@ static void _set_graph_build_params(
 }
 
 template <typename T>
-void* _build(cuvsResources_t res, cuvsCagraIndexParams params, DLManagedTensor* dataset_tensor)
+void* _build(cuvsResources_t res, cuvsCagraIndexParams params, DLManagedTensorVersioned* dataset_tensor)
 {
   auto dataset = dataset_tensor->dl_tensor;
 
@@ -133,7 +133,7 @@ void* _build(cuvsResources_t res, cuvsCagraIndexParams params, DLManagedTensor* 
 template <typename T>
 void _update_dataset(cuvsResources_t res,
                      cuvsCagraIndex index,
-                     DLManagedTensor* dataset_tensor)
+                     DLManagedTensorVersioned* dataset_tensor)
 {
   auto dataset   = dataset_tensor->dl_tensor;
   auto res_ptr   = reinterpret_cast<raft::resources*>(res);
@@ -155,8 +155,8 @@ void _update_dataset(cuvsResources_t res,
 template <typename T>
 void* _from_args(cuvsResources_t res,
                  cuvsDistanceType _metric,
-                 DLManagedTensor* graph_tensor,
-                 DLManagedTensor* dataset_tensor)
+                 DLManagedTensorVersioned* graph_tensor,
+                 DLManagedTensorVersioned* dataset_tensor)
 {
   auto metric  = static_cast<cuvs::distance::DistanceType>((int)_metric);
   auto dataset = dataset_tensor->dl_tensor;
@@ -196,7 +196,7 @@ template <typename T>
 void _extend(cuvsResources_t res,
              cuvsCagraExtendParams params,
              cuvsCagraIndex index,
-             DLManagedTensor* additional_dataset_tensor)
+             DLManagedTensorVersioned* additional_dataset_tensor)
 {
   auto dataset   = additional_dataset_tensor->dl_tensor;
   auto index_ptr = reinterpret_cast<cuvs::neighbors::cagra::index<T, uint32_t>*>(index.addr);
@@ -225,9 +225,9 @@ template <typename T, typename IdxT>
 void _search(cuvsResources_t res,
              cuvsCagraSearchParams params,
              cuvsCagraIndex index,
-             DLManagedTensor* queries_tensor,
-             DLManagedTensor* neighbors_tensor,
-             DLManagedTensor* distances_tensor,
+             DLManagedTensorVersioned* queries_tensor,
+             DLManagedTensorVersioned* neighbors_tensor,
+             DLManagedTensorVersioned* distances_tensor,
              cuvsFilter filter)
 {
   auto res_ptr   = reinterpret_cast<raft::resources*>(res);
@@ -248,7 +248,7 @@ void _search(cuvsResources_t res,
   } else if (filter.type == CUVS_FILTER_BITMAP) {
     using filter_mdspan_type = raft::device_vector_view<std::uint32_t, int64_t>;
     using filter_bmp_type    = cuvs::core::bitmap_view<std::uint32_t, int64_t>;
-    auto filter_tensor       = reinterpret_cast<DLManagedTensor*>(filter.addr);
+    auto filter_tensor       = reinterpret_cast<DLManagedTensorVersioned*>(filter.addr);
     auto filter_mds          = cuvs::core::from_dlpack<filter_mdspan_type>(filter_tensor);
     const auto bitmap_filter_obj = cuvs::neighbors::filtering::bitmap_filter(
       filter_bmp_type((std::uint32_t*)filter_mds.data_handle(), queries_mds.extent(0), index_ptr->size()));
@@ -257,7 +257,7 @@ void _search(cuvsResources_t res,
   } else if (filter.type == CUVS_FILTER_BITSET) {
     using filter_mdspan_type = raft::device_vector_view<std::uint32_t, int64_t>;
     using filter_bst_type    = cuvs::core::bitset_view<std::uint32_t, int64_t>;
-    auto filter_tensor       = reinterpret_cast<DLManagedTensor*>(filter.addr);
+    auto filter_tensor       = reinterpret_cast<DLManagedTensorVersioned*>(filter.addr);
     auto filter_mds          = cuvs::core::from_dlpack<filter_mdspan_type>(filter_tensor);
     const auto bitset_filter_obj = cuvs::neighbors::filtering::bitset_filter(
       filter_bst_type((std::uint32_t*)filter_mds.data_handle(), index_ptr->size()));
@@ -272,9 +272,9 @@ template <typename T>
 void _search(cuvsResources_t res,
              cuvsCagraSearchParams params,
              cuvsCagraIndex index,
-             DLManagedTensor* queries_tensor,
-             DLManagedTensor* neighbors_tensor,
-             DLManagedTensor* distances_tensor,
+             DLManagedTensorVersioned* queries_tensor,
+             DLManagedTensorVersioned* neighbors_tensor,
+             DLManagedTensorVersioned* distances_tensor,
              cuvsFilter filter)
 {
   if (neighbors_tensor->dl_tensor.dtype.code == kDLUInt &&
@@ -365,7 +365,7 @@ void* _merge(cuvsResources_t res,
       cuvs::neighbors::cagra::merge(*res_ptr, params_cpp, index_ptrs));
   } else if (filter.type == CUVS_FILTER_BITSET) {
     using filter_mdspan_type    = raft::device_vector_view<std::uint32_t, int64_t, raft::row_major>;
-    auto removed_indices_tensor = reinterpret_cast<DLManagedTensor*>(filter.addr);
+    auto removed_indices_tensor = reinterpret_cast<DLManagedTensorVersioned*>(filter.addr);
     auto removed_indices = cuvs::core::from_dlpack<filter_mdspan_type>(removed_indices_tensor);
     cuvs::core::bitset_view<std::uint32_t, int64_t> removed_indices_bitset(
       removed_indices, total_size);
@@ -378,14 +378,14 @@ void* _merge(cuvsResources_t res,
 }
 
 template <typename T, typename IdxT>
-void get_dataset_view(cuvsCagraIndex_t index, DLManagedTensor* dataset)
+void get_dataset_view(cuvsCagraIndex_t index, DLManagedTensorVersioned* dataset)
 {
   auto index_ptr = reinterpret_cast<cuvs::neighbors::cagra::index<T, IdxT>*>(index->addr);
   cuvs::core::to_dlpack(index_ptr->dataset(), dataset);
 }
 
 template <typename T, typename IdxT>
-void get_graph_view(cuvsCagraIndex_t index, DLManagedTensor* graph)
+void get_graph_view(cuvsCagraIndex_t index, DLManagedTensorVersioned* graph)
 {
   auto index_ptr = reinterpret_cast<cuvs::neighbors::cagra::index<T, IdxT>*>(index->addr);
   cuvs::core::to_dlpack(index_ptr->graph(), graph);
@@ -567,7 +567,7 @@ extern "C" cuvsError_t cuvsCagraIndexGetGraphDegree(cuvsCagraIndex_t index, int6
   });
 }
 
-extern "C" cuvsError_t cuvsCagraIndexGetDataset(cuvsCagraIndex_t index, DLManagedTensor* dataset)
+extern "C" cuvsError_t cuvsCagraIndexGetDataset(cuvsCagraIndex_t index, DLManagedTensorVersioned* dataset)
 {
   return cuvs::core::translate_exceptions([=] {
     if (index->dtype.code == kDLFloat && index->dtype.bits == 32) {
@@ -588,7 +588,7 @@ extern "C" cuvsError_t cuvsCagraIndexGetDataset(cuvsCagraIndex_t index, DLManage
   });
 }
 
-extern "C" cuvsError_t cuvsCagraIndexGetGraph(cuvsCagraIndex_t index, DLManagedTensor* graph)
+extern "C" cuvsError_t cuvsCagraIndexGetGraph(cuvsCagraIndex_t index, DLManagedTensorVersioned* graph)
 {
   return cuvs::core::translate_exceptions([=] {
     if (index->dtype.code == kDLFloat && index->dtype.bits == 32) {
@@ -611,7 +611,7 @@ extern "C" cuvsError_t cuvsCagraIndexGetGraph(cuvsCagraIndex_t index, DLManagedT
 
 extern "C" cuvsError_t cuvsCagraBuild(cuvsResources_t res,
                                       cuvsCagraIndexParams_t params,
-                                      DLManagedTensor* dataset_tensor,
+                                      DLManagedTensorVersioned* dataset_tensor,
                                       cuvsCagraIndex_t index)
 {
   return cuvs::core::translate_exceptions([=] {
@@ -665,7 +665,7 @@ void _delete_cagra_index(void* addr, DLDataType dtype)
 // raft::device_resources, making it safe to call from a background thread.
 template <typename T>
 void* _build_with_own_res(cuvs::neighbors::cagra::index_params const& index_params,
-                          DLManagedTensor* dataset_tensor)
+                          DLManagedTensorVersioned* dataset_tensor)
 {
   auto dataset = dataset_tensor->dl_tensor;
 
@@ -700,7 +700,7 @@ struct cagra_build_future {
 
 extern "C" cuvsError_t cuvsCagraBuildAsync(cuvsResources_t res,
                                            cuvsCagraIndexParams_t params,
-                                           DLManagedTensor* dataset_tensor,
+                                           DLManagedTensorVersioned* dataset_tensor,
                                            cuvsCagraBuildHandle_t* handle)
 {
   (void)res;  // The async build uses its own raft::device_resources.
@@ -783,7 +783,7 @@ extern "C" cuvsError_t cuvsCagraBuildHandleDestroy(cuvsCagraBuildHandle_t handle
 }
 
 extern "C" cuvsError_t cuvsCagraUpdateDataset(cuvsResources_t res,
-                                              DLManagedTensor* dataset_tensor,
+                                              DLManagedTensorVersioned* dataset_tensor,
                                               cuvsCagraIndex_t index)
 {
   return cuvs::core::translate_exceptions([=] {
@@ -808,7 +808,7 @@ extern "C" cuvsError_t cuvsCagraUpdateDataset(cuvsResources_t res,
 }
 
 extern "C" cuvsError_t cuvsCagraUpdateDatasetBinary(cuvsResources_t res,
-                                                    DLManagedTensor* dataset_tensor,
+                                                    DLManagedTensorVersioned* dataset_tensor,
                                                     uint32_t original_dim,
                                                     cuvsCagraIndex_t index)
 {
@@ -863,8 +863,8 @@ extern "C" cuvsError_t cuvsCagraUpdateDatasetBinary(cuvsResources_t res,
 
 extern "C" cuvsError_t cuvsCagraIndexFromArgs(cuvsResources_t res,
                                               cuvsDistanceType metric,
-                                              DLManagedTensor* graph_tensor,
-                                              DLManagedTensor* dataset_tensor,
+                                              DLManagedTensorVersioned* graph_tensor,
+                                              DLManagedTensorVersioned* dataset_tensor,
                                               cuvsCagraIndex_t index)
 {
   return cuvs::core::translate_exceptions([=] {
@@ -898,7 +898,7 @@ extern "C" cuvsError_t cuvsCagraIndexFromArgs(cuvsResources_t res,
 
 extern "C" cuvsError_t cuvsCagraExtend(cuvsResources_t res,
                                        cuvsCagraExtendParams_t params,
-                                       DLManagedTensor* additional_dataset_tensor,
+                                       DLManagedTensorVersioned* additional_dataset_tensor,
                                        cuvsCagraIndex_t index_c_ptr)
 {
   return cuvs::core::translate_exceptions([=] {
@@ -928,9 +928,9 @@ extern "C" cuvsError_t cuvsCagraExtend(cuvsResources_t res,
 extern "C" cuvsError_t cuvsCagraSearch(cuvsResources_t res,
                                        cuvsCagraSearchParams_t params,
                                        cuvsCagraIndex_t index_c_ptr,
-                                       DLManagedTensor* queries_tensor,
-                                       DLManagedTensor* neighbors_tensor,
-                                       DLManagedTensor* distances_tensor,
+                                       DLManagedTensorVersioned* queries_tensor,
+                                       DLManagedTensorVersioned* neighbors_tensor,
+                                       DLManagedTensorVersioned* distances_tensor,
                                        cuvsFilter filter)
 {
   return cuvs::core::translate_exceptions([=] {

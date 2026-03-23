@@ -131,8 +131,9 @@ CUVS_API cuvsError_t cuvsProductQuantizerDestroy(cuvsProductQuantizer_t quantize
  */
 CUVS_API cuvsError_t cuvsProductQuantizerBuild(cuvsResources_t res,
                                                cuvsProductQuantizerParams_t params,
-                                               DLManagedTensor* dataset,
+                                               DLManagedTensorVersioned* dataset,
                                                cuvsProductQuantizer_t quantizer);
+
 
 /**
  * @brief Applies product quantization transform to the given dataset
@@ -148,9 +149,10 @@ CUVS_API cuvsError_t cuvsProductQuantizerBuild(cuvsResources_t res,
  */
 CUVS_API cuvsError_t cuvsProductQuantizerTransform(cuvsResources_t res,
                                                    cuvsProductQuantizer_t quantizer,
-                                                   DLManagedTensor* dataset,
-                                                   DLManagedTensor* codes_out,
-                                                   DLManagedTensor* vq_labels);
+                                                   DLManagedTensorVersioned* dataset,
+                                                   DLManagedTensorVersioned* codes_out,
+                                                   DLManagedTensorVersioned* vq_labels);
+
 
 /**
  * @brief Applies product quantization inverse transform to the given quantized codes
@@ -166,9 +168,10 @@ CUVS_API cuvsError_t cuvsProductQuantizerTransform(cuvsResources_t res,
  */
 CUVS_API cuvsError_t cuvsProductQuantizerInverseTransform(cuvsResources_t res,
                                                          cuvsProductQuantizer_t quantizer,
-                                                         DLManagedTensor* pq_codes,
-                                                         DLManagedTensor* out,
-                                                         DLManagedTensor* vq_labels);
+                                                         DLManagedTensorVersioned* pq_codes,
+                                                         DLManagedTensorVersioned* out,
+                                                         DLManagedTensorVersioned* vq_labels);
+
 
 /**
  * @brief Get the bit length of the vector element after compression by PQ.
@@ -193,7 +196,8 @@ CUVS_API cuvsError_t cuvsProductQuantizerGetPqDim(cuvsProductQuantizer_t quantiz
  * @param[out] pq_codebook PQ codebook
  */
 CUVS_API cuvsError_t cuvsProductQuantizerGetPqCodebook(cuvsProductQuantizer_t quantizer,
-                                                       DLManagedTensor* pq_codebook);
+                                                       DLManagedTensorVersioned* pq_codebook);
+
 
 /**
  * @brief Get the VQ codebook.
@@ -202,7 +206,9 @@ CUVS_API cuvsError_t cuvsProductQuantizerGetPqCodebook(cuvsProductQuantizer_t qu
  * @param[out] vq_codebook VQ codebook
  */
 CUVS_API cuvsError_t cuvsProductQuantizerGetVqCodebook(cuvsProductQuantizer_t quantizer,
-                                                       DLManagedTensor* vq_codebook);
+                                                       DLManagedTensorVersioned* vq_codebook);
+
+
 /**
  * @brief Get the encoded dimension of the quantized dataset.
  *

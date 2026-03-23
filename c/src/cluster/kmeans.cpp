@@ -41,9 +41,9 @@ cuvs::cluster::kmeans::balanced_params convert_balanced_params(const cuvsKMeansP
 template <typename T, typename IdxT = int32_t>
 void _fit(cuvsResources_t res,
           const cuvsKMeansParams& params,
-          DLManagedTensor* X_tensor,
-          DLManagedTensor* sample_weight_tensor,
-          DLManagedTensor* centroids_tensor,
+          DLManagedTensorVersioned* X_tensor,
+          DLManagedTensorVersioned* sample_weight_tensor,
+          DLManagedTensorVersioned* centroids_tensor,
           double* inertia,
           int* n_iter)
 {
@@ -98,10 +98,10 @@ void _fit(cuvsResources_t res,
 template <typename T, typename IdxT = int32_t, typename LabelsT = int32_t>
 void _predict(cuvsResources_t res,
               const cuvsKMeansParams& params,
-              DLManagedTensor* X_tensor,
-              DLManagedTensor* sample_weight_tensor,
-              DLManagedTensor* centroids_tensor,
-              DLManagedTensor* labels_tensor,
+              DLManagedTensorVersioned* X_tensor,
+              DLManagedTensorVersioned* sample_weight_tensor,
+              DLManagedTensorVersioned* centroids_tensor,
+              DLManagedTensorVersioned* labels_tensor,
               bool normalize_weight,
               double* inertia)
 {
@@ -153,8 +153,8 @@ void _predict(cuvsResources_t res,
 
 template <typename T, typename IdxT = int32_t>
 void _cluster_cost(cuvsResources_t res,
-                   DLManagedTensor* X_tensor,
-                   DLManagedTensor* centroids_tensor,
+                   DLManagedTensorVersioned* X_tensor,
+                   DLManagedTensorVersioned* centroids_tensor,
                    double* cost)
 {
   auto X       = X_tensor->dl_tensor;
@@ -203,9 +203,9 @@ extern "C" cuvsError_t cuvsKMeansParamsDestroy(cuvsKMeansParams_t params)
 
 extern "C" cuvsError_t cuvsKMeansFit(cuvsResources_t res,
                                      cuvsKMeansParams_t params,
-                                     DLManagedTensor* X,
-                                     DLManagedTensor* sample_weight,
-                                     DLManagedTensor* centroids,
+                                     DLManagedTensorVersioned* X,
+                                     DLManagedTensorVersioned* sample_weight,
+                                     DLManagedTensorVersioned* centroids,
                                      double* inertia,
                                      int* n_iter)
 {
@@ -225,10 +225,10 @@ extern "C" cuvsError_t cuvsKMeansFit(cuvsResources_t res,
 
 extern "C" cuvsError_t cuvsKMeansPredict(cuvsResources_t res,
                                          cuvsKMeansParams_t params,
-                                         DLManagedTensor* X,
-                                         DLManagedTensor* sample_weight,
-                                         DLManagedTensor* centroids,
-                                         DLManagedTensor* labels,
+                                         DLManagedTensorVersioned* X,
+                                         DLManagedTensorVersioned* sample_weight,
+                                         DLManagedTensorVersioned* centroids,
+                                         DLManagedTensorVersioned* labels,
                                          bool normalize_weight,
                                          double* inertia)
 {
@@ -248,8 +248,8 @@ extern "C" cuvsError_t cuvsKMeansPredict(cuvsResources_t res,
 }
 
 extern "C" cuvsError_t cuvsKMeansClusterCost(cuvsResources_t res,
-                                             DLManagedTensor* X,
-                                             DLManagedTensor* centroids,
+                                             DLManagedTensorVersioned* X,
+                                             DLManagedTensorVersioned* centroids,
                                              double* cost)
 {
   return cuvs::core::translate_exceptions([=] {
@@ -265,3 +265,4 @@ extern "C" cuvsError_t cuvsKMeansClusterCost(cuvsResources_t res,
     }
   });
 }
+

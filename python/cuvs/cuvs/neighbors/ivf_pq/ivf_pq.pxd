@@ -8,7 +8,7 @@ from libc.stdint cimport int64_t, uint32_t, uintptr_t
 from libcpp cimport bool
 
 from cuvs.common.c_api cimport cuvsError_t, cuvsResources_t
-from cuvs.common.cydlpack cimport DLDataType, DLManagedTensor
+from cuvs.common.cydlpack cimport DLDataType, DLManagedTensorVersioned
 from cuvs.distance_type cimport cuvsDistanceType
 from cuvs.neighbors.filters.filters cimport cuvsFilter
 
@@ -96,53 +96,53 @@ cdef extern from "cuvs/neighbors/ivf_pq.h" nogil:
                                        int64_t * pq_len)
 
     cuvsError_t cuvsIvfPqIndexGetCenters(cuvsIvfPqIndex_t index,
-                                         DLManagedTensor * centers)
+                                         DLManagedTensorVersioned * centers)
 
     cuvsError_t cuvsIvfPqIndexGetCentersPadded(cuvsIvfPqIndex_t index,
-                                               DLManagedTensor * centers)
+                                               DLManagedTensorVersioned * centers)
 
     cuvsError_t cuvsIvfPqIndexGetListSizes(cuvsIvfPqIndex_t index,
-                                           DLManagedTensor * list_sizes)
+                                           DLManagedTensorVersioned * list_sizes)
 
     cuvsError_t cuvsIvfPqIndexGetPqCenters(cuvsIvfPqIndex_t index,
-                                           DLManagedTensor * centers)
+                                           DLManagedTensorVersioned * centers)
 
     cuvsError_t cuvsIvfPqIndexGetCentersRot(cuvsIvfPqIndex_t index,
-                                            DLManagedTensor * centers_rot)
+                                            DLManagedTensorVersioned * centers_rot)
 
     cuvsError_t cuvsIvfPqIndexGetRotationMatrix(cuvsIvfPqIndex_t index,
-                                                DLManagedTensor * rotation_matrix)
+                                                DLManagedTensorVersioned * rotation_matrix)
 
     cuvsError_t cuvsIvfPqIndexUnpackContiguousListData(cuvsResources_t res,
                                                        cuvsIvfPqIndex_t index,
-                                                       DLManagedTensor* out,
+                                                       DLManagedTensorVersioned* out,
                                                        uint32_t label,
                                                        uint32_t offset)
 
     cuvsError_t cuvsIvfPqIndexGetListIndices(cuvsIvfPqIndex_t index,
                                              uint32_t label,
-                                             DLManagedTensor* out)
+                                             DLManagedTensorVersioned* out)
 
     cuvsError_t cuvsIvfPqBuild(cuvsResources_t res,
                                cuvsIvfPqIndexParams* params,
-                               DLManagedTensor* dataset,
+                               DLManagedTensorVersioned* dataset,
                                cuvsIvfPqIndex_t index)
 
     cuvsError_t cuvsIvfPqBuildPrecomputed(cuvsResources_t res,
                                           cuvsIvfPqIndexParams_t params,
                                           uint32_t dim,
-                                          DLManagedTensor* pq_centers,
-                                          DLManagedTensor* centers,
-                                          DLManagedTensor* centers_rot,
-                                          DLManagedTensor* rotation_matrix,
+                                          DLManagedTensorVersioned* pq_centers,
+                                          DLManagedTensorVersioned* centers,
+                                          DLManagedTensorVersioned* centers_rot,
+                                          DLManagedTensorVersioned* rotation_matrix,
                                           cuvsIvfPqIndex_t index)
 
     cuvsError_t cuvsIvfPqSearch(cuvsResources_t res,
                                 cuvsIvfPqSearchParams* params,
                                 cuvsIvfPqIndex_t index,
-                                DLManagedTensor* queries,
-                                DLManagedTensor* neighbors,
-                                DLManagedTensor* distances,
+                                DLManagedTensorVersioned* queries,
+                                DLManagedTensorVersioned* neighbors,
+                                DLManagedTensorVersioned* distances,
                                 cuvsFilter filter)
 
     cuvsError_t cuvsIvfPqSerialize(cuvsResources_t res,
@@ -154,15 +154,15 @@ cdef extern from "cuvs/neighbors/ivf_pq.h" nogil:
                                      cuvsIvfPqIndex_t index)
 
     cuvsError_t cuvsIvfPqExtend(cuvsResources_t res,
-                                DLManagedTensor* new_vectors,
-                                DLManagedTensor* new_indices,
+                                DLManagedTensorVersioned* new_vectors,
+                                DLManagedTensorVersioned* new_indices,
                                 cuvsIvfPqIndex_t index)
 
     cuvsError_t cuvsIvfPqTransform(cuvsResources_t res,
                                    cuvsIvfPqIndex_t index,
-                                   DLManagedTensor* input_dataset,
-                                   DLManagedTensor* output_labels,
-                                   DLManagedTensor* output_dataset)
+                                   DLManagedTensorVersioned* input_dataset,
+                                   DLManagedTensorVersioned* output_labels,
+                                   DLManagedTensorVersioned* output_dataset)
 
 
 cdef class IndexParams:

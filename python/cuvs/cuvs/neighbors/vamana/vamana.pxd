@@ -8,7 +8,7 @@ from libc.stdint cimport int32_t, uint32_t, uintptr_t
 from libcpp cimport bool
 
 from cuvs.common.c_api cimport cuvsError_t, cuvsResources_t
-from cuvs.common.cydlpack cimport DLDataType, DLManagedTensor
+from cuvs.common.cydlpack cimport DLDataType, DLManagedTensorVersioned
 from cuvs.distance_type cimport cuvsDistanceType
 
 
@@ -45,7 +45,7 @@ cdef extern from "cuvs/neighbors/vamana.h" nogil:
 
     cuvsError_t cuvsVamanaBuild(cuvsResources_t res,
                                 cuvsVamanaIndexParams_t params,
-                                DLManagedTensor* dataset,
+                                DLManagedTensorVersioned* dataset,
                                 cuvsVamanaIndex_t index)
 
     cuvsError_t cuvsVamanaSerialize(cuvsResources_t res,

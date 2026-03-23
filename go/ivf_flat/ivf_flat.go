@@ -37,7 +37,7 @@ func CreateIndex[T any](params *IndexParams, dataset *cuvs.Tensor[T]) (*IvfFlatI
 // * `dataset` - A row-major Tensor on either the host or device to index
 // * `index` - IvfFlatIndex to build
 func BuildIndex[T any](Resources cuvs.Resource, params *IndexParams, dataset *cuvs.Tensor[T], index *IvfFlatIndex) error {
-	err := cuvs.CheckCuvs(cuvs.CuvsError(C.cuvsIvfFlatBuild(C.ulong(Resources.Resource), params.params, (*C.DLManagedTensor)(unsafe.Pointer(dataset.C_tensor)), index.index)))
+	err := cuvs.CheckCuvs(cuvs.CuvsError(C.cuvsIvfFlatBuild(C.ulong(Resources.Resource), params.params, (*C.DLManagedTensorVersioned)(unsafe.Pointer(dataset.C_tensor)), index.index)))
 	if err != nil {
 		return err
 	}
@@ -124,7 +124,7 @@ func SearchIndex[T any](Resources cuvs.Resource, params *SearchParams, index *Iv
 		_type: C.CUVS_FILTER_NONE,
 	}
 
-	return cuvs.CheckCuvs(cuvs.CuvsError(C.cuvsIvfFlatSearch(C.cuvsResources_t(Resources.Resource), params.params, index.index, (*C.DLManagedTensor)(unsafe.Pointer(queries.C_tensor)), (*C.DLManagedTensor)(unsafe.Pointer(neighbors.C_tensor)), (*C.DLManagedTensor)(unsafe.Pointer(distances.C_tensor)), prefilter)))
+	return cuvs.CheckCuvs(cuvs.CuvsError(C.cuvsIvfFlatSearch(C.cuvsResources_t(Resources.Resource), params.params, index.index, (*C.DLManagedTensorVersioned)(unsafe.Pointer(queries.C_tensor)), (*C.DLManagedTensorVersioned)(unsafe.Pointer(neighbors.C_tensor)), (*C.DLManagedTensorVersioned)(unsafe.Pointer(distances.C_tensor)), prefilter)))
 }
 
 func GetNLists(index *IvfFlatIndex) (nlist int64, err error) {
@@ -162,6 +162,6 @@ func GetCenters[T any](index *IvfFlatIndex, centers *cuvs.Tensor[T]) error {
 		return errors.New("index needs to be built before calling GetCenters")
 	}
 
-	err := cuvs.CheckCuvs(cuvs.CuvsError(C.cuvsIvfFlatIndexGetCenters(index.index, (*C.DLManagedTensor)(unsafe.Pointer(centers.C_tensor)))))
+	err := cuvs.CheckCuvs(cuvs.CuvsError(C.cuvsIvfFlatIndexGetCenters(index.index, (*C.DLManagedTensorVersioned)(unsafe.Pointer(centers.C_tensor)))))
 	return err
 }

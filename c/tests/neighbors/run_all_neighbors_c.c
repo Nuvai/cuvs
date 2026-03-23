@@ -4,7 +4,9 @@
  */
 
 #include <cuvs/neighbors/all_neighbors.h>
+#include <dlpack/dlpack.h>
 #include <stdint.h>
+#include <string.h>
 
 void run_all_neighbors(int64_t n_rows,
                        int64_t n_dim,
@@ -32,7 +34,11 @@ void run_all_neighbors(int64_t n_rows,
   params->n_clusters     = 1;
 
   // create dataset DLTensor
-  DLManagedTensor dataset_tensor;
+  DLManagedTensorVersioned dataset_tensor;
+  memset(&dataset_tensor, 0, sizeof(dataset_tensor));
+  dataset_tensor.version.major = DLPACK_MAJOR_VERSION;
+  dataset_tensor.version.minor = DLPACK_MINOR_VERSION;
+  dataset_tensor.flags         = 0;
   dataset_tensor.dl_tensor.data               = dataset_data;
   dataset_tensor.dl_tensor.device.device_type = kDLCUDA;
   dataset_tensor.dl_tensor.device.device_id   = 0;
@@ -48,7 +54,11 @@ void run_all_neighbors(int64_t n_rows,
   dataset_tensor.deleter                      = NULL;
 
   // create indices DLTensor
-  DLManagedTensor indices_tensor;
+  DLManagedTensorVersioned indices_tensor;
+  memset(&indices_tensor, 0, sizeof(indices_tensor));
+  indices_tensor.version.major = DLPACK_MAJOR_VERSION;
+  indices_tensor.version.minor = DLPACK_MINOR_VERSION;
+  indices_tensor.flags         = 0;
   indices_tensor.dl_tensor.data               = (void*)indices_data;
   indices_tensor.dl_tensor.device.device_type = kDLCUDA;
   indices_tensor.dl_tensor.device.device_id   = 0;
@@ -64,8 +74,12 @@ void run_all_neighbors(int64_t n_rows,
   indices_tensor.deleter                      = NULL;
 
   // create distances DLTensor (optional)
-  DLManagedTensor* distances_ptr = NULL;
-  DLManagedTensor distances_tensor;
+  DLManagedTensorVersioned* distances_ptr = NULL;
+  DLManagedTensorVersioned distances_tensor;
+  memset(&distances_tensor, 0, sizeof(distances_tensor));
+  distances_tensor.version.major = DLPACK_MAJOR_VERSION;
+  distances_tensor.version.minor = DLPACK_MINOR_VERSION;
+  distances_tensor.flags         = 0;
   int64_t distances_shape[2] = {n_rows, k};  // Moved outside if block
   if (distances_data != NULL) {
     distances_tensor.dl_tensor.data               = (void*)distances_data;
@@ -84,8 +98,12 @@ void run_all_neighbors(int64_t n_rows,
   }
 
   // create core_distances DLTensor (optional)
-  DLManagedTensor* core_distances_ptr = NULL;
-  DLManagedTensor core_distances_tensor;
+  DLManagedTensorVersioned* core_distances_ptr = NULL;
+  DLManagedTensorVersioned core_distances_tensor;
+  memset(&core_distances_tensor, 0, sizeof(core_distances_tensor));
+  core_distances_tensor.version.major = DLPACK_MAJOR_VERSION;
+  core_distances_tensor.version.minor = DLPACK_MINOR_VERSION;
+  core_distances_tensor.flags         = 0;
   int64_t core_distances_shape[1] = {n_rows};  // Moved outside if block
   if (core_distances_data != NULL) {
     core_distances_tensor.dl_tensor.data               = (void*)core_distances_data;

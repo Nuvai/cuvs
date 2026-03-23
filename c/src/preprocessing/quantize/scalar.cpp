@@ -18,7 +18,7 @@ namespace {
 template <typename T>
 void _train(cuvsResources_t res,
             cuvsScalarQuantizerParams params,
-            DLManagedTensor* dataset_tensor,
+            DLManagedTensorVersioned* dataset_tensor,
             cuvsScalarQuantizer_t quantizer)
 {
   auto dataset = dataset_tensor->dl_tensor;
@@ -49,8 +49,8 @@ void _train(cuvsResources_t res,
 template <typename T, typename OutputT = int8_t>
 void _transform(cuvsResources_t res,
                 cuvsScalarQuantizer_t quantizer_,
-                DLManagedTensor* dataset_tensor,
-                DLManagedTensor* out_tensor)
+                DLManagedTensorVersioned* dataset_tensor,
+                DLManagedTensorVersioned* out_tensor)
 {
   auto res_ptr = reinterpret_cast<raft::resources*>(res);
 
@@ -86,8 +86,8 @@ void _transform(cuvsResources_t res,
 template <typename OutputT, typename InputT = int8_t>
 void _inverse_transform(cuvsResources_t res,
                         cuvsScalarQuantizer_t quantizer_,
-                        DLManagedTensor* dataset_tensor,
-                        DLManagedTensor* out_tensor)
+                        DLManagedTensorVersioned* dataset_tensor,
+                        DLManagedTensorVersioned* out_tensor)
 {
   auto res_ptr = reinterpret_cast<raft::resources*>(res);
 
@@ -144,7 +144,7 @@ extern "C" cuvsError_t cuvsScalarQuantizerDestroy(cuvsScalarQuantizer_t quantize
 
 extern "C" cuvsError_t cuvsScalarQuantizerTrain(cuvsResources_t res,
                                                 cuvsScalarQuantizerParams_t params,
-                                                DLManagedTensor* dataset_tensor,
+                                                DLManagedTensorVersioned* dataset_tensor,
                                                 cuvsScalarQuantizer_t quantizer)
 {
   return cuvs::core::translate_exceptions([=] {
@@ -165,8 +165,8 @@ extern "C" cuvsError_t cuvsScalarQuantizerTrain(cuvsResources_t res,
 
 extern "C" cuvsError_t cuvsScalarQuantizerTransform(cuvsResources_t res,
                                                     cuvsScalarQuantizer_t quantizer,
-                                                    DLManagedTensor* dataset_tensor,
-                                                    DLManagedTensor* out_tensor)
+                                                    DLManagedTensorVersioned* dataset_tensor,
+                                                    DLManagedTensorVersioned* out_tensor)
 {
   return cuvs::core::translate_exceptions([=] {
     auto dataset = dataset_tensor->dl_tensor;
@@ -184,10 +184,10 @@ extern "C" cuvsError_t cuvsScalarQuantizerTransform(cuvsResources_t res,
   });
 }
 
-cuvsError_t cuvsScalarQuantizerInverseTransform(cuvsResources_t res,
-                                                cuvsScalarQuantizer_t quantizer,
-                                                DLManagedTensor* dataset,
-                                                DLManagedTensor* out)
+extern "C" cuvsError_t cuvsScalarQuantizerInverseTransform(cuvsResources_t res,
+                                                           cuvsScalarQuantizer_t quantizer,
+                                                           DLManagedTensorVersioned* dataset,
+                                                           DLManagedTensorVersioned* out)
 {
   return cuvs::core::translate_exceptions([=] {
     auto dtype = out->dl_tensor.dtype;
@@ -203,3 +203,4 @@ cuvsError_t cuvsScalarQuantizerInverseTransform(cuvsResources_t res,
     }
   });
 }
+

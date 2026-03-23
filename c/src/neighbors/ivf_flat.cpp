@@ -45,7 +45,7 @@ void convert_c_search_params(cuvsIvfFlatSearchParams params,
 namespace {
 
 template <typename T, typename IdxT>
-void* _build(cuvsResources_t res, cuvsIvfFlatIndexParams params, DLManagedTensor* dataset_tensor)
+void* _build(cuvsResources_t res, cuvsIvfFlatIndexParams params, DLManagedTensorVersioned* dataset_tensor)
 {
   auto res_ptr = reinterpret_cast<raft::resources*>(res);
 
@@ -69,9 +69,9 @@ template <typename T, typename IdxT>
 void _search(cuvsResources_t res,
              cuvsIvfFlatSearchParams params,
              cuvsIvfFlatIndex index,
-             DLManagedTensor* queries_tensor,
-             DLManagedTensor* neighbors_tensor,
-             DLManagedTensor* distances_tensor,
+             DLManagedTensorVersioned* queries_tensor,
+             DLManagedTensorVersioned* neighbors_tensor,
+             DLManagedTensorVersioned* distances_tensor,
              cuvsFilter filter)
 {
   auto res_ptr   = reinterpret_cast<raft::resources*>(res);
@@ -93,7 +93,7 @@ void _search(cuvsResources_t res,
   } else if (filter.type == CUVS_FILTER_BITMAP) {
     using filter_mdspan_type = raft::device_vector_view<std::uint32_t, int64_t>;
     using filter_bmp_type    = cuvs::core::bitmap_view<std::uint32_t, int64_t>;
-    auto filter_tensor       = reinterpret_cast<DLManagedTensor*>(filter.addr);
+    auto filter_tensor       = reinterpret_cast<DLManagedTensorVersioned*>(filter.addr);
     auto filter_mds          = cuvs::core::from_dlpack<filter_mdspan_type>(filter_tensor);
     const auto bitmap_filter_obj = cuvs::neighbors::filtering::bitmap_filter(
       filter_bmp_type((std::uint32_t*)filter_mds.data_handle(), queries_mds.extent(0), index_ptr->size()));
@@ -102,7 +102,7 @@ void _search(cuvsResources_t res,
   } else if (filter.type == CUVS_FILTER_BITSET) {
     using filter_mdspan_type = raft::device_vector_view<std::uint32_t, int64_t>;
     using filter_bst_type    = cuvs::core::bitset_view<std::uint32_t, int64_t>;
-    auto filter_tensor       = reinterpret_cast<DLManagedTensor*>(filter.addr);
+    auto filter_tensor       = reinterpret_cast<DLManagedTensorVersioned*>(filter.addr);
     auto filter_mds          = cuvs::core::from_dlpack<filter_mdspan_type>(filter_tensor);
     const auto bitset_filter_obj = cuvs::neighbors::filtering::bitset_filter(
       filter_bst_type((std::uint32_t*)filter_mds.data_handle(), index_ptr->size()));
@@ -132,8 +132,8 @@ void* _deserialize(cuvsResources_t res, const char* filename)
 
 template <typename T, typename IdxT>
 void _extend(cuvsResources_t res,
-             DLManagedTensor* new_vectors,
-             DLManagedTensor* new_indices,
+             DLManagedTensorVersioned* new_vectors,
+             DLManagedTensorVersioned* new_indices,
              cuvsIvfFlatIndex index)
 {
   auto res_ptr   = reinterpret_cast<raft::resources*>(res);
@@ -148,7 +148,7 @@ void _extend(cuvsResources_t res,
 }
 
 template <typename T, typename IdxT>
-void get_centers(cuvsIvfFlatIndex index, DLManagedTensor* centers)
+void get_centers(cuvsIvfFlatIndex index, DLManagedTensorVersioned* centers)
 {
   auto index_ptr = reinterpret_cast<cuvs::neighbors::ivf_flat::index<T, IdxT>*>(index.addr);
   cuvs::core::to_dlpack(index_ptr->centers(), centers);
@@ -188,7 +188,7 @@ extern "C" cuvsError_t cuvsIvfFlatIndexDestroy(cuvsIvfFlatIndex_t index_c_ptr)
 
 extern "C" cuvsError_t cuvsIvfFlatBuild(cuvsResources_t res,
                                         cuvsIvfFlatIndexParams_t params,
-                                        DLManagedTensor* dataset_tensor,
+                                        DLManagedTensorVersioned* dataset_tensor,
                                         cuvsIvfFlatIndex_t index)
 {
   return cuvs::core::translate_exceptions([=] {
@@ -218,9 +218,9 @@ extern "C" cuvsError_t cuvsIvfFlatBuild(cuvsResources_t res,
 extern "C" cuvsError_t cuvsIvfFlatSearch(cuvsResources_t res,
                                          cuvsIvfFlatSearchParams_t params,
                                          cuvsIvfFlatIndex_t index_c_ptr,
-                                         DLManagedTensor* queries_tensor,
-                                         DLManagedTensor* neighbors_tensor,
-                                         DLManagedTensor* distances_tensor,
+                                         DLManagedTensorVersioned* queries_tensor,
+                                         DLManagedTensorVersioned* neighbors_tensor,
+                                         DLManagedTensorVersioned* distances_tensor,
                                          cuvsFilter filter)
 
 {
@@ -347,8 +347,8 @@ extern "C" cuvsError_t cuvsIvfFlatSerialize(cuvsResources_t res,
 }
 
 extern "C" cuvsError_t cuvsIvfFlatExtend(cuvsResources_t res,
-                                         DLManagedTensor* new_vectors,
-                                         DLManagedTensor* new_indices,
+                                         DLManagedTensorVersioned* new_vectors,
+                                         DLManagedTensorVersioned* new_indices,
                                          cuvsIvfFlatIndex_t index)
 {
   return cuvs::core::translate_exceptions([=] {
@@ -417,7 +417,7 @@ extern "C" cuvsError_t cuvsIvfFlatIndexGetDim(cuvsIvfFlatIndex_t index, int64_t*
 }
 
 extern "C" cuvsError_t cuvsIvfFlatIndexGetCenters(cuvsIvfFlatIndex_t index,
-                                                  DLManagedTensor* centers)
+                                                  DLManagedTensorVersioned* centers)
 {
   return cuvs::core::translate_exceptions([=] {
     if (index->dtype.code == kDLFloat && index->dtype.bits == 32) {
@@ -433,3 +433,4 @@ extern "C" cuvsError_t cuvsIvfFlatIndexGetCenters(cuvsIvfFlatIndex_t index,
     }
   });
 }
+

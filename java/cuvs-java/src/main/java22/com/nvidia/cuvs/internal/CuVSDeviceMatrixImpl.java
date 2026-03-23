@@ -9,7 +9,7 @@ import static com.nvidia.cuvs.internal.panama.headers_h.*;
 
 import com.nvidia.cuvs.*;
 import com.nvidia.cuvs.internal.common.PinnedMemoryBuffer;
-import com.nvidia.cuvs.internal.panama.DLManagedTensor;
+import com.nvidia.cuvs.internal.panama.DLManagedTensorVersioned;
 import com.nvidia.cuvs.internal.panama.DLTensor;
 import java.lang.foreign.*;
 
@@ -119,15 +119,15 @@ public class CuVSDeviceMatrixImpl extends CuVSMatrixBaseImpl implements CuVSDevi
     try (var localArena = Arena.ofConfined()) {
       var rowCount = endRow - startRow;
 
-      MemorySegment sliceManagedTensor = DLManagedTensor.allocate(localArena);
-      DLManagedTensor.dl_tensor(sliceManagedTensor, DLTensor.allocate(localArena));
+      MemorySegment sliceManagedTensor = DLManagedTensorVersioned.allocate(localArena);
+      DLManagedTensorVersioned.dl_tensor(sliceManagedTensor, DLTensor.allocate(localArena));
 
       checkCuVSError(
           cuvsMatrixSliceRows(0, toTensor(localArena), startRow, endRow, sliceManagedTensor),
           "cuvsMatrixSliceRows");
-      assert DLTensor.shape(DLManagedTensor.dl_tensor(sliceManagedTensor)).get(C_LONG, 0)
+      assert DLTensor.shape(DLManagedTensorVersioned.dl_tensor(sliceManagedTensor)).get(C_LONG, 0)
           == rowCount;
-      assert DLTensor.shape(DLManagedTensor.dl_tensor(sliceManagedTensor)).getAtIndex(C_LONG, 1)
+      assert DLTensor.shape(DLManagedTensorVersioned.dl_tensor(sliceManagedTensor)).getAtIndex(C_LONG, 1)
           == columns;
 
       MemorySegment bufferTensor =
@@ -189,8 +189,8 @@ public class CuVSDeviceMatrixImpl extends CuVSMatrixBaseImpl implements CuVSDevi
   }
 
   private void copyRow(Object array, Arena localArena, int r, MemorySegment tmpRowSegment) {
-    MemorySegment sliceManagedTensor = DLManagedTensor.allocate(localArena);
-    DLManagedTensor.dl_tensor(sliceManagedTensor, DLTensor.allocate(localArena));
+    MemorySegment sliceManagedTensor = DLManagedTensorVersioned.allocate(localArena);
+    DLManagedTensorVersioned.dl_tensor(sliceManagedTensor, DLTensor.allocate(localArena));
 
     checkCuVSError(
         cuvsMatrixSliceRows(0, toTensor(localArena), r, r + 1, sliceManagedTensor),

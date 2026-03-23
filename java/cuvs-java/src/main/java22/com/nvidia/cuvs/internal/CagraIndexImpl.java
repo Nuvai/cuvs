@@ -385,16 +385,16 @@ public class CagraIndexImpl implements CagraIndex {
   public CuVSDeviceMatrix getGraph() {
     try (var localArena = Arena.ofConfined()) {
       // Use a "device" graph + tensor, avoid (defer) copy
-      MemorySegment graphDeviceTensor = DLManagedTensor.allocate(localArena);
-      DLManagedTensor.dl_tensor(graphDeviceTensor, DLTensor.allocate(localArena));
+      MemorySegment graphDeviceTensor = DLManagedTensorVersioned.allocate(localArena);
+      DLManagedTensorVersioned.dl_tensor(graphDeviceTensor, DLTensor.allocate(localArena));
 
       checkCuVSError(
           cuvsCagraIndexGetGraph(cagraIndexReference.getMemorySegment(), graphDeviceTensor),
           "cuvsCagraIndexGetGraph");
 
-      assert DLTensor.ndim(DLManagedTensor.dl_tensor(graphDeviceTensor)) == 2;
-      assert DLTensor.shape(DLManagedTensor.dl_tensor(graphDeviceTensor)).get(int64_t, 0) > 0;
-      assert DLTensor.shape(DLManagedTensor.dl_tensor(graphDeviceTensor)).getAtIndex(int64_t, 1)
+      assert DLTensor.ndim(DLManagedTensorVersioned.dl_tensor(graphDeviceTensor)) == 2;
+      assert DLTensor.shape(DLManagedTensorVersioned.dl_tensor(graphDeviceTensor)).get(int64_t, 0) > 0;
+      assert DLTensor.shape(DLManagedTensorVersioned.dl_tensor(graphDeviceTensor)).getAtIndex(int64_t, 1)
           > 0;
 
       var graph = CuVSMatrixBaseImpl.fromTensor(graphDeviceTensor, resources);

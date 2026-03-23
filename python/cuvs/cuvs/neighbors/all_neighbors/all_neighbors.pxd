@@ -7,7 +7,7 @@
 from libc.stdint cimport int64_t
 
 from cuvs.common.c_api cimport cuvsError_t, cuvsResources_t
-from cuvs.common.cydlpack cimport DLManagedTensor
+from cuvs.common.cydlpack cimport DLManagedTensorVersioned
 from cuvs.distance_type cimport cuvsDistanceType
 from cuvs.neighbors.ivf_pq.ivf_pq cimport cuvsIvfPqIndexParams_t
 from cuvs.neighbors.nn_descent.nn_descent cimport cuvsNNDescentIndexParams_t
@@ -33,9 +33,9 @@ cdef extern from "cuvs/neighbors/all_neighbors.h" nogil:
     cuvsError_t cuvsAllNeighborsBuild(
         cuvsResources_t res,
         cuvsAllNeighborsIndexParams_t params,
-        DLManagedTensor* dataset,
-        DLManagedTensor* indices,
-        DLManagedTensor* distances,
-        DLManagedTensor* core_distances,
+        DLManagedTensorVersioned* dataset,
+        DLManagedTensorVersioned* indices,
+        DLManagedTensorVersioned* distances,
+        DLManagedTensorVersioned* core_distances,
         float alpha
     )

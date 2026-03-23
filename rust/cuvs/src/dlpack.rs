@@ -23,17 +23,17 @@ pub(crate) enum DatasetOwnership<'a> {
     Owned(ManagedTensor),
 }
 
-/// ManagedTensor is a wrapper around a dlpack DLManagedTensor object.
+/// ManagedTensor is a wrapper around a dlpack DLManagedTensorVersioned object.
 /// This lets you pass matrices in device or host memory into cuvs.
 #[derive(Debug)]
-pub struct ManagedTensor(ffi::DLManagedTensor);
+pub struct ManagedTensor(ffi::DLManagedTensorVersioned);
 
 pub trait IntoDtype {
     fn ffi_dtype() -> ffi::DLDataType;
 }
 
 impl ManagedTensor {
-    pub fn as_ptr(&self) -> *mut ffi::DLManagedTensor {
+    pub fn as_ptr(&self) -> *mut ffi::DLManagedTensorVersioned {
         &self.0 as *const _ as *mut _
     }
 
@@ -98,10 +98,18 @@ fn dl_tensor_bytes(tensor: &ffi::DLTensor) -> usize {
     bytes
 }
 
-unsafe extern "C" fn rmm_free_tensor(self_: *mut ffi::DLManagedTensor) {
+unsafe extern "C" fn rmm_free_tensor(self_: *mut ffi::DLManagedTensorVersioned) {
     let bytes = dl_tensor_bytes(&(*self_).dl_tensor);
-    let res = Resources::new().unwrap();
-    let _ = ffi::cuvsRMMFree(res.0, (*self_).dl_tensor.data as *mut _, bytes);
+    // Use match instead of unwrap() to avoid panicking inside a C callback / Drop.
+    // Panicking across an FFI boundary is undefined behavior.
+    match Resources::new() {
+        Ok(res) => {
+            let _ = ffi::cuvsRMMFree(res.0, (*self_).dl_tensor.data as *mut _, bytes);
+        }
+        Err(_) => {
+            eprintln!("cuvs: rmm_free_tensor failed to create Resources — leaking {} bytes of device memory", bytes);
+        }
+    }
 }
 
 /// Create a non-owning view of a Tensor from a ndarray
@@ -125,10 +133,15 @@ impl<T: IntoDtype, S: ndarray::RawData<Elem = T>, D: ndarray::Dimension>
             (*tensor).ndim = arr.ndim() as i32;
             (*tensor).shape = arr.shape().as_ptr() as *mut _;
             (*tensor).dtype = T::ffi_dtype();
-            ManagedTensor(ffi::DLManagedTensor {
-                dl_tensor: ret.assume_init(),
+            ManagedTensor(ffi::DLManagedTensorVersioned {
+                version: ffi::DLPackVersion {
+                    major: ffi::DLPACK_MAJOR_VERSION,
+                    minor: ffi::DLPACK_MINOR_VERSION,
+                },
                 manager_ctx: std::ptr::null_mut(),
                 deleter: None,
+                flags: 0,
+                dl_tensor: ret.assume_init(),
             })
         }
     }

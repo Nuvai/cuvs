@@ -14,7 +14,6 @@
 
 #include "../core/exceptions.hpp"
 #include "../core/interop.hpp"
-
 #include <fstream>
 
 extern "C" cuvsError_t cuvsMultiGpuIvfFlatIndexParamsCreate(
@@ -144,7 +143,7 @@ namespace {
 template <typename T>
 void* _mg_build(cuvsResources_t res,
                 cuvsMultiGpuIvfFlatIndexParams params,
-                DLManagedTensor* dataset_tensor)
+                DLManagedTensorVersioned* dataset_tensor)
 {
   auto res_ptr = reinterpret_cast<raft::resources*>(res);
 
@@ -165,9 +164,9 @@ template <typename T>
 void _mg_search(cuvsResources_t res,
                 cuvsMultiGpuIvfFlatSearchParams params,
                 cuvsMultiGpuIvfFlatIndex index,
-                DLManagedTensor* queries_tensor,
-                DLManagedTensor* neighbors_tensor,
-                DLManagedTensor* distances_tensor)
+                DLManagedTensorVersioned* queries_tensor,
+                DLManagedTensorVersioned* neighbors_tensor,
+                DLManagedTensorVersioned* distances_tensor)
 {
   auto res_ptr      = reinterpret_cast<raft::resources*>(res);
   auto mg_index_ptr = reinterpret_cast<
@@ -193,8 +192,8 @@ void _mg_search(cuvsResources_t res,
 template <typename T>
 void _mg_extend(cuvsResources_t res,
                 cuvsMultiGpuIvfFlatIndex index,
-                DLManagedTensor* new_vectors_tensor,
-                DLManagedTensor* new_indices_tensor)
+                DLManagedTensorVersioned* new_vectors_tensor,
+                DLManagedTensorVersioned* new_indices_tensor)
 {
   auto res_ptr      = reinterpret_cast<raft::resources*>(res);
   auto mg_index_ptr = reinterpret_cast<
@@ -250,7 +249,7 @@ void* _mg_distribute(cuvsResources_t res, const char* filename)
 
 extern "C" cuvsError_t cuvsMultiGpuIvfFlatBuild(cuvsResources_t res,
                                                 cuvsMultiGpuIvfFlatIndexParams_t params,
-                                                DLManagedTensor* dataset_tensor,
+                                                DLManagedTensorVersioned* dataset_tensor,
                                                 cuvsMultiGpuIvfFlatIndex_t index)
 {
   return cuvs::core::translate_exceptions([=] {
@@ -282,9 +281,9 @@ extern "C" cuvsError_t cuvsMultiGpuIvfFlatBuild(cuvsResources_t res,
 extern "C" cuvsError_t cuvsMultiGpuIvfFlatSearch(cuvsResources_t res,
                                                  cuvsMultiGpuIvfFlatSearchParams_t params,
                                                  cuvsMultiGpuIvfFlatIndex_t index,
-                                                 DLManagedTensor* queries_tensor,
-                                                 DLManagedTensor* neighbors_tensor,
-                                                 DLManagedTensor* distances_tensor)
+                                                 DLManagedTensorVersioned* queries_tensor,
+                                                 DLManagedTensorVersioned* neighbors_tensor,
+                                                 DLManagedTensorVersioned* distances_tensor)
 {
   return cuvs::core::translate_exceptions([=] {
     auto queries   = queries_tensor->dl_tensor;
@@ -329,8 +328,8 @@ extern "C" cuvsError_t cuvsMultiGpuIvfFlatSearch(cuvsResources_t res,
 
 extern "C" cuvsError_t cuvsMultiGpuIvfFlatExtend(cuvsResources_t res,
                                                  cuvsMultiGpuIvfFlatIndex_t index,
-                                                 DLManagedTensor* new_vectors_tensor,
-                                                 DLManagedTensor* new_indices_tensor)
+                                                 DLManagedTensorVersioned* new_vectors_tensor,
+                                                 DLManagedTensorVersioned* new_indices_tensor)
 {
   return cuvs::core::translate_exceptions([=] {
     auto vectors = new_vectors_tensor->dl_tensor;

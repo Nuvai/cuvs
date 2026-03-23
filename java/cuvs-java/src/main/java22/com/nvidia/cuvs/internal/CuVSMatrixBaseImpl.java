@@ -14,7 +14,7 @@ import com.nvidia.cuvs.CuVSMatrix;
 import com.nvidia.cuvs.CuVSResources;
 import com.nvidia.cuvs.internal.panama.DLDataType;
 import com.nvidia.cuvs.internal.panama.DLDevice;
-import com.nvidia.cuvs.internal.panama.DLManagedTensor;
+import com.nvidia.cuvs.internal.panama.DLManagedTensorVersioned;
 import com.nvidia.cuvs.internal.panama.DLTensor;
 import java.lang.foreign.*;
 import java.util.Locale;
@@ -108,14 +108,14 @@ abstract class CuVSMatrixBaseImpl implements CuVSMatrixInternal {
   }
 
   /**
-   * Creates a {@link CuVSMatrix} from data and infos from a {@link DLManagedTensor}
+   * Creates a {@link CuVSMatrix} from data and infos from a {@link DLManagedTensorVersioned}
    *
-   * @param dlManagedTensor a {@link MemorySegment} representing the source DLManagedTensor
+   * @param dlManagedTensor a {@link MemorySegment} representing the source DLManagedTensorVersioned
    * @param resources       {@link CuVSResources} to allocate the resulting matrix
-   * @return a {@link CuVSMatrix} encapsulating the same data as the input {@link DLManagedTensor}
+   * @return a {@link CuVSMatrix} encapsulating the same data as the input {@link DLManagedTensorVersioned}
    */
   public static CuVSMatrix fromTensor(MemorySegment dlManagedTensor, CuVSResources resources) {
-    var dlTensor = DLManagedTensor.dl_tensor(dlManagedTensor);
+    var dlTensor = DLManagedTensorVersioned.dl_tensor(dlManagedTensor);
     var dlDevice = DLTensor.device(dlTensor);
 
     var deviceType = DLDevice.device_type(dlDevice);

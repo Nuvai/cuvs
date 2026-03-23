@@ -10,7 +10,7 @@ from libc cimport stdlib
 from libc.stdint cimport uintptr_t
 
 
-cdef void deleter(DLManagedTensor* tensor) noexcept:
+cdef void deleter(DLManagedTensorVersioned* tensor) noexcept:
     if tensor.manager_ctx is NULL:
         return
     stdlib.free(tensor.dl_tensor.shape)
@@ -57,14 +57,15 @@ def dl_data_type_to_numpy(DLDataType dtype):
         raise ValueError(f"unknown DLDataTypeCode.code: {dtype.code}")
 
 
-cdef DLManagedTensor* dlpack_c(ary):
+cdef DLManagedTensorVersioned* dlpack_c(ary):
     # todo(dgd): add checking options/parameters
     cdef DLDeviceType dev_type
     cdef DLDevice dev
     cdef DLDataType dtype
     cdef DLTensor tensor
-    cdef DLManagedTensor* dlm = \
-        <DLManagedTensor*>stdlib.malloc(sizeof(DLManagedTensor))
+    cdef DLManagedTensorVersioned* dlm = \
+        <DLManagedTensorVersioned*>stdlib.malloc(
+            sizeof(DLManagedTensorVersioned))
 
     if ary.from_cai:
         dev_type = DLDeviceType.kDLCUDA
@@ -137,6 +138,9 @@ cdef DLManagedTensor* dlpack_c(ary):
     else:
         raise ValueError("Input data must be contiguous")
 
+    dlm.version.major = DLPACK_MAJOR_VERSION
+    dlm.version.minor = DLPACK_MINOR_VERSION
+    dlm.flags = 0
     dlm.dl_tensor = tensor
     dlm.manager_ctx = NULL
     dlm.deleter = deleter

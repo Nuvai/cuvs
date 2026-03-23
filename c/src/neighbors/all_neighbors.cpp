@@ -80,7 +80,7 @@ static cuvs::neighbors::all_neighbors::all_neighbors_params convert_params(
   return out;
 }
 
-static void ensure_indices_dtype_and_device_compatibility(DLManagedTensor* indices)
+static void ensure_indices_dtype_and_device_compatibility(DLManagedTensorVersioned* indices)
 {
   auto dtype = indices->dl_tensor.dtype;
   RAFT_EXPECTS(dtype.code == kDLInt && dtype.bits == 64, "indices must be int64 output tensor");
@@ -88,7 +88,7 @@ static void ensure_indices_dtype_and_device_compatibility(DLManagedTensor* indic
                "indices tensor must be device-compatible");
 }
 
-static void ensure_optional_distance_dtype_and_device_compatibility(DLManagedTensor* distances)
+static void ensure_optional_distance_dtype_and_device_compatibility(DLManagedTensorVersioned* distances)
 {
   if (distances == nullptr) { return; }
   auto dtype = distances->dl_tensor.dtype;
@@ -99,7 +99,7 @@ static void ensure_optional_distance_dtype_and_device_compatibility(DLManagedTen
 }
 
 static void ensure_optional_core_distance_dtype_and_device_compatibility(
-  DLManagedTensor* core_distances)
+  DLManagedTensorVersioned* core_distances)
 {
   if (core_distances == nullptr) { return; }
   auto dtype = core_distances->dl_tensor.dtype;
@@ -112,10 +112,10 @@ static void ensure_optional_core_distance_dtype_and_device_compatibility(
 template <typename T>
 void _build_host(cuvsResources_t res,
                  cuvsAllNeighborsIndexParams_t params,
-                 DLManagedTensor* dataset_tensor,
-                 DLManagedTensor* indices_tensor,
-                 DLManagedTensor* distances_tensor,
-                 DLManagedTensor* core_distances_tensor,
+                 DLManagedTensorVersioned* dataset_tensor,
+                 DLManagedTensorVersioned* indices_tensor,
+                 DLManagedTensorVersioned* distances_tensor,
+                 DLManagedTensorVersioned* core_distances_tensor,
                  float alpha)
 {
   auto& cpp_res = *reinterpret_cast<raft::device_resources*>(res);
@@ -163,10 +163,10 @@ void _build_host(cuvsResources_t res,
 template <typename T>
 void _build_device(cuvsResources_t device_res,
                    cuvsAllNeighborsIndexParams_t params,
-                   DLManagedTensor* dataset_tensor,
-                   DLManagedTensor* indices_tensor,
-                   DLManagedTensor* distances_tensor,
-                   DLManagedTensor* core_distances_tensor,
+                   DLManagedTensorVersioned* dataset_tensor,
+                   DLManagedTensorVersioned* indices_tensor,
+                   DLManagedTensorVersioned* distances_tensor,
+                   DLManagedTensorVersioned* core_distances_tensor,
                    float alpha)
 {
   auto& cpp_res = *reinterpret_cast<raft::device_resources*>(device_res);
@@ -241,10 +241,10 @@ extern "C" cuvsError_t cuvsAllNeighborsIndexParamsDestroy(cuvsAllNeighborsIndexP
 
 extern "C" cuvsError_t cuvsAllNeighborsBuild(cuvsResources_t res,
                                              cuvsAllNeighborsIndexParams_t params,
-                                             DLManagedTensor* dataset_tensor,
-                                             DLManagedTensor* indices_tensor,
-                                             DLManagedTensor* distances_tensor,
-                                             DLManagedTensor* core_distances_tensor,
+                                             DLManagedTensorVersioned* dataset_tensor,
+                                             DLManagedTensorVersioned* indices_tensor,
+                                             DLManagedTensorVersioned* distances_tensor,
+                                             DLManagedTensorVersioned* core_distances_tensor,
                                              float alpha)
 {
   return cuvs::core::translate_exceptions([=] {

@@ -13,6 +13,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 void test_compile_cagra()
 {
@@ -39,7 +40,19 @@ void test_compile_tiered_index()
   cuvsTieredIndexParams_t index_params;
   cuvsResources_t resources;
   cuvsFilter prefilter;
-  DLManagedTensor dataset, neighbors, distances;
+  DLManagedTensorVersioned dataset, neighbors, distances;
+  memset(&dataset, 0, sizeof(dataset));
+  dataset.version.major = DLPACK_MAJOR_VERSION;
+  dataset.version.minor = DLPACK_MINOR_VERSION;
+  dataset.flags         = 0;
+  memset(&neighbors, 0, sizeof(neighbors));
+  neighbors.version.major = DLPACK_MAJOR_VERSION;
+  neighbors.version.minor = DLPACK_MINOR_VERSION;
+  neighbors.flags         = 0;
+  memset(&distances, 0, sizeof(distances));
+  distances.version.major = DLPACK_MAJOR_VERSION;
+  distances.version.minor = DLPACK_MINOR_VERSION;
+  distances.flags         = 0;
   cuvsTieredIndexParamsCreate(&index_params);
   cuvsTieredIndexParamsDestroy(index_params);
   cuvsTieredIndexBuild(resources, index_params, &dataset, tiered_index);
@@ -55,7 +68,23 @@ void test_compile_all_neighbors()
 
   cuvsAllNeighborsIndexParams_t params;
   cuvsResources_t resources;
-  DLManagedTensor dataset, indices, distances, core_distances;
+  DLManagedTensorVersioned dataset, indices, distances, core_distances;
+  memset(&dataset, 0, sizeof(dataset));
+  dataset.version.major = DLPACK_MAJOR_VERSION;
+  dataset.version.minor = DLPACK_MINOR_VERSION;
+  dataset.flags         = 0;
+  memset(&indices, 0, sizeof(indices));
+  indices.version.major = DLPACK_MAJOR_VERSION;
+  indices.version.minor = DLPACK_MINOR_VERSION;
+  indices.flags         = 0;
+  memset(&distances, 0, sizeof(distances));
+  distances.version.major = DLPACK_MAJOR_VERSION;
+  distances.version.minor = DLPACK_MINOR_VERSION;
+  distances.flags         = 0;
+  memset(&core_distances, 0, sizeof(core_distances));
+  core_distances.version.major = DLPACK_MAJOR_VERSION;
+  core_distances.version.minor = DLPACK_MINOR_VERSION;
+  core_distances.flags         = 0;
   cuvsAllNeighborsIndexParamsCreate(&params);
   cuvsAllNeighborsIndexParamsDestroy(params);
   cuvsAllNeighborsBuild(resources, params, &dataset, &indices, &distances, &core_distances, 1.0f);

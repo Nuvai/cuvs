@@ -8,7 +8,7 @@ from libc.stdint cimport int64_t, uint32_t, uintptr_t
 from libcpp cimport bool
 
 from cuvs.common.c_api cimport cuvsError_t, cuvsResources_t
-from cuvs.common.cydlpack cimport DLDataType, DLManagedTensor
+from cuvs.common.cydlpack cimport DLDataType, DLManagedTensorVersioned
 from cuvs.distance_type cimport cuvsDistanceType
 from cuvs.neighbors.cagra.cagra cimport cuvsCagraIndexParams_t
 from cuvs.neighbors.filters.filters cimport cuvsFilter
@@ -51,17 +51,17 @@ cdef extern from "cuvs/neighbors/tiered_index.h" nogil:
 
     cuvsError_t cuvsTieredIndexBuild(cuvsResources_t res,
                                      cuvsTieredIndexParams* params,
-                                     DLManagedTensor* dataset,
+                                     DLManagedTensorVersioned* dataset,
                                      cuvsTieredIndex_t index)
 
     cuvsError_t cuvsTieredIndexSearch(cuvsResources_t res,
                                       void * params,
                                       cuvsTieredIndex_t index,
-                                      DLManagedTensor* queries,
-                                      DLManagedTensor* neighbors,
-                                      DLManagedTensor* distances,
+                                      DLManagedTensorVersioned* queries,
+                                      DLManagedTensorVersioned* neighbors,
+                                      DLManagedTensorVersioned* distances,
                                       cuvsFilter filter) except +
 
     cuvsError_t cuvsTieredIndexExtend(cuvsResources_t res,
-                                      DLManagedTensor* new_vectors,
+                                      DLManagedTensorVersioned* new_vectors,
                                       cuvsTieredIndex_t index)

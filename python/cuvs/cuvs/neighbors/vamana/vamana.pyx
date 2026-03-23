@@ -205,7 +205,7 @@ def build(IndexParams index_params, dataset, resources=None):
                                     np.dtype('uint8')])
 
     cdef Index idx = Index()
-    cdef cydlpack.DLManagedTensor* dataset_dlpack = \
+    cdef cydlpack.DLManagedTensorVersioned* dataset_dlpack = \
         cydlpack.dlpack_c(dataset_ai)
     cdef cuvsVamanaIndexParams* params = index_params.params
 

@@ -35,7 +35,11 @@ void cagra_build_search_simple()
   CHECK_CUVS(cuvsResourcesCreate(&res));
 
   // Use DLPack to represent `dataset` as a tensor
-  DLManagedTensor dataset_tensor;
+  DLManagedTensorVersioned dataset_tensor;
+  memset(&dataset_tensor, 0, sizeof(dataset_tensor));
+  dataset_tensor.version.major                = DLPACK_MAJOR_VERSION;
+  dataset_tensor.version.minor                = DLPACK_MINOR_VERSION;
+  dataset_tensor.flags                        = 0;
   dataset_tensor.dl_tensor.data               = dataset;
   dataset_tensor.dl_tensor.device.device_type = kDLCPU;
   dataset_tensor.dl_tensor.ndim               = 2;
@@ -65,7 +69,11 @@ void cagra_build_search_simple()
   // Use DLPack to represent `queries`, `neighbors` and `distances` as tensors
   CHECK_CUDA(cudaMemcpy(queries_d, queries, sizeof(float) * 4 * 2, cudaMemcpyDefault));
 
-  DLManagedTensor queries_tensor;
+  DLManagedTensorVersioned queries_tensor;
+  memset(&queries_tensor, 0, sizeof(queries_tensor));
+  queries_tensor.version.major                = DLPACK_MAJOR_VERSION;
+  queries_tensor.version.minor                = DLPACK_MINOR_VERSION;
+  queries_tensor.flags                        = 0;
   queries_tensor.dl_tensor.data               = queries_d;
   queries_tensor.dl_tensor.device.device_type = kDLCUDA;
   queries_tensor.dl_tensor.ndim               = 2;
@@ -76,7 +84,11 @@ void cagra_build_search_simple()
   queries_tensor.dl_tensor.shape              = queries_shape;
   queries_tensor.dl_tensor.strides            = NULL;
 
-  DLManagedTensor neighbors_tensor;
+  DLManagedTensorVersioned neighbors_tensor;
+  memset(&neighbors_tensor, 0, sizeof(neighbors_tensor));
+  neighbors_tensor.version.major                = DLPACK_MAJOR_VERSION;
+  neighbors_tensor.version.minor                = DLPACK_MINOR_VERSION;
+  neighbors_tensor.flags                        = 0;
   neighbors_tensor.dl_tensor.data               = neighbors;
   neighbors_tensor.dl_tensor.device.device_type = kDLCUDA;
   neighbors_tensor.dl_tensor.ndim               = 2;
@@ -87,7 +99,11 @@ void cagra_build_search_simple()
   neighbors_tensor.dl_tensor.shape              = neighbors_shape;
   neighbors_tensor.dl_tensor.strides            = NULL;
 
-  DLManagedTensor distances_tensor;
+  DLManagedTensorVersioned distances_tensor;
+  memset(&distances_tensor, 0, sizeof(distances_tensor));
+  distances_tensor.version.major                = DLPACK_MAJOR_VERSION;
+  distances_tensor.version.minor                = DLPACK_MINOR_VERSION;
+  distances_tensor.flags                        = 0;
   distances_tensor.dl_tensor.data               = distances;
   distances_tensor.dl_tensor.device.device_type = kDLCUDA;
   distances_tensor.dl_tensor.ndim               = 2;
