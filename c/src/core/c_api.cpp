@@ -30,7 +30,7 @@
 extern "C" cuvsError_t cuvsResourcesCreate(cuvsResources_t* res)
 {
   return cuvs::core::translate_exceptions([=] {
-    auto res_ptr = new raft::resources{};
+    auto res_ptr = new raft::device_resources{};
     *res         = reinterpret_cast<uintptr_t>(res_ptr);
   });
 }
@@ -38,7 +38,9 @@ extern "C" cuvsError_t cuvsResourcesCreate(cuvsResources_t* res)
 extern "C" cuvsError_t cuvsResourcesDestroy(cuvsResources_t res)
 {
   return cuvs::core::translate_exceptions([=] {
-    auto res_ptr = reinterpret_cast<raft::resources*>(res);
+    // Must delete through the derived type since raft::resources does not have
+    // a virtual destructor — deleting via base pointer would be UB.
+    auto res_ptr = reinterpret_cast<raft::device_resources*>(res);
     delete res_ptr;
   });
 }

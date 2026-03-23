@@ -1545,16 +1545,19 @@ void write_to_graph(raft::host_matrix_view<IdxT, int64_t, raft::row_major> knn_g
   size_t top_k         = neighbors_host_view.extent(1);
   // omit itself & write out
   for (std::size_t i = 0; i < batch_size; i++) {
-    size_t vec_idx = i + batch_offset;
-    for (std::size_t j = 0, num_added = 0; j < top_k && num_added < node_degree; j++) {
+    size_t vec_idx    = i + batch_offset;
+    bool self_found   = false;
+    size_t num_added  = 0;
+    for (std::size_t j = 0; j < top_k && num_added < node_degree; j++) {
       const auto v = neighbors_host_view(i, j);
       if (static_cast<size_t>(v) == vec_idx) {
-        num_self_included++;
+        self_found = true;
         continue;
       }
       knn_graph(vec_idx, num_added) = v;
       num_added++;
     }
+    if (self_found) { num_self_included++; }
   }
 }
 

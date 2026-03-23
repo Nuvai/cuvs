@@ -152,9 +152,21 @@ static void to_dlpack(MdspanType src, DLManagedTensor* dst)
 {
   auto tensor = &dst->dl_tensor;
 
+  // IMPORTANT: this function overwrites tensor->data, tensor->shape, and tensor->strides.
+  // - tensor->data will point into the source mdspan (NOT owned by the tensor).
+  // - tensor->shape/strides are allocated with new[] and freed by the deleter.
+  // If a previous deleter is set (from a prior to_dlpack call), invoke it first to
+  // free the old shape/strides metadata and avoid leaks.
+  if (dst->deleter != nullptr) {
+    dst->deleter(dst);
+    dst->deleter = nullptr;
+  }
+
   tensor->dtype  = data_type_to_DLDataType<typename MdspanType::value_type>();
   tensor->device = accessor_type_to_DLDevice<typename MdspanType::accessor_type>();
   tensor->ndim   = MdspanType::extents_type::rank();
+  // NB: data points into the source mdspan — the caller does NOT own this pointer
+  // and must NOT free it. The deleter only frees shape/strides metadata.
   tensor->data   = const_cast<typename MdspanType::value_type*>(src.data_handle());
   tensor->shape  = new int64_t[tensor->ndim];
   for (int64_t i = 0; i < tensor->ndim; ++i) {

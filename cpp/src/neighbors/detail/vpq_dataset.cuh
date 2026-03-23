@@ -130,14 +130,26 @@ auto fill_missing_params_heuristics(const vpq_params& params, const DatasetT& da
   if (r.pq_bits == 0) { r.pq_bits = 8; }
   if (r.vq_n_centers == 0) { r.vq_n_centers = raft::round_up_safe<uint32_t>(std::sqrt(n_rows), 8); }
   if (r.vq_kmeans_trainset_fraction == 0) {
-    double vq_trainset_size       = 100.0 * r.vq_n_centers;
-    r.vq_kmeans_trainset_fraction = std::min(1.0, vq_trainset_size / n_rows);
+    // If the user explicitly set max_train_points_per_vq_cluster to a non-default value,
+    // default the fraction to 1.0 so only the max_train_points cap applies.
+    if (params.max_train_points_per_vq_cluster != vpq_params{}.max_train_points_per_vq_cluster) {
+      r.vq_kmeans_trainset_fraction = 1.0;
+    } else {
+      double vq_trainset_size       = 100.0 * r.vq_n_centers;
+      r.vq_kmeans_trainset_fraction = std::min(1.0, vq_trainset_size / n_rows);
+    }
   }
   if (r.pq_kmeans_trainset_fraction == 0) {
-    // NB: we'll have actually `pq_dim` times more samples than this
-    //     (because the dataset is reinterpreted as `[n_rows * pq_dim, pq_len]`)
-    double pq_trainset_size       = 1000.0 * (1u << r.pq_bits);
-    r.pq_kmeans_trainset_fraction = std::min(1.0, pq_trainset_size / n_rows);
+    // If the user explicitly set max_train_points_per_pq_code to a non-default value,
+    // default the fraction to 1.0 so only the max_train_points cap applies.
+    if (params.max_train_points_per_pq_code != vpq_params{}.max_train_points_per_pq_code) {
+      r.pq_kmeans_trainset_fraction = 1.0;
+    } else {
+      // NB: we'll have actually `pq_dim` times more samples than this
+      //     (because the dataset is reinterpreted as `[n_rows * pq_dim, pq_len]`)
+      double pq_trainset_size       = 1000.0 * (1u << r.pq_bits);
+      r.pq_kmeans_trainset_fraction = std::min(1.0, pq_trainset_size / n_rows);
+    }
   }
   r.max_train_points_per_pq_code = params.max_train_points_per_pq_code;
   return r;
