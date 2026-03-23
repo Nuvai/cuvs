@@ -57,7 +57,7 @@ fn cagra_example() -> Result<()> {
 
     let search_params = SearchParams::new()?;
 
-    index.search(&res, &search_params, &queries, &neighbors, &distances)?;
+    index.search(&res, &search_params, &queries, &neighbors, &distances, None)?;
 
     // Copy back to host memory
     distances.to_host(&res, &mut distances_host)?;

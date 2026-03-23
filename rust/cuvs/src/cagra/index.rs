@@ -10,6 +10,7 @@ use std::marker::PhantomData;
 use crate::cagra::{IndexParams, SearchParams};
 use crate::dlpack::{DatasetOwnership, ManagedTensor};
 use crate::error::{check_cuvs, Result};
+use crate::filters::{Filter, NoFilter};
 use crate::resources::Resources;
 
 /// CAGRA ANN Index
@@ -109,6 +110,7 @@ impl<'a> Index<'a> {
     /// * `queries` - A matrix in device memory to query for
     /// * `neighbors` - Matrix in device memory that receives the indices of the nearest neighbors
     /// * `distances` - Matrix in device memory that receives the distances of the nearest neighbors
+    /// * `filter` - Optional filter to apply to the search (defaults to NoFilter if not provided)
     pub fn search(
         &self,
         res: &Resources,
@@ -116,12 +118,12 @@ impl<'a> Index<'a> {
         queries: &ManagedTensor,
         neighbors: &ManagedTensor,
         distances: &ManagedTensor,
+        filter: Option<&dyn Filter>,
     ) -> Result<()> {
         unsafe {
-            let prefilter = ffi::cuvsFilter {
-                addr: 0,
-                type_: ffi::cuvsFilterType::NO_FILTER,
-            };
+            let filter_ffi = filter
+                .map(|f| f.into_ffi())
+                .unwrap_or_else(|| NoFilter.into_ffi());
 
             check_cuvs(ffi::cuvsCagraSearch(
                 res.0,
@@ -130,7 +132,7 @@ impl<'a> Index<'a> {
                 queries.as_ptr(),
                 neighbors.as_ptr(),
                 distances.as_ptr(),
-                prefilter,
+                filter_ffi,
             ))
         }
     }
@@ -291,7 +293,7 @@ mod tests {
         let search_params = SearchParams::new().unwrap();
 
         index
-            .search(&res, &search_params, &queries, &neighbors, &distances)
+            .search(&res, &search_params, &queries, &neighbors, &distances, None)
             .unwrap();
 
         // Copy back to host memory
@@ -360,7 +362,7 @@ mod tests {
 
             // This should work on every iteration because search() takes &self
             index
-                .search(&res, &search_params, &queries, &neighbors, &distances)
+                .search(&res, &search_params, &queries, &neighbors, &distances, None)
                 .unwrap_or_else(|e| panic!("search iteration {} failed: {}", search_iter, e));
 
             // Copy back to host memory
@@ -419,7 +421,7 @@ mod tests {
 
         let search_params = SearchParams::new().unwrap();
         loaded_index
-            .search(&res, &search_params, &queries, &neighbors, &distances)
+            .search(&res, &search_params, &queries, &neighbors, &distances, None)
             .expect("failed to search deserialized index");
 
         distances.to_host(&res, &mut distances_host).unwrap();
@@ -492,7 +494,7 @@ mod tests {
             .unwrap();
 
         index
-            .search(&res, &search_params, &queries, &neighbors, &distances)
+            .search(&res, &search_params, &queries, &neighbors, &distances, None)
             .unwrap();
 
         distances.to_host(&res, &mut distances_host).unwrap();
