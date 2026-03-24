@@ -154,14 +154,14 @@ CUVS_API cuvsError_t cuvsTieredIndexParamsDestroy(cuvsTieredIndexParams_t index_
  * @endcode
  *
  * @param[in] res cuvsResources_t opaque C handle
- * @param[in] dataset DLManagedTensorVersioned* training dataset
+ * @param[in] dataset struct DLManagedTensorVersioned* training dataset
  * @param[in] index_params Index parameters to use when building the index
  * @param[out] index cuvsTieredIndex_t Newly built TieredIndex index
  * @return cuvsError_t
  */
 CUVS_API cuvsError_t cuvsTieredIndexBuild(cuvsResources_t res,
                                           cuvsTieredIndexParams_t index_params,
-                                          DLManagedTensorVersioned* dataset,
+                                          struct DLManagedTensorVersioned* dataset,
                                           cuvsTieredIndex_t index);
 
 /**
@@ -204,18 +204,18 @@ CUVS_API cuvsError_t cuvsTieredIndexBuild(cuvsResources_t res,
  * cuvsCagraSearchParams_t, cuvsIvfFlatSearchParams_t, cuvsIvfPqSearchParams_t
  * depending on the type of the tiered index used
  * @param[in] index cuvsTieredIndex which has been returned by `cuvsTieredIndexBuild`
- * @param[in] queries DLManagedTensorVersioned* queries dataset to search
- * @param[out] neighbors DLManagedTensorVersioned* output `k` neighbors for queries
- * @param[out] distances DLManagedTensorVersioned* output `k` distances for queries
+ * @param[in] queries struct DLManagedTensorVersioned* queries dataset to search
+ * @param[out] neighbors struct DLManagedTensorVersioned* output `k` neighbors for queries
+ * @param[out] distances struct DLManagedTensorVersioned* output `k` distances for queries
  * @param[in] prefilter cuvsFilter input prefilter that can be used
               to filter queries and neighbors based on the given bitmap.
  */
 CUVS_API cuvsError_t cuvsTieredIndexSearch(cuvsResources_t res,
                                            void* search_params,
                                            cuvsTieredIndex_t index,
-                                           DLManagedTensorVersioned* queries,
-                                           DLManagedTensorVersioned* neighbors,
-                                           DLManagedTensorVersioned* distances,
+                                           struct DLManagedTensorVersioned* queries,
+                                           struct DLManagedTensorVersioned* neighbors,
+                                           struct DLManagedTensorVersioned* distances,
                                            cuvsFilter prefilter);
 
 
@@ -230,12 +230,12 @@ CUVS_API cuvsError_t cuvsTieredIndexSearch(cuvsResources_t res,
  * @brief Extend the index with the new data.
  *
  * @param[in] res cuvsResources_t opaque C handle
- * @param[in] new_vectors DLManagedTensorVersioned* the new vectors to add to the index
+ * @param[in] new_vectors struct DLManagedTensorVersioned* the new vectors to add to the index
  * @param[inout] index Tiered index to be extended
  * @return cuvsError_t
  */
 CUVS_API cuvsError_t cuvsTieredIndexExtend(cuvsResources_t res,
-                                           DLManagedTensorVersioned* new_vectors,
+                                           struct DLManagedTensorVersioned* new_vectors,
                                            cuvsTieredIndex_t index);
 
 /**

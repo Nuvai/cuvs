@@ -168,9 +168,9 @@ typedef enum { CUVS_KMEANS_TYPE_KMEANS = 0, CUVS_KMEANS_TYPE_KMEANS_BALANCED = 1
  */
 CUVS_API cuvsError_t cuvsKMeansFit(cuvsResources_t res,
                                    cuvsKMeansParams_t params,
-                                   DLManagedTensorVersioned* X,
-                                   DLManagedTensorVersioned* sample_weight,
-                                   DLManagedTensorVersioned* centroids,
+                                   struct DLManagedTensorVersioned* X,
+                                   struct DLManagedTensorVersioned* sample_weight,
+                                   struct DLManagedTensorVersioned* centroids,
                                    double* inertia,
                                    int* n_iter);
 
@@ -196,10 +196,10 @@ CUVS_API cuvsError_t cuvsKMeansFit(cuvsResources_t res,
  */
 CUVS_API cuvsError_t cuvsKMeansPredict(cuvsResources_t res,
                                        cuvsKMeansParams_t params,
-                                       DLManagedTensorVersioned* X,
-                                       DLManagedTensorVersioned* sample_weight,
-                                       DLManagedTensorVersioned* centroids,
-                                       DLManagedTensorVersioned* labels,
+                                       struct DLManagedTensorVersioned* X,
+                                       struct DLManagedTensorVersioned* sample_weight,
+                                       struct DLManagedTensorVersioned* centroids,
+                                       struct DLManagedTensorVersioned* labels,
                                        bool normalize_weight,
                                        double* inertia);
 
@@ -218,8 +218,8 @@ CUVS_API cuvsError_t cuvsKMeansPredict(cuvsResources_t res,
  *
  */
 CUVS_API cuvsError_t cuvsKMeansClusterCost(cuvsResources_t res,
-                                           DLManagedTensorVersioned* X,
-                                           DLManagedTensorVersioned* centroids,
+                                           struct DLManagedTensorVersioned* X,
+                                           struct DLManagedTensorVersioned* centroids,
                                            double* cost);
 
 

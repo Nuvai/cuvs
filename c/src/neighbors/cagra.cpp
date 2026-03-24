@@ -336,7 +336,7 @@ void* _merge(cuvsResources_t res,
 
   int64_t total_size = 0;
   int64_t dim        = 0;
-  if (params.build_algo == cuvsCagraGraphBuildAlgo::IVF_PQ) {
+  if (params.build_algo == cuvsCagraGraphBuildAlgo::CUVS_CAGRA_BUILD_IVF_PQ) {
     auto first_idx_ptr =
       reinterpret_cast<cuvs::neighbors::cagra::index<T, uint32_t>*>(indices[0]->addr);
     dim = first_idx_ptr->dim();
@@ -431,14 +431,14 @@ static void _populate_cagra_index_params_from_cpp(cuvsCagraIndexParams_t c_param
   // Set build algo and parameters based on the variant
   if (std::holds_alternative<cuvs::neighbors::cagra::graph_build_params::nn_descent_params>(
         cpp_params.graph_build_params)) {
-    c_params->build_algo = NN_DESCENT;
+    c_params->build_algo = CUVS_CAGRA_BUILD_NN_DESCENT;
     auto nn_params =
       std::get<cuvs::neighbors::cagra::graph_build_params::nn_descent_params>(
         cpp_params.graph_build_params);
     c_params->nn_descent_niter = nn_params.max_iterations;
   } else if (std::holds_alternative<cuvs::neighbors::cagra::graph_build_params::ivf_pq_params>(
                cpp_params.graph_build_params)) {
-    c_params->build_algo = IVF_PQ;
+    c_params->build_algo = CUVS_CAGRA_BUILD_IVF_PQ;
     auto ivf_pq_params =
       std::get<cuvs::neighbors::cagra::graph_build_params::ivf_pq_params>(
         cpp_params.graph_build_params);
@@ -446,7 +446,7 @@ static void _populate_cagra_index_params_from_cpp(cuvsCagraIndexParams_t c_param
     _populate_c_ivf_pq_params(static_cast<cuvsIvfPqParams*>(c_params->graph_build_params), ivf_pq_params);
   } else if (std::holds_alternative<cuvs::neighbors::cagra::graph_build_params::ace_params>(
                cpp_params.graph_build_params)) {
-    c_params->build_algo = ACE;
+    c_params->build_algo = CUVS_CAGRA_BUILD_ACE;
     auto ace_params =
       std::get<cuvs::neighbors::cagra::graph_build_params::ace_params>(
         cpp_params.graph_build_params);
@@ -1030,7 +1030,7 @@ extern "C" cuvsError_t cuvsCagraIndexParamsCreate(cuvsCagraIndexParams_t* params
     *params                       = new cuvsCagraIndexParams{.metric                    = CUVS_DISTANCE_L2_EXPANDED,
                                                              .intermediate_graph_degree = 128,
                                                              .graph_degree              = 64,
-                                                             .build_algo                = IVF_PQ,
+                                                             .build_algo                = CUVS_CAGRA_BUILD_IVF_PQ,
                                                              .nn_descent_niter          = 20,
                                                              .compression               = nullptr,
                                                              .graph_build_params        = nullptr,
@@ -1045,7 +1045,7 @@ extern "C" cuvsError_t cuvsCagraIndexParamsDestroy(cuvsCagraIndexParams_t params
     // Delete graph_build_params based on the build algorithm type
     if (params->graph_build_params != nullptr) {
       switch (params->build_algo) {
-      case cuvsCagraGraphBuildAlgo::IVF_PQ:
+      case cuvsCagraGraphBuildAlgo::CUVS_CAGRA_BUILD_IVF_PQ:
         delete static_cast<cuvsIvfPqParams *>(params->graph_build_params);
         break;
       case cuvsCagraGraphBuildAlgo::CUVS_CAGRA_BUILD_ACE: {

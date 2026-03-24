@@ -98,10 +98,10 @@ CUVS_API cuvsError_t cuvsAllNeighborsIndexParamsDestroy(cuvsAllNeighborsIndexPar
  */
 CUVS_API cuvsError_t cuvsAllNeighborsBuild(cuvsResources_t res,
                                            cuvsAllNeighborsIndexParams_t params,
-                                           DLManagedTensorVersioned* dataset,
-                                           DLManagedTensorVersioned* indices,
-                                           DLManagedTensorVersioned* distances,
-                                           DLManagedTensorVersioned* core_distances,
+                                           struct DLManagedTensorVersioned* dataset,
+                                           struct DLManagedTensorVersioned* indices,
+                                           struct DLManagedTensorVersioned* distances,
+                                           struct DLManagedTensorVersioned* core_distances,
                                            float alpha);
 
 

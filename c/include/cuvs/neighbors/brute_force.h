@@ -83,14 +83,14 @@ CUVS_API cuvsError_t cuvsBruteForceIndexDestroy(cuvsBruteForceIndex_t index);
  * @endcode
  *
  * @param[in] res cuvsResources_t opaque C handle
- * @param[in] dataset DLManagedTensorVersioned* training dataset
+ * @param[in] dataset struct DLManagedTensorVersioned* training dataset
  * @param[in] metric metric
  * @param[in] metric_arg metric_arg
  * @param[out] index cuvsBruteForceIndex_t Newly built BRUTEFORCE index
  * @return cuvsError_t
  */
 CUVS_API cuvsError_t cuvsBruteForceBuild(cuvsResources_t res,
-                                         DLManagedTensorVersioned* dataset,
+                                         struct DLManagedTensorVersioned* dataset,
                                          cuvsDistanceType metric,
                                          float metric_arg,
                                          cuvsBruteForceIndex_t index);
@@ -140,17 +140,17 @@ CUVS_API cuvsError_t cuvsBruteForceBuild(cuvsResources_t res,
  *
  * @param[in] res cuvsResources_t opaque C handle
  * @param[in] index cuvsBruteForceIndex which has been returned by `cuvsBruteForceBuild`
- * @param[in] queries DLManagedTensorVersioned* queries dataset to search
- * @param[out] neighbors DLManagedTensorVersioned* output `k` neighbors for queries
- * @param[out] distances DLManagedTensorVersioned* output `k` distances for queries
+ * @param[in] queries struct DLManagedTensorVersioned* queries dataset to search
+ * @param[out] neighbors struct DLManagedTensorVersioned* output `k` neighbors for queries
+ * @param[out] distances struct DLManagedTensorVersioned* output `k` distances for queries
  * @param[in] prefilter cuvsFilter input prefilter that can be used
               to filter queries and neighbors based on the given bitmap.
  */
 CUVS_API cuvsError_t cuvsBruteForceSearch(cuvsResources_t res,
                                           cuvsBruteForceIndex_t index,
-                                          DLManagedTensorVersioned* queries,
-                                          DLManagedTensorVersioned* neighbors,
-                                          DLManagedTensorVersioned* distances,
+                                          struct DLManagedTensorVersioned* queries,
+                                          struct DLManagedTensorVersioned* neighbors,
+                                          struct DLManagedTensorVersioned* distances,
                                           cuvsFilter prefilter);
 
 /**

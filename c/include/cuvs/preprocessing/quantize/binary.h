@@ -108,7 +108,7 @@ CUVS_API cuvsError_t cuvsBinaryQuantizerDestroy(cuvsBinaryQuantizer_t quantizer)
  */
 CUVS_API cuvsError_t cuvsBinaryQuantizerTrain(cuvsResources_t res,
                                               cuvsBinaryQuantizerParams_t params,
-                                              DLManagedTensorVersioned* dataset,
+                                              struct DLManagedTensorVersioned* dataset,
                                               cuvsBinaryQuantizer_t quantizer);
 
 
@@ -124,8 +124,8 @@ CUVS_API cuvsError_t cuvsBinaryQuantizerTrain(cuvsResources_t res,
  * @param[out] out a row-major host or device matrix to store transformed data
  */
 CUVS_API cuvsError_t cuvsBinaryQuantizerTransform(cuvsResources_t res,
-                                                  DLManagedTensorVersioned* dataset,
-                                                  DLManagedTensorVersioned* out);
+                                                  struct DLManagedTensorVersioned* dataset,
+                                                  struct DLManagedTensorVersioned* out);
 
 
 /**
@@ -142,8 +142,8 @@ CUVS_API cuvsError_t cuvsBinaryQuantizerTransform(cuvsResources_t res,
  */
 CUVS_API cuvsError_t cuvsBinaryQuantizerTransformWithParams(cuvsResources_t res,
                                                             cuvsBinaryQuantizer_t quantizer,
-                                                            DLManagedTensorVersioned* dataset,
-                                                            DLManagedTensorVersioned* out);
+                                                            struct DLManagedTensorVersioned* dataset,
+                                                            struct DLManagedTensorVersioned* out);
 
 
 /**

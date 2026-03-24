@@ -158,11 +158,11 @@ CUVS_API cuvsError_t cuvsMultiGpuResourcesCreate(cuvsResources_t* res);
  *        for multi-GPU operations with specific device IDs
  *
  * @param[in] res cuvsResources_t opaque C handle
- * @param[in] device_ids DLManagedTensorVersioned* containing device IDs to use
+ * @param[in] device_ids struct DLManagedTensorVersioned* containing device IDs to use
  * @return cuvsError_t
  */
 CUVS_API cuvsError_t cuvsMultiGpuResourcesCreateWithDeviceIds(cuvsResources_t* res,
-                                                              DLManagedTensorVersioned* device_ids);
+                                                              struct DLManagedTensorVersioned* device_ids);
 
 /**
  * @brief Destroy and de-allocate opaque C handle for C++ type `raft::device_resources_snmg`
@@ -272,8 +272,8 @@ CUVS_API cuvsError_t cuvsVersionGet(uint16_t* major, uint16_t* minor, uint16_t* 
  * @param[out] dst Pointer to DLManagedTensorVersioned to receive copy of data
  */
 CUVS_API cuvsError_t cuvsMatrixCopy(cuvsResources_t res,
-                                    DLManagedTensorVersioned* src,
-                                    DLManagedTensorVersioned* dst);
+                                    struct DLManagedTensorVersioned* src,
+                                    struct DLManagedTensorVersioned* dst);
 
 /**
  * @brief Slices rows from a matrix
@@ -285,10 +285,10 @@ CUVS_API cuvsError_t cuvsMatrixCopy(cuvsResources_t res,
  * @param[out] dst Pointer to DLManagedTensorVersioned to receive slice from matrix
  */
 CUVS_API cuvsError_t cuvsMatrixSliceRows(cuvsResources_t res,
-                                         DLManagedTensorVersioned* src,
+                                         struct DLManagedTensorVersioned* src,
                                          int64_t start,
                                          int64_t end,
-                                         DLManagedTensorVersioned* dst);
+                                         struct DLManagedTensorVersioned* dst);
 
 /** @} */
 

@@ -295,7 +295,7 @@ CUVS_API cuvsError_t cuvsIvfPqIndexGetPqLen(cuvsIvfPqIndex_t index, int64_t* pq_
  * @return cuvsError_t
  */
 CUVS_API cuvsError_t cuvsIvfPqIndexGetCenters(cuvsIvfPqIndex_t index,
-                                              DLManagedTensorVersioned* centers);
+                                              struct DLManagedTensorVersioned* centers);
 
 
 /**
@@ -310,7 +310,7 @@ CUVS_API cuvsError_t cuvsIvfPqIndexGetCenters(cuvsIvfPqIndex_t index,
  * @return cuvsError_t
  */
 CUVS_API cuvsError_t cuvsIvfPqIndexGetCentersPadded(cuvsIvfPqIndex_t index,
-                                                    DLManagedTensorVersioned* centers);
+                                                    struct DLManagedTensorVersioned* centers);
 
 
 /**
@@ -324,7 +324,7 @@ CUVS_API cuvsError_t cuvsIvfPqIndexGetCentersPadded(cuvsIvfPqIndex_t index,
  * @return cuvsError_t
  */
 CUVS_API cuvsError_t cuvsIvfPqIndexGetPqCenters(cuvsIvfPqIndex_t index,
-                                                DLManagedTensorVersioned* pq_centers);
+                                                struct DLManagedTensorVersioned* pq_centers);
 
 
 /**
@@ -336,7 +336,7 @@ CUVS_API cuvsError_t cuvsIvfPqIndexGetPqCenters(cuvsIvfPqIndex_t index,
  * @return cuvsError_t
  */
 CUVS_API cuvsError_t cuvsIvfPqIndexGetCentersRot(cuvsIvfPqIndex_t index,
-                                                 DLManagedTensorVersioned* centers_rot);
+                                                 struct DLManagedTensorVersioned* centers_rot);
 
 
 /**
@@ -349,7 +349,7 @@ CUVS_API cuvsError_t cuvsIvfPqIndexGetCentersRot(cuvsIvfPqIndex_t index,
  * @return cuvsError_t
  */
 CUVS_API cuvsError_t cuvsIvfPqIndexGetRotationMatrix(cuvsIvfPqIndex_t index,
-                                                     DLManagedTensorVersioned* rotation_matrix);
+                                                     struct DLManagedTensorVersioned* rotation_matrix);
 
 
 /**
@@ -360,7 +360,7 @@ CUVS_API cuvsError_t cuvsIvfPqIndexGetRotationMatrix(cuvsIvfPqIndex_t index,
  * @return cuvsError_t
  */
 CUVS_API cuvsError_t cuvsIvfPqIndexGetListSizes(cuvsIvfPqIndex_t index,
-                                                DLManagedTensorVersioned* list_sizes);
+                                                struct DLManagedTensorVersioned* list_sizes);
 
 
 /**
@@ -382,7 +382,7 @@ CUVS_API cuvsError_t cuvsIvfPqIndexGetListSizes(cuvsIvfPqIndex_t index,
  */
 CUVS_API cuvsError_t cuvsIvfPqIndexUnpackContiguousListData(cuvsResources_t res,
                                                             cuvsIvfPqIndex_t index,
-                                                            DLManagedTensorVersioned* out_codes,
+                                                            struct DLManagedTensorVersioned* out_codes,
                                                             uint32_t label,
                                                             uint32_t offset);
 
@@ -398,7 +398,7 @@ CUVS_API cuvsError_t cuvsIvfPqIndexUnpackContiguousListData(cuvsResources_t res,
  */
 CUVS_API cuvsError_t cuvsIvfPqIndexGetListIndices(cuvsIvfPqIndex_t index,
                                                   uint32_t label,
-                                                  DLManagedTensorVersioned* out_labels);
+                                                  struct DLManagedTensorVersioned* out_labels);
 
 /**
  * @}
@@ -447,13 +447,13 @@ CUVS_API cuvsError_t cuvsIvfPqIndexGetListIndices(cuvsIvfPqIndex_t index,
  *
  * @param[in] res cuvsResources_t opaque C handle
  * @param[in] params cuvsIvfPqIndexParams_t used to build IVF-PQ index
- * @param[in] dataset DLManagedTensorVersioned* training dataset
+ * @param[in] dataset struct DLManagedTensorVersioned* training dataset
  * @param[out] index cuvsIvfPqIndex_t Newly built IVF-PQ index
  * @return cuvsError_t
  */
 CUVS_API cuvsError_t cuvsIvfPqBuild(cuvsResources_t res,
                                     cuvsIvfPqIndexParams_t params,
-                                    DLManagedTensorVersioned* dataset,
+                                    struct DLManagedTensorVersioned* dataset,
                                     cuvsIvfPqIndex_t index);
 
 
@@ -489,10 +489,10 @@ CUVS_API cuvsError_t cuvsIvfPqBuild(cuvsResources_t res,
 CUVS_API cuvsError_t cuvsIvfPqBuildPrecomputed(cuvsResources_t res,
                                                cuvsIvfPqIndexParams_t params,
                                                uint32_t dim,
-                                               DLManagedTensorVersioned* pq_centers,
-                                               DLManagedTensorVersioned* centers,
-                                               DLManagedTensorVersioned* centers_rot,
-                                               DLManagedTensorVersioned* rotation_matrix,
+                                               struct DLManagedTensorVersioned* pq_centers,
+                                               struct DLManagedTensorVersioned* centers,
+                                               struct DLManagedTensorVersioned* centers_rot,
+                                               struct DLManagedTensorVersioned* rotation_matrix,
                                                cuvsIvfPqIndex_t index);
 
 /**
@@ -544,17 +544,17 @@ CUVS_API cuvsError_t cuvsIvfPqBuildPrecomputed(cuvsResources_t res,
  * @param[in] res cuvsResources_t opaque C handle
  * @param[in] search_params cuvsIvfPqSearchParams_t used to search IVF-PQ index
  * @param[in] index cuvsIvfPqIndex which has been returned by `cuvsIvfPqBuild`
- * @param[in] queries DLManagedTensorVersioned* queries dataset to search
- * @param[out] neighbors DLManagedTensorVersioned* output `k` neighbors for queries
- * @param[out] distances DLManagedTensorVersioned* output `k` distances for queries
+ * @param[in] queries struct DLManagedTensorVersioned* queries dataset to search
+ * @param[out] neighbors struct DLManagedTensorVersioned* output `k` neighbors for queries
+ * @param[out] distances struct DLManagedTensorVersioned* output `k` distances for queries
  * @param[in] filter cuvsFilter filter to apply to the search
  */
 CUVS_API cuvsError_t cuvsIvfPqSearch(cuvsResources_t res,
                                      cuvsIvfPqSearchParams_t search_params,
                                      cuvsIvfPqIndex_t index,
-                                     DLManagedTensorVersioned* queries,
-                                     DLManagedTensorVersioned* neighbors,
-                                     DLManagedTensorVersioned* distances,
+                                     struct DLManagedTensorVersioned* queries,
+                                     struct DLManagedTensorVersioned* neighbors,
+                                     struct DLManagedTensorVersioned* distances,
                                      cuvsFilter filter);
 
 /**
@@ -609,14 +609,14 @@ CUVS_API cuvsError_t cuvsIvfPqDeserialize(cuvsResources_t res, const char* filen
  * @brief Extend the index with the new data.
  *
  * @param[in] res cuvsResources_t opaque C handle
- * @param[in] new_vectors DLManagedTensorVersioned* the new vectors to add to the index
- * @param[in] new_indices DLManagedTensorVersioned* vector of new indices for the new vectors
+ * @param[in] new_vectors struct DLManagedTensorVersioned* the new vectors to add to the index
+ * @param[in] new_indices struct DLManagedTensorVersioned* vector of new indices for the new vectors
  * @param[inout] index IVF-PQ index to be extended
  * @return cuvsError_t
  */
 CUVS_API cuvsError_t cuvsIvfPqExtend(cuvsResources_t res,
-                                     DLManagedTensorVersioned* new_vectors,
-                                     DLManagedTensorVersioned* new_indices,
+                                     struct DLManagedTensorVersioned* new_vectors,
+                                     struct DLManagedTensorVersioned* new_indices,
                                      cuvsIvfPqIndex_t index);
 
 /**
@@ -632,16 +632,16 @@ CUVS_API cuvsError_t cuvsIvfPqExtend(cuvsResources_t res,
  *
  * @param[in] res cuvsResources_t opaque C handle
  * @param[in] index IVF-PQ index
- * @param[in] input_dataset DLManagedTensorVersioned* vectors to transform
- * @param[out] output_labels DLManagedTensorVersioned* Vector of cluster labels for each vector in the input
- * @param[out] output_dataset DLManagedTensorVersioned* input vectors after pq-encoding
+ * @param[in] input_dataset struct DLManagedTensorVersioned* vectors to transform
+ * @param[out] output_labels struct DLManagedTensorVersioned* Vector of cluster labels for each vector in the input
+ * @param[out] output_dataset struct DLManagedTensorVersioned* input vectors after pq-encoding
  * @return cuvsError_t
  */
 CUVS_API cuvsError_t cuvsIvfPqTransform(cuvsResources_t res,
                                         cuvsIvfPqIndex_t index,
-                                        DLManagedTensorVersioned* input_dataset,
-                                        DLManagedTensorVersioned* output_labels,
-                                        DLManagedTensorVersioned* output_dataset);
+                                        struct DLManagedTensorVersioned* input_dataset,
+                                        struct DLManagedTensorVersioned* output_labels,
+                                        struct DLManagedTensorVersioned* output_dataset);
 
 /**
  * @}

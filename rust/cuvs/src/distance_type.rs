@@ -6,7 +6,7 @@
 pub type DistanceType = ffi::cuvsDistanceType;
 
 /// Bitwise Hamming distance for binary vectors.
-pub const BITWISE_HAMMING: DistanceType = ffi::cuvsDistanceType_CUVS_DISTANCE_BITWISE_HAMMING;
+pub const BITWISE_HAMMING: DistanceType = ffi::cuvsDistanceType::CUVS_DISTANCE_BITWISE_HAMMING;
 
 #[cfg(test)]
 mod tests {

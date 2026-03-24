@@ -9,15 +9,11 @@
 
 namespace cuvs::neighbors::cagra {
 
+// NOTE: build_knn_graph with ivf_pq_params is NOT instantiated for bfloat16 because
+// ivf_pq::build does not support bfloat16 data. Only the build() overloads
+// are instantiated here.
+
 #define RAFT_INST_CAGRA_BUILD(T, IdxT)                                                    \
-  void build_knn_graph(raft::resources const& handle,                                     \
-                       raft::host_matrix_view<const T, int64_t, raft::row_major> dataset, \
-                       raft::host_matrix_view<IdxT, int64_t, raft::row_major> knn_graph,  \
-                       cuvs::neighbors::cagra::graph_build_params::ivf_pq_params params)  \
-  {                                                                                       \
-    cuvs::neighbors::cagra::build_knn_graph<T, IdxT>(handle, dataset, knn_graph, params); \
-  }                                                                                       \
-                                                                                          \
   auto build(raft::resources const& handle,                                               \
              const cuvs::neighbors::cagra::index_params& params,                          \
              raft::device_matrix_view<const T, int64_t, raft::row_major> dataset)         \

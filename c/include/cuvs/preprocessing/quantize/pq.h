@@ -131,7 +131,7 @@ CUVS_API cuvsError_t cuvsProductQuantizerDestroy(cuvsProductQuantizer_t quantize
  */
 CUVS_API cuvsError_t cuvsProductQuantizerBuild(cuvsResources_t res,
                                                cuvsProductQuantizerParams_t params,
-                                               DLManagedTensorVersioned* dataset,
+                                               struct DLManagedTensorVersioned* dataset,
                                                cuvsProductQuantizer_t quantizer);
 
 
@@ -149,9 +149,9 @@ CUVS_API cuvsError_t cuvsProductQuantizerBuild(cuvsResources_t res,
  */
 CUVS_API cuvsError_t cuvsProductQuantizerTransform(cuvsResources_t res,
                                                    cuvsProductQuantizer_t quantizer,
-                                                   DLManagedTensorVersioned* dataset,
-                                                   DLManagedTensorVersioned* codes_out,
-                                                   DLManagedTensorVersioned* vq_labels);
+                                                   struct DLManagedTensorVersioned* dataset,
+                                                   struct DLManagedTensorVersioned* codes_out,
+                                                   struct DLManagedTensorVersioned* vq_labels);
 
 
 /**
@@ -168,9 +168,9 @@ CUVS_API cuvsError_t cuvsProductQuantizerTransform(cuvsResources_t res,
  */
 CUVS_API cuvsError_t cuvsProductQuantizerInverseTransform(cuvsResources_t res,
                                                          cuvsProductQuantizer_t quantizer,
-                                                         DLManagedTensorVersioned* pq_codes,
-                                                         DLManagedTensorVersioned* out,
-                                                         DLManagedTensorVersioned* vq_labels);
+                                                         struct DLManagedTensorVersioned* pq_codes,
+                                                         struct DLManagedTensorVersioned* out,
+                                                         struct DLManagedTensorVersioned* vq_labels);
 
 
 /**
@@ -196,7 +196,7 @@ CUVS_API cuvsError_t cuvsProductQuantizerGetPqDim(cuvsProductQuantizer_t quantiz
  * @param[out] pq_codebook PQ codebook
  */
 CUVS_API cuvsError_t cuvsProductQuantizerGetPqCodebook(cuvsProductQuantizer_t quantizer,
-                                                       DLManagedTensorVersioned* pq_codebook);
+                                                       struct DLManagedTensorVersioned* pq_codebook);
 
 
 /**
@@ -206,7 +206,7 @@ CUVS_API cuvsError_t cuvsProductQuantizerGetPqCodebook(cuvsProductQuantizer_t qu
  * @param[out] vq_codebook VQ codebook
  */
 CUVS_API cuvsError_t cuvsProductQuantizerGetVqCodebook(cuvsProductQuantizer_t quantizer,
-                                                       DLManagedTensorVersioned* vq_codebook);
+                                                       struct DLManagedTensorVersioned* vq_codebook);
 
 
 /**

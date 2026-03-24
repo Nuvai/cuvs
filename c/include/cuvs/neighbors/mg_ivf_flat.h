@@ -143,13 +143,13 @@ CUVS_API cuvsError_t cuvsMultiGpuIvfFlatIndexDestroy(cuvsMultiGpuIvfFlatIndex_t 
  *
  * @param[in] res cuvsResources_t opaque C handle
  * @param[in] params Multi-GPU IVF-Flat index parameters
- * @param[in] dataset_tensor DLManagedTensorVersioned* training dataset
+ * @param[in] dataset_tensor struct DLManagedTensorVersioned* training dataset
  * @param[out] index Multi-GPU IVF-Flat index
  * @return cuvsError_t
  */
 CUVS_API cuvsError_t cuvsMultiGpuIvfFlatBuild(cuvsResources_t res,
                                               cuvsMultiGpuIvfFlatIndexParams_t params,
-                                              DLManagedTensorVersioned* dataset_tensor,
+                                              struct DLManagedTensorVersioned* dataset_tensor,
                                               cuvsMultiGpuIvfFlatIndex_t index);
 
 
@@ -168,17 +168,17 @@ CUVS_API cuvsError_t cuvsMultiGpuIvfFlatBuild(cuvsResources_t res,
  * @param[in] res cuvsResources_t opaque C handle
  * @param[in] params Multi-GPU IVF-Flat search parameters
  * @param[in] index Multi-GPU IVF-Flat index
- * @param[in] queries_tensor DLManagedTensorVersioned* queries dataset
- * @param[out] neighbors_tensor DLManagedTensorVersioned* output neighbors
- * @param[out] distances_tensor DLManagedTensorVersioned* output distances
+ * @param[in] queries_tensor struct DLManagedTensorVersioned* queries dataset
+ * @param[out] neighbors_tensor struct DLManagedTensorVersioned* output neighbors
+ * @param[out] distances_tensor struct DLManagedTensorVersioned* output distances
  * @return cuvsError_t
  */
 CUVS_API cuvsError_t cuvsMultiGpuIvfFlatSearch(cuvsResources_t res,
                                                cuvsMultiGpuIvfFlatSearchParams_t params,
                                                cuvsMultiGpuIvfFlatIndex_t index,
-                                               DLManagedTensorVersioned* queries_tensor,
-                                               DLManagedTensorVersioned* neighbors_tensor,
-                                               DLManagedTensorVersioned* distances_tensor);
+                                               struct DLManagedTensorVersioned* queries_tensor,
+                                               struct DLManagedTensorVersioned* neighbors_tensor,
+                                               struct DLManagedTensorVersioned* distances_tensor);
 
 
 /**
@@ -195,14 +195,14 @@ CUVS_API cuvsError_t cuvsMultiGpuIvfFlatSearch(cuvsResources_t res,
  *
  * @param[in] res cuvsResources_t opaque C handle
  * @param[in,out] index Multi-GPU IVF-Flat index to extend
- * @param[in] new_vectors_tensor DLManagedTensorVersioned* new vectors to add
- * @param[in] new_indices_tensor DLManagedTensorVersioned* new indices (optional, can be NULL)
+ * @param[in] new_vectors_tensor struct DLManagedTensorVersioned* new vectors to add
+ * @param[in] new_indices_tensor struct DLManagedTensorVersioned* new indices (optional, can be NULL)
  * @return cuvsError_t
  */
 CUVS_API cuvsError_t cuvsMultiGpuIvfFlatExtend(cuvsResources_t res,
                                                cuvsMultiGpuIvfFlatIndex_t index,
-                                               DLManagedTensorVersioned* new_vectors_tensor,
-                                               DLManagedTensorVersioned* new_indices_tensor);
+                                               struct DLManagedTensorVersioned* new_vectors_tensor,
+                                               struct DLManagedTensorVersioned* new_indices_tensor);
 
 
 /**

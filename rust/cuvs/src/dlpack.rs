@@ -135,8 +135,10 @@ impl<T: IntoDtype, S: ndarray::RawData<Elem = T>, D: ndarray::Dimension>
             (*tensor).dtype = T::ffi_dtype();
             ManagedTensor(ffi::DLManagedTensorVersioned {
                 version: ffi::DLPackVersion {
-                    major: ffi::DLPACK_MAJOR_VERSION,
-                    minor: ffi::DLPACK_MINOR_VERSION,
+                    // DLPACK_MAJOR_VERSION / DLPACK_MINOR_VERSION are #define macros
+                    // that bindgen cannot import. Hardcode to match dlpack v1.0.
+                    major: 1,
+                    minor: 0,
                 },
                 manager_ctx: std::ptr::null_mut(),
                 deleter: None,

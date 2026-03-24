@@ -558,8 +558,11 @@ if(NOT BUILD_CPU_ONLY)
     src/neighbors/cagra_build_half.cu
     src/neighbors/cagra_build_int8.cu
     src/neighbors/cagra_build_uint8.cu
-    src/neighbors/cagra_build_double.cu
-    src/neighbors/cagra_build_bfloat16.cu
+    # cagra_build_double.cu and cagra_build_bfloat16.cu excluded: cagra::detail::build
+    # instantiates ivf_pq::build<T> which only supports float/half/int8/uint8.
+    # The constexpr-if float-cast guard in detail::build (lines 2252-2277) handles
+    # runtime dispatch correctly, but nvcc still instantiates the dead branch
+    # during explicit template instantiation, causing a compile error.
     src/neighbors/cagra_extend_float.cu
     src/neighbors/cagra_extend_half.cu
     src/neighbors/cagra_extend_int8.cu

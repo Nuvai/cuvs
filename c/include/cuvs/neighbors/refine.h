@@ -35,12 +35,12 @@ extern "C" {
  * @param[out] distances device matrix that stores the refined distances [n_queries, k]
  */
 CUVS_API cuvsError_t cuvsRefine(cuvsResources_t res,
-                                DLManagedTensorVersioned* dataset,
-                                DLManagedTensorVersioned* queries,
-                                DLManagedTensorVersioned* candidates,
+                                struct DLManagedTensorVersioned* dataset,
+                                struct DLManagedTensorVersioned* queries,
+                                struct DLManagedTensorVersioned* candidates,
                                 cuvsDistanceType metric,
-                                DLManagedTensorVersioned* indices,
-                                DLManagedTensorVersioned* distances);
+                                struct DLManagedTensorVersioned* indices,
+                                struct DLManagedTensorVersioned* distances);
 
 /**
  * @}

@@ -162,13 +162,13 @@ CUVS_API cuvsError_t cuvsVamanaIndexGetDims(cuvsVamanaIndex_t index, int* dim);
  *
  * @param[in] res cuvsResources_t opaque C handle
  * @param[in] params cuvsVamanaIndexParams_t used to build Vamana index
- * @param[in] dataset DLManagedTensorVersioned* training dataset
+ * @param[in] dataset struct DLManagedTensorVersioned* training dataset
  * @param[out] index cuvsVamanaIndex_t Vamana index
  * @return cuvsError_t
  */
 CUVS_API cuvsError_t cuvsVamanaBuild(cuvsResources_t res,
                                      cuvsVamanaIndexParams_t params,
-                                     DLManagedTensorVersioned* dataset,
+                                     struct DLManagedTensorVersioned* dataset,
                                      cuvsVamanaIndex_t index);
 
 

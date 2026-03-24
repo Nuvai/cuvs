@@ -85,7 +85,7 @@ CUVS_API cuvsError_t cuvsScalarQuantizerDestroy(cuvsScalarQuantizer_t quantizer)
  */
 CUVS_API cuvsError_t cuvsScalarQuantizerTrain(cuvsResources_t res,
                                               cuvsScalarQuantizerParams_t params,
-                                              DLManagedTensorVersioned* dataset,
+                                              struct DLManagedTensorVersioned* dataset,
                                               cuvsScalarQuantizer_t quantizer);
 
 
@@ -99,8 +99,8 @@ CUVS_API cuvsError_t cuvsScalarQuantizerTrain(cuvsResources_t res,
  */
 CUVS_API cuvsError_t cuvsScalarQuantizerTransform(cuvsResources_t res,
                                                   cuvsScalarQuantizer_t quantizer,
-                                                  DLManagedTensorVersioned* dataset,
-                                                  DLManagedTensorVersioned* out);
+                                                  struct DLManagedTensorVersioned* dataset,
+                                                  struct DLManagedTensorVersioned* out);
 
 
 /**
@@ -117,8 +117,8 @@ CUVS_API cuvsError_t cuvsScalarQuantizerTransform(cuvsResources_t res,
  */
 CUVS_API cuvsError_t cuvsScalarQuantizerInverseTransform(cuvsResources_t res,
                                                          cuvsScalarQuantizer_t quantizer,
-                                                         DLManagedTensorVersioned* dataset,
-                                                         DLManagedTensorVersioned* out);
+                                                         struct DLManagedTensorVersioned* dataset,
+                                                         struct DLManagedTensorVersioned* out);
 
 
 /**

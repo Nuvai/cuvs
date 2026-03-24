@@ -243,8 +243,6 @@ impl<'a> Filter for Bitmap<'a> {
     }
 }
 
-// Re-export for convenience
-use ffi::cuvs_sys as ffi;
 type uintptr_t = usize;
 
 /// Create a bitmap tensor by excluding specific indices per query

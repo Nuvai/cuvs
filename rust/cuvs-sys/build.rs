@@ -9,7 +9,14 @@ use std::path::PathBuf;
 
 fn main() {
     // build the cuvs c-api library with cmake, and link it into this crate
-    let cuvs_build = cmake::Config::new(".").build();
+    let mut cmake_cfg = cmake::Config::new(".");
+
+    // Forward CMAKE_PREFIX_PATH from env so find_package can locate pre-built deps
+    if let Ok(prefix_path) = env::var("CMAKE_PREFIX_PATH") {
+        cmake_cfg.define("CMAKE_PREFIX_PATH", &prefix_path);
+    }
+
+    let cuvs_build = cmake_cfg.build();
 
     println!(
         "cargo:rustc-link-search=native={}/lib",
