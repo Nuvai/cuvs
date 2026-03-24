@@ -414,13 +414,16 @@ jobs:
         cuda_version:
           - *latest_cuda12
           - *latest_cuda13
+        arch:
+          - amd64
+          - arm64
     with:
       build_type: pull-request
       node_type: "gpu-l4-latest-1"
-      arch: "amd64"
+      arch: "${{ matrix.arch }}"
       container_image: "rapidsai/ci-conda:26.06-cuda${{ matrix.cuda_version }}-ubuntu24.04-py3.13"
       script: "ci/test_java.sh"
-      artifact-name: "cuvs-java-cuda${{ matrix.cuda_version }}"
+      artifact-name: "cuvs-java-cuda${{ matrix.cuda_version }}_${{ matrix.arch }}"
       file_to_upload: "java/cuvs-java/target/"
   rust-build:
     needs: [conda-cpp-build, changed-files]
@@ -435,10 +438,13 @@ jobs:
         cuda_version:
           - *latest_cuda12
           - *latest_cuda13
+        arch:
+          - amd64
+          - arm64
     with:
       build_type: pull-request
       node_type: "gpu-l4-latest-1"
-      arch: "amd64"
+      arch: "${{ matrix.arch }}"
       container_image: "rapidsai/ci-conda:26.06-cuda${{ matrix.cuda_version }}-ubuntu24.04-py3.13"
       script: "ci/build_rust.sh"
   go-build:
@@ -454,10 +460,13 @@ jobs:
         cuda_version:
           - *latest_cuda12
           - *latest_cuda13
+        arch:
+          - amd64
+          - arm64
     with:
       build_type: pull-request
       node_type: "gpu-l4-latest-1"
-      arch: "amd64"
+      arch: "${{ matrix.arch }}"
       container_image: "rapidsai/ci-conda:26.06-cuda${{ matrix.cuda_version }}-ubuntu24.04-py3.13"
       script: "ci/build_go.sh"
   docs-build:

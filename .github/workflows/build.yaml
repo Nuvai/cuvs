@@ -80,10 +80,13 @@ jobs:
         cuda_version:
           - *latest_cuda12
           - *latest_cuda13
+        arch:
+          - amd64
+          - arm64
     with:
       build_type: ${{ inputs.build_type || 'branch' }}
       branch: ${{ inputs.branch }}
-      arch: "amd64"
+      arch: "${{ matrix.arch }}"
       date: ${{ inputs.date }}
       container_image: "rapidsai/ci-conda:26.06-cuda${{ matrix.cuda_version }}-ubuntu24.04-py3.13"
       node_type: "gpu-l4-latest-1"
@@ -101,10 +104,13 @@ jobs:
         cuda_version:
           - *latest_cuda12
           - *latest_cuda13
+        arch:
+          - amd64
+          - arm64
     with:
       build_type: ${{ inputs.build_type || 'branch' }}
       branch: ${{ inputs.branch }}
-      arch: "amd64"
+      arch: "${{ matrix.arch }}"
       date: ${{ inputs.date }}
       container_image: "rapidsai/ci-conda:26.06-cuda${{ matrix.cuda_version }}-ubuntu24.04-py3.13"
       node_type: "gpu-l4-latest-1"
@@ -122,14 +128,17 @@ jobs:
         cuda_version:
           - *latest_cuda12
           - *latest_cuda13
+        arch:
+          - amd64
+          - arm64
     with:
       build_type: ${{ inputs.build_type || 'branch' }}
       branch: ${{ inputs.branch }}
-      arch: "amd64"
+      arch: "${{ matrix.arch }}"
       date: ${{ inputs.date }}
       container_image: "rapidsai/ci-conda:26.06-cuda${{ matrix.cuda_version }}-ubuntu24.04-py3.13"
       script: "ci/build_java.sh"
-      artifact-name: "cuvs-java-cuda${{ matrix.cuda_version }}"
+      artifact-name: "cuvs-java-cuda${{ matrix.cuda_version }}_${{ matrix.arch }}"
       file_to_upload: "java/cuvs-java/target/"
       sha: ${{ inputs.sha }}
   python-build:
