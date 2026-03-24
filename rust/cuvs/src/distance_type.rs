@@ -17,7 +17,7 @@ mod tests {
         // Verify our friendly constant matches the auto-generated FFI binding.
         assert_eq!(
             BITWISE_HAMMING,
-            ffi::cuvsDistanceType_CUVS_DISTANCE_BITWISE_HAMMING,
+            ffi::cuvsDistanceType::CUVS_DISTANCE_BITWISE_HAMMING,
             "BITWISE_HAMMING must match FFI-generated constant"
         );
     }
@@ -25,6 +25,6 @@ mod tests {
     #[test]
     fn test_bitwise_hamming_value() {
         // Sanity check: the C enum value for BITWISE_HAMMING is 20.
-        assert_eq!(BITWISE_HAMMING, 20);
+        assert_eq!(BITWISE_HAMMING as u32, 20);
     }
 }

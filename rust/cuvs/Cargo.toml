@@ -13,5 +13,5 @@ ffi = { package = "cuvs-sys", path = "../cuvs-sys", version = "26.6.0" }
 ndarray = "0.16"
 
 [dev-dependencies]
-ndarray-rand = "0.16"
+ndarray-rand = "0.15"
 mark-flaky-tests = "1"

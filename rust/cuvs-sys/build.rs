@@ -18,12 +18,13 @@ fn main() {
 
     let cuvs_build = cmake_cfg.build();
 
-    println!(
-        "cargo:rustc-link-search=native={}/lib",
-        cuvs_build.display()
-    );
+    let lib_dir = format!("{}/lib", cuvs_build.display());
+    println!("cargo:rustc-link-search=native={}", lib_dir);
     println!("cargo:rustc-link-lib=dylib=cuvs_c");
     println!("cargo:rustc-link-lib=dylib=cudart");
+
+    // Embed rpath so test binaries can find libcuvs_c.so without LD_LIBRARY_PATH
+    println!("cargo:rustc-link-arg=-Wl,-rpath,{}", lib_dir);
 
     // we need some extra flags both to link against cuvs, and also to run bindgen
     // specifically we need to:
